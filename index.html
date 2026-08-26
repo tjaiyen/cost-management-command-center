@@ -247,7 +247,9 @@
   <!-- ============================================================ OVERVIEW ============================================================ -->
   <div class="tabpanel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
     <section>
-      <h2>Portfolio snapshot</h2>
+      <h2>Portfolio snapshot
+        <button class="info-toggle" type="button" data-explainer="exp01" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp01"></div>
       <div class="card">
         <div class="kpis" id="overviewKpis"></div>
         <p class="src-note">Every number here is read live from the same computation the Cost and
@@ -296,7 +298,9 @@
   <!-- ============================================================ COST ============================================================ -->
   <div class="tabpanel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost">
     <section id="bridge-section">
-      <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span></h2>
+      <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span>
+        <button class="info-toggle" type="button" data-explainer="exp0206" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp0206"></div>
       <p class="lede" style="font-size:13px">Underwriting baseline → scope change → market
         escalation → field-execution variance → contingency drawdown → current forecast.</p>
       <div class="card">
@@ -320,7 +324,9 @@
           simulation below).</p>
       </div>
       <div class="card" style="margin-top:16px">
-        <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span></h3>
+        <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span>
+          <button class="info-toggle" type="button" data-explainer="exp13" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="exp13"></div>
         <p class="lede" style="font-size:12.5px">Recomputes live off the same baseline, separate
           from the "as-reported" bridge above — the real $208K driver and the contingency drawdown
           are held constant so this sandbox can never quietly rewrite either. Directly demonstrates
@@ -343,7 +349,9 @@
     </section>
 
     <section id="benchmark-section">
-      <h2>Data-center cost-driver benchmarks <span class="badge real">real published figures</span></h2>
+      <h2>Data-center cost-driver benchmarks <span class="badge real">real published figures</span>
+        <button class="info-toggle" type="button" data-explainer="exp0708" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp0708"></div>
       <p class="lede" style="font-size:13px">Real, published industry percentages — not this
         program's own numbers — useful context for why cost archetype shifts (air-cooled vs.
         liquid-cooled) matter as much as scale.</p>
@@ -360,7 +368,9 @@
           <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1, most-defined).</p>
       </div>
       <div class="card" style="margin-top:16px">
-        <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span></h3>
+        <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span>
+          <button class="info-toggle" type="button" data-explainer="exp09" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="exp09"></div>
         <div class="kpis">
           <div class="kpi"><div class="lbl">Tokyo</div><div class="val">$15.2/W</div></div>
           <div class="kpi"><div class="lbl">Singapore</div><div class="val">$14.5/W</div></div>
@@ -379,7 +389,9 @@
     </section>
 
     <section id="wbs-section">
-      <h2>WBS Cost Allocation</h2>
+      <h2>WBS Cost Allocation
+        <button class="info-toggle" type="button" data-explainer="exp10" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp10"></div>
       <div class="card">
         <div id="wbsChart"></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Shaped around a
@@ -389,7 +401,9 @@
     </section>
 
     <section id="cal-section">
-      <h2>Control Account Ledger <span class="badge illustrative">illustrative rows, real structure</span></h2>
+      <h2>Control Account Ledger <span class="badge illustrative">illustrative rows, real structure</span>
+        <button class="info-toggle" type="button" data-explainer="exp1112" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp1112"></div>
       <p class="lede" style="font-size:13px">Drill-down from each WBS category above into its own
         BAC / % complete / earned value / actual cost — Cost Performance Index and Cost Variance
         computed per account, not just at the program level. CPI/CV need only physical % complete,
@@ -419,7 +433,9 @@
         57R-09</b> — a real, named industry practice.</p>
       <div class="grid2">
         <div class="card">
-          <h3>Drawdown ratio vs. % complete</h3>
+          <h3>Drawdown ratio vs. % complete
+            <button class="info-toggle" type="button" data-explainer="exp03" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <div class="explainer" id="exp03"></div>
           <div class="slider-row">
             <label for="pctComplete" style="font-size:12.5px; white-space:nowrap">% complete</label>
             <input type="range" id="pctComplete" min="0" max="100" value="18" />
@@ -436,7 +452,9 @@
             contingency/change-order-tracking history, $50M+ per project.</p>
         </div>
         <div class="card">
-          <h3>Monte Carlo completion cost (2,000 draws) <span class="badge illustrative">tri-point playground</span></h3>
+          <h3>Monte Carlo completion cost (2,000 draws) <span class="badge illustrative">tri-point playground</span>
+            <button class="info-toggle" type="button" data-explainer="exp04" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <div class="explainer" id="exp04"></div>
           <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
           <div class="pctile-row" aria-live="polite" aria-atomic="true">
             <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
@@ -472,7 +490,9 @@
     </section>
 
     <section>
-      <h2>Priced Risk Register <span class="badge illustrative">illustrative rows, real methodology</span></h2>
+      <h2>Priced Risk Register <span class="badge illustrative">illustrative rows, real methodology</span>
+        <button class="info-toggle" type="button" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp05"></div>
       <div class="card">
         <table id="riskTable"></table>
         <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
@@ -482,7 +502,9 @@
     </section>
 
     <section id="float-section">
-      <h2>Schedule Float — a cost-risk input signal, not schedule ownership <span class="badge illustrative">illustrative trend</span></h2>
+      <h2>Schedule Float — a cost-risk input signal, not schedule ownership <span class="badge illustrative">illustrative trend</span>
+        <button class="info-toggle" type="button" data-explainer="exp14" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp14"></div>
       <p class="lede" style="font-size:13px">Float erosion feeds contingency and escalation risk
         the same way a leading indicator should — this dashboard <em>reads</em> float trend as one
         more input, it doesn't own the CPM schedule that produces it (that stays project-controls/
@@ -501,7 +523,9 @@
     </section>
 
     <section id="emv-section">
-      <h2>Change Order Settlement Decision — Expected Monetary Value <span class="badge illustrative">illustrative dispute, real EMV method</span></h2>
+      <h2>Change Order Settlement Decision — Expected Monetary Value <span class="badge illustrative">illustrative dispute, real EMV method</span>
+        <button class="info-toggle" type="button" data-explainer="exp15" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp15"></div>
       <p class="lede" style="font-size:13px">Settle now vs. contest through dispute resolution —
         priced the same probability × impact way as the risk register above, compared against a
         known settle-now cost.</p>
@@ -515,7 +539,9 @@
   <!-- ============================================================ VENDOR & GOVERNANCE ============================================================ -->
   <div class="tabpanel" id="panel-governance" role="tabpanel" aria-labelledby="tab-governance">
     <section>
-      <h2>Consultant Deliverable Scorecard</h2>
+      <h2>Consultant Deliverable Scorecard
+        <button class="info-toggle" type="button" data-explainer="exp16" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp16"></div>
       <p class="lede" style="font-size:13px">Pre-bid-estimate-vs-actual variance tracking for
         third-party cost consultants — generic methodology, never labeled as any specific vendor's
         real data.</p>
@@ -528,7 +554,9 @@
     </section>
 
     <section>
-      <h2>Data-Quality Reconciliation Health</h2>
+      <h2>Data-Quality Reconciliation Health
+        <button class="info-toggle" type="button" data-explainer="exp17" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp17"></div>
       <p class="lede" style="font-size:13px">A generic "Field System vs. Corporate ERP" sync-lag
         health indicator.</p>
       <div class="card">
@@ -542,7 +570,9 @@
     </section>
 
     <section id="productivity-section">
-      <h2>Crew Productivity — Labor Productivity Factor <span class="badge illustrative">illustrative rows, real ratio</span></h2>
+      <h2>Crew Productivity — Labor Productivity Factor <span class="badge illustrative">illustrative rows, real ratio</span>
+        <button class="info-toggle" type="button" data-explainer="exp18" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp18"></div>
       <p class="lede" style="font-size:13px">Earned direct-labor hours ÷ actual hours expended, by
         trade — a cost-management-owned productivity signal (it needs only earned/actual hours,
         not a schedule baseline), scoped here to three trades rather than full crew-level tracking.</p>
@@ -558,7 +588,9 @@
   <!-- ============================================================ PORTFOLIO ============================================================ -->
   <div class="tabpanel" id="panel-portfolio" role="tabpanel" aria-labelledby="tab-portfolio">
     <section>
-      <h2>Multi-Region Cost Rollup <span class="badge illustrative">illustrative</span></h2>
+      <h2>Multi-Region Cost Rollup <span class="badge illustrative">illustrative</span>
+        <button class="info-toggle" type="button" data-explainer="exp19" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp19"></div>
       <p class="lede" style="font-size:13px">Four regions — the same four a real global
         data-center platform typically operates across, used here only as realistic labels for an
         illustrative rollup, not any specific employer's real cost data.</p>
@@ -572,7 +604,9 @@
   <!-- ============================================================ OPERATING FRAMEWORK ============================================================ -->
   <div class="tabpanel" id="panel-framework" role="tabpanel" aria-labelledby="tab-framework">
     <section>
-      <h2>Gate 4 readiness — genuinely computed, not a static bar <span class="badge real">real inputs, illustrative reserve</span></h2>
+      <h2>Gate 4 readiness — genuinely computed, not a static bar <span class="badge real">real inputs, illustrative reserve</span>
+        <button class="info-toggle" type="button" data-explainer="exp20" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="exp20"></div>
       <p class="lede" style="font-size:13px">Contingency Coverage Ratio = remaining contingency
         reserve ÷ total priced risk exposure (the same expected-value total from the Contingency
         &amp; Risk tab). A ratio below 1.00 means the priced risks currently exceed what's left in
@@ -1488,6 +1522,35 @@
     { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
     { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
   ];
+  /* ---------- Formula & methodology explainers for all 20 KPIs (extends the one AACE RP 57R-09
+     explainer that existed before this build to 17 slots covering all 20 -- 3 pairs share one
+     heading/section, so 17 buttons, 20 KPIs). Text lives in one object; the buttons/divs are
+     already in the HTML (each with an empty #expNN div) -- this just fills them in, reusing the
+     existing .info-toggle click-delegation with zero new wiring. ---------- */
+  var kpiExplainers = {
+    exp01: "Portfolio Forecast = Underwriting Baseline + Σ(scope change + market escalation + field-execution variance − contingency drawdown). Reads live off the Cost tab's own budget bridge, not a separately-typed number. A forecast climbing faster than physical progress is usually the first sign a re-baseline conversation is coming.",
+    exp0206: "Net Variance = Current Forecast − Underwriting Baseline (AACE RP 86R-14 variance-analysis framework). The Market Escalation step is priced using an index-based method (AACE RP 58R-10, extended by RP 68R-11 with Monte Carlo for escalation uncertainty specifically) — a variance concentrated in the escalation step usually means the market moved, not that the team executed poorly.",
+    exp03: "Drawdown Ratio = % Contingency Drawn ÷ % Physical Complete. A ratio above 1.5x means contingency is being spent faster than the work that's supposed to justify spending it — the earlier this fires in a project's life, the more useful the warning.",
+    exp04: "Runs 2,000 simulated draws from a triangular distribution (optimistic/most-likely/pessimistic) per AACE RP 57R-09, producing P50/P80/P90 completion-cost percentiles instead of one point estimate. AACE guidance generally favors pricing contingency to P80, not P50 — a P50-priced reserve is, by definition, expected to run out roughly half the time.",
+    exp05: "Expected Value = Probability × Impact per risk (AACE RP 40R-08 risk-driver framework), summed for total exposure. Ranks risks for mitigation priority before they're priced into contingency — a high-probability, low-impact risk can rank above a low-probability catastrophic one.",
+    exp0708: "Real published 2026 industry splits (Archdesk): electrical/power ~40–45% of total cost, cooling ~15–25% (the second-largest driver). Cost Estimate Classification follows AACE RP 17R-97 (Class 5 = least-defined/conceptual, through Class 1 = most-defined/as-built) — knowing which class an estimate sits at tells you how much variance is actually normal.",
+    exp09: "Real US$/W benchmarks from Turner & Townsend's Data Centre Construction Cost Index 2025-2026 (9th year, 52 markets). A site pricing meaningfully above its market's benchmark is either paying a real premium (liquid cooling, site conditions) or has an estimating problem — the benchmark is what tells you which.",
+    exp10: "Percent of baseline allocated per WBS category (GCs & Trades, Long Lead Equipment, Design & Engineering, Site & Utilities). A category consuming a disproportionate share relative to its historical norm is usually the first place to look when a program starts drifting.",
+    exp1112: "Per account: EV (Earned Value) = BAC × % Complete; AC (Actual Cost) = EV × an actual/earned ratio; CPI = EV/AC (ANSI/EIA-748 EVMS formulation, ≥1.0 is healthy); CV = EV − AC (negative means overrun). Drills the program-level variance down to which specific account is actually driving it.",
+    exp13: "Adjusted Forecast = Baseline × (1 + scope%) × (1 + escalation%), plus the real, held-constant $208K driver and contingency drawdown. Lets you see the cost impact of a scope or escalation assumption before it's locked into next month's report, not after.",
+    exp14: "Erosion Rate = (first float reading − last float reading) ÷ number of periods. Critical-path identification follows AACE RP 49R-06. A real published finding: float declining at an increasing rate is a leading indicator of program trouble roughly 2–3 months before it shows up in SPI — by the time schedule performance looks bad, this would already have been flashing.",
+    exp15: "Dispute EV = Σ(probability × outcome cost) + process cost, compared against the known settle-now cost — the same probability × impact logic as the risk register, applied to a binary settle-or-fight decision instead of a mitigation-priority ranking.",
+    exp16: "Variance % = (Actual Bid − Pre-Bid Estimate) ÷ Pre-Bid Estimate. Flags an estimate within ±5% of actual as normal tolerance (✓) and anything wider as worth a conversation with that consultant (⚠) before the next submission.",
+    exp17: "Compares unposted PCOs and sync-lag days (field system vs. corporate ERP) against a threshold, aligned to AACE RP 108R-19's accounting-alignment principles. A lag past threshold means this month's reported numbers are provably stale, not just possibly stale.",
+    exp18: "LPF = Earned Direct-Labor Hours ÷ Actual Direct-Labor Hours Expended (AACE RP 22R-01, direct labor productivity measurement). LPF ≥ 1.0 means the crew earned at least as much work as it spent hours on; below 1.0 is a real, quantified productivity loss, not a guess.",
+    exp19: "Variance % = (Forecast − Baseline) ÷ Baseline, computed per region. Ranking by ratio rather than raw dollars means a small region running badly over doesn't hide behind a large region running fine.",
+    exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure. A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy."
+  };
+  Object.keys(kpiExplainers).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.textContent = kpiExplainers[id];
+  });
+
   /* ---------- Reference tab: the 20-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
   var kpiCatalog = [
     { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver" },

@@ -113,6 +113,20 @@ const lightTokenBlocks = (indexHtml.match(/--c-success:6 121 89; --c-warning:131
 check(darkTokenBlocks === 2, "both dark-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${darkTokenBlocks}, expected 2`);
 check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${lightTokenBlocks}, expected 2`);
 
+console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
+const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
+const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
+check(explainerDivIds.length === 17, `found all 17 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+if (explainerObjMatch) {
+  const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
+  const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
+  const keysWithNoDiv = explainerKeys.filter((id) => !explainerDivIds.includes(id));
+  check(divsWithNoContent.length === 0, "every explainer div id has matching content in kpiExplainers (no silently-empty tooltip)", JSON.stringify(divsWithNoContent));
+  check(keysWithNoDiv.length === 0, "every kpiExplainers key has a matching div in the HTML (no orphaned content nobody can see)", JSON.stringify(keysWithNoDiv));
+} else {
+  failures++; console.error("FAIL: could not find the kpiExplainers object in index.html to check against");
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

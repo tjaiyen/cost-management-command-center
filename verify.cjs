@@ -173,6 +173,13 @@ elementsById["glossarySearch"] = glossarySearchStub;
 const infoToggleBtnStub = withProperties(makeElementStub());
 infoToggleBtnStub.classList.add("info-toggle");
 infoToggleBtnStub.dataset = { explainer: "aace5709exp" };
+
+// A second, distinct info-toggle button stub (one of the 17 formula/methodology explainers added
+// for the 20-KPI catalog) -- proves the click delegation is genuinely generic (reads
+// btn.dataset.explainer dynamically), not hardcoded to the one original button.
+const infoToggleBtnStub2 = withProperties(makeElementStub());
+infoToggleBtnStub2.classList.add("info-toggle");
+infoToggleBtnStub2.dataset = { explainer: "exp20" };
 elementsById["aace5709exp"] = withProperties(makeElementStub()); // the explainer panel itself
 
 const localStorageStub = { getItem(){ return null; }, setItem(){} };
@@ -323,6 +330,15 @@ if (documentClickHandlers.length === 0) {
   const ariaAfterSecondClick = infoToggleBtnStub.getAttribute("aria-expanded");
   assertStrEqual(String(afterSecondClick), "false", "second click closes the explainer panel again");
   assertStrEqual(ariaAfterSecondClick, "false", "second click sets aria-expanded=false");
+
+  // Fire the SAME click handler against a DIFFERENT explainer button (one of the 17 new
+  // formula/methodology toggles from the 20-KPI catalog build) -- proves the delegation is
+  // genuinely generic, not something that happens to work only for the one original button.
+  const explainerEl2 = elementsById["exp20"];
+  const fakeEvent2 = { target: infoToggleBtnStub2 };
+  clickHandler(fakeEvent2);
+  assertStrEqual(String(explainerEl2.classList.contains("open")), "true", "the SAME click delegation correctly opens a different (Gate 4 / exp20) explainer, not just the original one");
+  assertStrEqual(explainerEl2.textContent.length > 0, true, "exp20's explainer div actually has real filled-in content, not an empty placeholder");
 
   // A click that doesn't land on (or inside) an .info-toggle must be a no-op, not a crash.
   const unrelatedEvent = { target: withProperties(makeElementStub()) };
