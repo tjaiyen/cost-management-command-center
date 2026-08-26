@@ -117,7 +117,7 @@
   .badge.real{background:rgb(var(--c-success) / 0.15); color:rgb(var(--c-success))}
   .badge.illustrative{background:rgb(var(--c-warning) / 0.15); color:rgb(var(--c-warning))}
 
-  .bridge{display:flex; align-items:flex-end; gap:6px; height:220px; margin:20px 0 6px; position:relative}
+  .bridge{display:flex; align-items:flex-end; gap:6px; height:220px; margin:20px 0 6px; position:relative; min-width:540px}
   .bridge .col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%}
   .bridge .bar{width:100%; border-radius:6px 6px 0 0; transition:height .6s ease}
   .bridge .bar.base{background:rgb(var(--c-accent))}
@@ -279,6 +279,61 @@
     #panel-exec section, #panel-exec .card{background:none !important; border:none !important; padding:0 !important}
     #panel-exec *{color:#000 !important}
   }
+
+  /* ===== Director-grade visual upgrades (brainstorm build): bullet/gauge/heatmap/ladder/
+     stoplight/tornado -- each animates in on render, exposes its exact figure on hover, and
+     drills further on click. Every one gets its own .info-toggle explainer (added inline below). */
+  .bullet{margin:14px 0}
+  .bullet .blabel{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px}
+  .bullet .btrack{position:relative; height:22px; background:rgb(var(--c-bg-card2)); border-radius:5px; overflow:hidden; cursor:pointer}
+  .bullet .bfill{position:absolute; left:0; top:0; height:100%; background:rgb(var(--c-accent)); border-radius:5px 0 0 5px;
+    width:0; transition:width 900ms cubic-bezier(.2,.8,.2,1)}
+  .bullet .btarget{position:absolute; top:-3px; bottom:-3px; width:2px; background:rgb(var(--c-text-primary))}
+  .bullet .bworst{position:absolute; top:0; bottom:0; width:2px; background:rgb(var(--c-danger)/0.7)}
+  .bullet .bcaption{font-size:11px; color:rgb(var(--c-text-secondary)); margin-top:4px}
+
+  .lgauge{margin:14px 0}
+  .lgauge .gtrack{position:relative; height:26px; border-radius:6px; overflow:hidden; display:flex; cursor:pointer}
+  .lgauge .gzone{height:100%}
+  .lgauge .gzone.success{background:rgb(var(--c-success)/0.55)}
+  .lgauge .gzone.warning{background:rgb(var(--c-warning)/0.55)}
+  .lgauge .gzone.danger{background:rgb(var(--c-danger)/0.55)}
+  .lgauge .gneedle{position:absolute; top:-4px; bottom:-4px; width:3px; background:rgb(var(--c-text-primary));
+    left:0%; transition:left 900ms cubic-bezier(.2,.8,.2,1)}
+  .lgauge .greadout{display:flex; justify-content:space-between; font-size:12.5px; margin-top:6px}
+  .lgauge .greadout b{font:700 16px/1.2 ui-monospace,monospace}
+
+  .heatmap{display:grid; grid-template-columns:74px repeat(3,1fr); gap:3px; font-size:11px; margin:14px 0}
+  .heatmap .hm-axis{display:flex; align-items:center; justify-content:center; text-align:center; font-weight:600; color:rgb(var(--c-text-secondary)); padding:4px}
+  .heatmap .hm-cell{position:relative; aspect-ratio:1.3; background:rgb(var(--c-bg-card2)); border-radius:6px; display:flex; align-items:center; justify-content:center}
+  .heatmap .hm-bubble{border-radius:50%; background:rgb(var(--c-danger)/0.78); color:#fff; display:flex; align-items:center;
+    justify-content:center; font-size:10px; font-weight:700; cursor:pointer; transform:scale(0); transition:transform 500ms cubic-bezier(.34,1.56,.64,1)}
+  .heatmap .hm-bubble.shown{transform:scale(1)}
+
+  .ladder{display:flex; gap:4px; margin:14px 0}
+  .ladder .lstep{flex:1; text-align:center; padding:10px 4px; border-radius:7px; font-size:11.5px; font-weight:600;
+    background:rgb(var(--c-bg-card2)); color:rgb(var(--c-text-secondary)); cursor:pointer; border:2px solid transparent;
+    transition:background 300ms, color 300ms}
+  .ladder .lstep.current{background:rgb(var(--c-accent)/0.18); color:rgb(var(--c-accent)); border-color:rgb(var(--c-accent))}
+
+  .stoplight-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin:14px 0}
+  .stoplight-tile{padding:10px; border-radius:8px; cursor:pointer; opacity:0; transform:translateY(6px);
+    transition:opacity 500ms, transform 500ms}
+  .stoplight-tile.shown{opacity:1; transform:translateY(0)}
+  .stoplight-tile.ok{background:rgb(var(--c-success)/0.12); border:1px solid rgb(var(--c-success)/0.4)}
+  .stoplight-tile.warn{background:rgb(var(--c-danger)/0.12); border:1px solid rgb(var(--c-danger)/0.4)}
+  .stoplight-tile .st-name{font-size:11px; color:rgb(var(--c-text-secondary))}
+  .stoplight-tile .st-val{font:700 18px/1.3 ui-monospace,monospace}
+
+  .tornado{margin:14px 0}
+  .tornado-row{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px}
+  .tornado-row .tname{width:150px; flex-shrink:0; text-align:right}
+  .tornado-row .thalf{flex:1; position:relative; height:18px}
+  .tornado-row .tbar{position:absolute; top:0; height:100%; width:0; cursor:pointer; border-radius:3px;
+    transition:width 700ms cubic-bezier(.2,.8,.2,1)}
+  .tornado-row .tbar.neg{right:0; background:rgb(var(--c-danger))}
+  .tornado-row .tbar.pos{left:0; background:rgb(var(--c-success))}
+  .tornado-row .tval{width:90px; font-variant-numeric:tabular-nums; font-size:11.5px}
 </style>
 </head>
 <body>
@@ -370,6 +425,12 @@
         <p class="src-note">Every number here is read live from the same computation the Cost and
           Contingency tabs run — not a separately-typed summary.</p>
       </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Forecast bullet chart <span class="badge illustrative">illustrative worst-case marker, real inputs</span>
+          <button class="info-toggle" type="button" data-explainer="expBullet" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expBullet"></div>
+        <div id="bulletForecast"></div>
+      </div>
     </section>
     <section>
       <h2>Three layers, not one number</h2>
@@ -429,7 +490,7 @@
       <p class="lede" style="font-size:13px">Underwriting baseline → scope change → market
         escalation → field-execution variance → contingency drawdown → current forecast.</p>
       <div class="card">
-        <div class="bridge" id="bridgeChart" role="img" aria-label="Budget bridge waterfall from underwriting baseline to current forecast"></div>
+        <div style="overflow-x:auto"><div class="bridge" id="bridgeChart" role="img" aria-label="Budget bridge waterfall from underwriting baseline to current forecast"></div></div>
         <div class="kpis">
           <div class="kpi"><div class="lbl">Baseline</div><div class="val tabular" id="bBaseline">—</div></div>
           <div class="kpi"><div class="lbl">Current forecast</div><div class="val tabular" id="bFinal">—</div></div>
@@ -471,6 +532,12 @@
           <div class="kpi"><div class="lbl">Delta vs. current forecast</div><div class="val tabular" id="wiDelta">—</div></div>
         </div>
       </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Which lever moves the total most? <span class="badge illustrative">illustrative ±10% swing, real forecast function</span>
+          <button class="info-toggle" type="button" data-explainer="expSensitivity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expSensitivity"></div>
+        <div id="sensitivityTornado" class="tornado"></div>
+      </div>
     </section>
 
     <section id="benchmark-section">
@@ -510,6 +577,13 @@
           from 9.0% in 2024) and a 7–10% construction-cost premium for liquid-cooled AI data centers
           vs. air-cooled equivalents — an independent second real source corroborating the
           liquid-cooling premium figure above.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Estimate maturity <span class="badge real">real classification framework</span>
+          <button class="info-toggle" type="button" data-explainer="expMaturity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expMaturity"></div>
+        <div id="maturityLadder" class="ladder"></div>
+        <div id="maturityDetail" class="src-note" style="min-height:1.4em">Hover or click a class for its definition.</div>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Escalation assumption governance <span class="badge illustrative">illustrative dates, real cadence practice</span>
@@ -575,6 +649,19 @@
           (WBS %) and the accounts themselves are the same real GC/subcontractor bid-package
           structure cited above.</p>
       </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Account health at a glance <span class="badge illustrative">illustrative rows, real CPI formula</span>
+          <button class="info-toggle" type="button" data-explainer="expStoplight" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expStoplight"></div>
+        <div id="cpiStoplightGrid" class="stoplight-grid"></div>
+        <div id="stoplightDetail" class="src-note" style="min-height:1.4em">Click any tile for its detail.</div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Which account is furthest off-plan? <span class="badge illustrative">illustrative rows, real CV formula</span>
+          <button class="info-toggle" type="button" data-explainer="expCvTornado" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expCvTornado"></div>
+        <div id="cvTornado" class="tornado"></div>
+      </div>
     </section>
   </div>
 
@@ -616,6 +703,7 @@
             <span class="tabular" id="drawdownPctVal">35%</span>
           </div>
           <div id="drawdownWarn"></div>
+          <div id="drawdownGaugeWrap" style="margin:12px 0"></div>
           <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> —
             the underlying early-warning pattern is grounded in a real 100+ bid-package
             contingency/change-order-tracking history, $50M+ per project.</p>
@@ -663,6 +751,13 @@
         <button class="info-toggle" type="button" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp05"></div>
       <div class="card">
+        <h3>Probability × impact heat-map <span class="badge illustrative">illustrative rows, real bucketing practice</span>
+          <button class="info-toggle" type="button" data-explainer="expHeatmap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expHeatmap"></div>
+        <div id="riskHeatmap" class="heatmap"></div>
+        <div id="heatmapDetail" class="src-note" style="min-height:1.4em">Click any bubble for its detail.</div>
+      </div>
+      <div class="card" style="margin-top:16px">
         <div style="overflow-x:auto"><table id="riskTable"></table></div>
         <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
           impact, prioritized for mitigation before pricing) follows <b>AACE RP 40R-08</b>'s
@@ -1327,6 +1422,7 @@
   function updateDrawdownAndOverview(){
     liveDrawdownRatio = updateDrawdown();
     if (typeof renderOverview === "function") renderOverview();
+    if (typeof renderDrawdownGauge === "function") renderDrawdownGauge(); // gauge tracks the sliders live
   }
   pctComplete.addEventListener("input", updateDrawdownAndOverview);
   drawdownPct.addEventListener("input", updateDrawdownAndOverview);
@@ -1433,6 +1529,7 @@
     var b = readMcSliders();
     runMonteCarlo(mcSeed, b.min, b.mode, b.max);
     if (typeof renderOverview === "function") renderOverview();
+    if (typeof renderBulletForecast === "function") renderBulletForecast(); // P90 marker tracks the tri-point sliders live
   }
   mcMinInput.addEventListener("input", reRunFromSliders);
   mcModeInput.addEventListener("input", reRunFromSliders);
@@ -1445,6 +1542,7 @@
     var b = readMcSliders();
     runMonteCarlo(mcSeed, b.min, b.mode, b.max);
     if (typeof renderOverview === "function") renderOverview();
+    if (typeof renderBulletForecast === "function") renderBulletForecast();
   });
 
   /* ================= COST TAB: what-if forecast sandbox (separate from the as-reported bridge) ================= */
@@ -1516,6 +1614,262 @@
     return subtotals;
   }
   var riskCategorySubtotals = renderRiskCategoryBreakdown();
+
+  /* ================= DIRECTOR-GRADE VISUALS (brainstorm build): bullet / gauge / heatmap /
+     ladder / stoplight / tornado -- every one reuses a compute* function already defined above
+     (no new fabricated numbers), animates in on render, exposes its exact figure on hover/focus,
+     and either jumps a tab or fills its own detail line on click. ================= */
+
+  // ---- shared helper: classify a value against ascending band thresholds ----
+  function bandForValue(value, bands){
+    for (var i = 0; i < bands.length; i++){ if (value <= bands[i].max) return bands[i].cls; }
+    return bands[bands.length - 1].cls;
+  }
+  // requestAnimationFrame doesn't exist in this repo's Node-based verify.cjs sandbox (no browser
+  // event loop there) -- guarded the same way elsewhere on this page (see showTabDrawer, the
+  // Monte Carlo histogram draw), so every new visual below is still testable headlessly even
+  // though its entrance animation only actually plays in a real browser.
+  function runOnFrame(fn){
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(fn); else fn();
+  }
+  // ---- shared: a linear banded gauge (track split into colored zones + an animated needle) ----
+  function renderLinearGauge(containerId, value, min, max, bands, unit){
+    var el = document.getElementById(containerId);
+    if (!el) return null;
+    var cls = bandForValue(value, bands);
+    var pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    var zonesHtml = "", prevBoundary = min;
+    bands.forEach(function(b){
+      var boundary = Math.min(b.max, max);
+      var widthPct = Math.max(0, (boundary - prevBoundary) / (max - min) * 100);
+      zonesHtml += '<div class="gzone ' + b.cls + '" style="width:' + widthPct + '%"></div>';
+      prevBoundary = boundary;
+    });
+    el.innerHTML =
+      '<div class="lgauge"><div class="gtrack" id="' + containerId + 'Track" tabindex="0" role="img" ' +
+      'aria-label="' + value.toFixed(2) + unit + ', status ' + cls + '" title="' + value.toFixed(2) + unit + ' (' + cls + ')">' +
+      zonesHtml + '<div class="gneedle" id="' + containerId + 'Needle"></div></div>' +
+      '<div class="greadout"><span>' + min.toFixed(1) + unit + '</span><b>' + value.toFixed(2) + unit + '</b><span>' + max.toFixed(1) + unit + '</span></div></div>';
+    runOnFrame(function(){
+      var needle = document.getElementById(containerId + "Needle");
+      if (needle) needle.style.left = (pct * 100) + "%";
+    });
+    return { value: value, cls: cls, pct: pct };
+  }
+
+  // ---- 1. Bullet chart: Portfolio Forecast (Overview tab) ----
+  function renderBulletForecast(){
+    var el = document.getElementById("bulletForecast");
+    if (!el) return null;
+    var baseline = bridgeResult.baseline, forecast = bridgeResult.final, worst = lastMC.p90 || forecast;
+    var axisMax = Math.max(baseline, forecast, worst) * 1.08;
+    var fillPct = Math.min(100, (forecast / axisMax) * 100);
+    var targetPct = Math.min(100, (baseline / axisMax) * 100);
+    var worstPct = Math.min(100, (worst / axisMax) * 100);
+    el.innerHTML =
+      '<div class="bullet">' +
+      '<div class="blabel"><span>Baseline ' + fmt(baseline) + '</span><span>Forecast <b>' + fmt(forecast) + '</b></span><span>P90 worst-case ' + fmt(worst) + '</span></div>' +
+      '<div class="btrack" id="bulletTrack" tabindex="0" role="img" ' +
+      'aria-label="Forecast ' + fmt(forecast) + ' vs. baseline ' + fmt(baseline) + ' vs. P90 worst-case ' + fmt(worst) + '" ' +
+      'title="Forecast ' + fmt(forecast) + ' vs. baseline ' + fmt(baseline) + ' vs. P90 ' + fmt(worst) + '">' +
+      '<div class="bfill" id="bulletFill"></div>' +
+      '<div class="btarget" style="left:' + targetPct + '%"></div>' +
+      '<div class="bworst" style="left:' + worstPct + '%"></div></div>' +
+      '<div class="bcaption">Bar = current forecast · vertical line = underwriting baseline · red line = ' +
+      'Monte Carlo P90 worst-case. Click to open the Cost tab.</div></div>';
+    var track = document.getElementById("bulletTrack");
+    if (track) track.addEventListener("click", function(){ activateTab("cost"); });
+    runOnFrame(function(){
+      var f = document.getElementById("bulletFill");
+      if (f) f.style.width = fillPct + "%";
+    });
+    return { baseline: baseline, forecast: forecast, worst: worst, fillPct: fillPct, targetPct: targetPct, worstPct: worstPct };
+  }
+
+  // ---- 2. Gauge: Contingency Drawdown Ratio (Contingency tab) ----
+  var DRAWDOWN_GAUGE_BANDS = [ { max: 1.0, cls: "success" }, { max: 1.5, cls: "warning" }, { max: Infinity, cls: "danger" } ];
+  function renderDrawdownGauge(){
+    return renderLinearGauge("drawdownGaugeWrap", liveDrawdownRatio, 0, 2.0, DRAWDOWN_GAUGE_BANDS, "x");
+  }
+
+  // ---- 3. Heat-map: Total Priced Risk Exposure (Contingency tab) ----
+  // Pure functions: fixed, documented bucket thresholds -- not tuned to force a particular layout.
+  function probBucket(p){ return p >= 0.35 ? "High" : p >= 0.20 ? "Med" : "Low"; }
+  function impactBucket(i){ return i >= 150000 ? "High" : i >= 80000 ? "Med" : "Low"; }
+  function computeRiskHeatCells(risks){
+    return risks.map(function(r){
+      return { name: r.name, prob: r.prob, impact: r.impact, ev: r.prob * r.impact,
+        probBucket: probBucket(r.prob), impactBucket: impactBucket(r.impact) };
+    });
+  }
+  var HEAT_PROB_ROWS = ["High", "Med", "Low"];
+  var HEAT_IMPACT_COLS = ["Low", "Med", "High"];
+  function renderRiskHeatmap(){
+    var el = document.getElementById("riskHeatmap");
+    if (!el) return null;
+    var cells = computeRiskHeatCells(riskRegister);
+    var maxEv = Math.max.apply(null, cells.map(function(c){ return c.ev; })) || 1;
+    var html = '<div class="hm-axis"></div>';
+    HEAT_IMPACT_COLS.forEach(function(col){ html += '<div class="hm-axis">' + col + '<br>impact</div>'; });
+    HEAT_PROB_ROWS.forEach(function(row){
+      html += '<div class="hm-axis">' + row + '<br>prob.</div>';
+      HEAT_IMPACT_COLS.forEach(function(col){
+        var inCell = cells.filter(function(c){ return c.probBucket === row && c.impactBucket === col; });
+        html += '<div class="hm-cell">' + inCell.map(function(c){
+          var idx = cells.indexOf(c);
+          var size = 26 + Math.round(30 * Math.sqrt(c.ev / maxEv));
+          return '<div class="hm-bubble" id="heatBubble' + idx + '" style="width:' + size + 'px; height:' + size + 'px" ' +
+            'tabindex="0" title="' + c.name + ': ' + Math.round(c.prob * 100) + '% x ' + fmt(c.impact) + ' = ' + fmt(c.ev) + ' EV">' +
+            Math.round(c.prob * 100) + '%</div>';
+        }).join("") + '</div>';
+      });
+    });
+    el.innerHTML = html;
+    cells.forEach(function(c, i){
+      var bubble = document.getElementById("heatBubble" + i);
+      if (!bubble) return;
+      var show = function(){
+        var d = document.getElementById("heatmapDetail");
+        if (d) d.innerHTML = "<b>" + c.name + "</b> — " + Math.round(c.prob * 100) + "% probability × " + fmt(c.impact) + " impact = <b>" + fmt(c.ev) + "</b> expected value.";
+      };
+      bubble.addEventListener("click", show);
+      bubble.addEventListener("focus", show);
+    });
+    runOnFrame(function(){
+      cells.forEach(function(c, i){
+        var bubble = document.getElementById("heatBubble" + i);
+        if (bubble) bubble.classList.add("shown");
+      });
+    });
+    return cells;
+  }
+
+  // ---- 4. Maturity ladder: Cost Estimate Classification (Cost tab) ----
+  var AACE_CLASSES = [
+    { num: 5, label: "Class 5", desc: "Conceptual screening — rough order of magnitude, before design exists." },
+    { num: 4, label: "Class 4", desc: "Concept / feasibility — before design is locked down." },
+    { num: 3, label: "Class 3", desc: "Budget authorization — design underway, WBS-level control estimate." },
+    { num: 2, label: "Class 2", desc: "Control estimate — most bid packages awarded, detailed design substantially complete." },
+    { num: 1, label: "Class 1", desc: "Check estimate / as-built — near or at completion." }
+  ];
+  // illustrative: this synthetic program sits mid-procurement (Portfolio tab's own Gate 3, 62%)
+  var costEstimateClass = 3;
+  function renderMaturityLadder(){
+    var el = document.getElementById("maturityLadder");
+    if (!el) return null;
+    el.innerHTML = AACE_CLASSES.map(function(c){
+      return '<div class="lstep' + (c.num === costEstimateClass ? ' current' : '') + '" id="ladderStep' + c.num + '" ' +
+        'tabindex="0" title="' + c.desc + '">' + c.label + '</div>';
+    }).join("");
+    AACE_CLASSES.forEach(function(c){
+      var step = document.getElementById("ladderStep" + c.num);
+      if (!step) return;
+      var show = function(){
+        var d = document.getElementById("maturityDetail");
+        if (d) d.innerHTML = "<b>" + c.label + (c.num === costEstimateClass ? " (this program's current class)" : "") + "</b> — " + c.desc;
+      };
+      step.addEventListener("click", show);
+      step.addEventListener("focus", show);
+    });
+    return { classes: AACE_CLASSES, current: costEstimateClass };
+  }
+
+  // ---- 5. Stoplight small-multiples: Control-Account CPI (Cost tab) ----
+  function renderCpiStoplightGrid(){
+    var el = document.getElementById("cpiStoplightGrid");
+    if (!el) return null;
+    el.innerHTML = controlAccounts.map(function(a, i){
+      var ok = a.cpi >= 1;
+      return '<div class="stoplight-tile ' + (ok ? "ok" : "warn") + '" id="stoplightTile' + i + '" tabindex="0" ' +
+        'title="' + a.name + ': CPI ' + a.cpi.toFixed(2) + '"><div class="st-name">' + a.name + '</div>' +
+        '<div class="st-val">' + a.cpi.toFixed(2) + '</div></div>';
+    }).join("");
+    controlAccounts.forEach(function(a, i){
+      var tile = document.getElementById("stoplightTile" + i);
+      if (!tile) return;
+      var show = function(){
+        var d = document.getElementById("stoplightDetail");
+        if (d) d.innerHTML = "<b>" + a.name + "</b> — BAC " + fmt(a.bac) + ", EV " + fmt(a.ev) + ", AC " + fmt(a.ac) + ", CPI <b>" + a.cpi.toFixed(2) + "</b>.";
+      };
+      tile.addEventListener("click", show);
+      tile.addEventListener("focus", show);
+    });
+    runOnFrame(function(){
+      controlAccounts.forEach(function(a, i){
+        var tile = document.getElementById("stoplightTile" + i);
+        if (tile) tile.classList.add("shown");
+      });
+    });
+    return controlAccounts;
+  }
+
+  // ---- 6. Tornado: Control-Account CV ranked (Cost tab) ----
+  function renderCvTornado(){
+    var el = document.getElementById("cvTornado");
+    if (!el) return null;
+    var ranked = controlAccounts.slice().sort(function(a, b){ return Math.abs(b.cv) - Math.abs(a.cv); });
+    var maxAbs = Math.max.apply(null, ranked.map(function(a){ return Math.abs(a.cv); })) || 1;
+    el.innerHTML = ranked.map(function(a, i){
+      var overBudget = a.cv < 0;
+      return '<div class="tornado-row"><div class="tname">' + a.name + '</div>' +
+        '<div class="thalf"><div class="tbar ' + (overBudget ? "neg" : "pos") + '" id="cvBar' + i + '" ' +
+        'title="' + a.name + ': CV ' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '"></div></div>' +
+        '<div class="tval">' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '</div></div>';
+    }).join("");
+    runOnFrame(function(){
+      ranked.forEach(function(a, i){
+        var bar = document.getElementById("cvBar" + i);
+        if (bar) bar.style.width = (Math.abs(a.cv) / maxAbs * 100) + "%";
+      });
+    });
+    return ranked;
+  }
+
+  // ---- 7. Tornado: What-If sensitivity ranking (Cost tab) ----
+  // Fixed ±10% swing per lever -- the standard tornado-diagram convention (vary one input at a
+  // time by a common step, rank by resulting $ swing) -- not this program's own invention.
+  function computeSensitivityScenarios(baseline, fieldVariance, drawdown, currentFinal){
+    var deltas = [
+      { name: "Scope +10%", scope: 10, esc: 0 },
+      { name: "Scope −10%", scope: -10, esc: 0 },
+      { name: "Escalation +10%", scope: 0, esc: 10 },
+      { name: "Escalation −10%", scope: 0, esc: -10 }
+    ];
+    var scenarios = deltas.map(function(d){
+      var total = computeWhatIf(baseline, d.scope, d.esc, fieldVariance, drawdown);
+      return { name: d.name, delta: total - currentFinal };
+    });
+    scenarios.sort(function(a, b){ return Math.abs(b.delta) - Math.abs(a.delta); });
+    return scenarios;
+  }
+  function renderSensitivityTornado(){
+    var el = document.getElementById("sensitivityTornado");
+    if (!el) return null;
+    var scenarios = computeSensitivityScenarios(bridgeResult.baseline, bridgeSteps[3].value, bridgeSteps[4].value, bridgeResult.final);
+    var maxAbs = Math.max.apply(null, scenarios.map(function(s){ return Math.abs(s.delta); })) || 1;
+    el.innerHTML = scenarios.map(function(s, i){
+      var favorable = s.delta < 0;
+      return '<div class="tornado-row"><div class="tname">' + s.name + '</div>' +
+        '<div class="thalf"><div class="tbar ' + (favorable ? "pos" : "neg") + '" id="sensBar' + i + '" ' +
+        'title="' + s.name + ': ' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + ' vs. current forecast"></div></div>' +
+        '<div class="tval">' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + '</div></div>';
+    }).join("");
+    runOnFrame(function(){
+      scenarios.forEach(function(s, i){
+        var bar = document.getElementById("sensBar" + i);
+        if (bar) bar.style.width = (Math.abs(s.delta) / maxAbs * 100) + "%";
+      });
+    });
+    return scenarios;
+  }
+
+  var bulletResult = renderBulletForecast();
+  var gaugeResult = renderDrawdownGauge();
+  var heatmapCells = renderRiskHeatmap();
+  var ladderResult = renderMaturityLadder();
+  var stoplightResult = renderCpiStoplightGrid();
+  var cvTornadoResult = renderCvTornado();
+  var sensitivityResult = renderSensitivityTornado();
 
   /* ================= CONTINGENCY TAB: schedule float as a cost-risk input signal ================= */
   var floatHistory = [ { week:1, floatDays:22 }, { week:2, floatDays:19 }, { week:3, floatDays:14 }, { week:4, floatDays:13 } ];
@@ -1962,7 +2316,13 @@
     exp19: "Variance % = (Forecast − Baseline) ÷ Baseline, computed per region. Ranking by ratio rather than raw dollars means a small region running badly over doesn't hide behind a large region running fine.",
     exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure. A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy.",
     expLLE: "Buffer = Available Schedule Window − Procurement Lead Time, per long-lead package. A negative buffer means that package's own delivery date is already later than the schedule it's meant to feed — it is the critical path, whether or not it's been named that yet. Real data-center transformer lead times running 160+ weeks (up to ~200+ for the largest HV units) are what make this check load-bearing rather than academic.",
-    expEscGov: "Age (days) = today − last re-validated date, compared against a fixed re-validation cadence (here, a 90-day/quarterly cadence). Escalation assumptions are index-driven and market conditions move continuously — treating a re-basing cadence as a hard check, not a calendar reminder someone can forget, is what keeps a cited escalation rate defensible months after it was first pulled."
+    expEscGov: "Age (days) = today − last re-validated date, compared against a fixed re-validation cadence (here, a 90-day/quarterly cadence). Escalation assumptions are index-driven and market conditions move continuously — treating a re-basing cadence as a hard check, not a calendar reminder someone can forget, is what keeps a cited escalation rate defensible months after it was first pulled.",
+    expBullet: "One bar answers what three separate KPI tiles used to require reading in sequence: the forecast bar itself, a baseline reference line, and a Monte Carlo P90 worst-case line, all on one axis. A forecast bar that's already crept past the baseline line — while still sitting comfortably short of the P90 line — is a materially different conversation than one pressing up against P90.",
+    expSensitivity: "Runs the same what-if forecast function used by the sandbox above at a fixed ±10% swing on each lever in isolation, then ranks by absolute $ impact — the standard tornado-diagram technique for showing which input actually moves the total most, before touching the real sliders.",
+    expHeatmap: "Places each priced risk into a probability × impact cell (AACE RP 40R-08's own risk-driver framework), bubble size scaled to expected value. A risk doesn't have to be the biggest dollar figure to deserve the most attention — high-probability/high-impact risks in the top-right are the ones a mitigation plan should reach first.",
+    expStoplight: "One tile per control account, colored by the same CPI formula as the ledger table below (EV/AC, ANSI/EIA-748) — an account run over multiple periods should be escalated well before its cumulative CV becomes unrecoverable, and a stoplight reads faster than a table column at a glance.",
+    expCvTornado: "Ranks control accounts by |CV| (Earned Value − Actual Cost), worst first — the same accounts and the same formula as the ledger table, just re-sorted so the account actually driving the program's overall variance doesn't have to be found by scanning every row.",
+    expMaturity: "AACE RP 17R-97 defines 5 estimate classes from Class 5 (conceptual, least-defined) to Class 1 (as-built, most-defined) — each with a wider or narrower expected accuracy range as design and procurement mature. Knowing which class an estimate sits at is what tells leadership how much variance is actually normal versus a real red flag."
   };
   Object.keys(kpiExplainers).forEach(function(id){
     var el = document.getElementById(id);
@@ -2125,6 +2485,7 @@
     runMonteCarlo(mcSeed, mcVals.min, mcVals.mode, mcVals.max);
     renderWhatIf();
     renderRiskTable();
+    riskCategorySubtotals = renderRiskCategoryBreakdown();
     emvDecision = renderEmv();
     renderConsultantTable();
     renderRegionDetail();
@@ -2133,6 +2494,10 @@
     renderExecBrief();
     triageItems = renderTriage();
     guardsResult = renderGuards();
+    renderBulletForecast();
+    renderRiskHeatmap();
+    renderCvTornado();
+    sensitivityResult = renderSensitivityTornado();
   });
 
   /* ================= LIVE INTEGRITY GATE (GUARDS) -- runs in the browser, not just in verify.cjs =================
@@ -2255,7 +2620,22 @@
     escalationStatus: escalationStatus,         // Proactive-framework build: escalation staleness guard
     computeEscalationAge: computeEscalationAge,
     riskCategorySubtotals: riskCategorySubtotals, // Proactive-framework build: categorized risk exposure
-    computeRiskCategorySubtotals: computeRiskCategorySubtotals
+    computeRiskCategorySubtotals: computeRiskCategorySubtotals,
+    // Director-grade visuals (brainstorm build)
+    bandForValue: bandForValue,
+    bulletResult: bulletResult,
+    gaugeResult: gaugeResult,
+    computeRiskHeatCells: computeRiskHeatCells,
+    heatmapCells: heatmapCells,
+    probBucket: probBucket,
+    impactBucket: impactBucket,
+    AACE_CLASSES: AACE_CLASSES,
+    costEstimateClass: costEstimateClass,
+    ladderResult: ladderResult,
+    stoplightResult: stoplightResult,
+    cvTornadoResult: cvTornadoResult,
+    computeSensitivityScenarios: computeSensitivityScenarios,
+    sensitivityResult: sensitivityResult
   };
 })();
 </script>

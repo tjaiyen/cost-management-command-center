@@ -116,7 +116,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 19, `found all 19 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 25, `found all 25 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
@@ -179,6 +179,47 @@ if (guardsBlockMatch) {
   check(guardsBlockMatch[1].includes("Every region reports the same cost-reporting schema"), "the cross-region schema-consistency guard is registered");
 }
 check(/Substation transformer lead times[\s\S]{0,400}(140|160)/.test(indexHtml), "the LLE section's real-badged citation actually states the 140/160-week transformer figures, not a bare claim");
+
+console.log("--- Director-grade visuals (brainstorm build): structural checks ---");
+// 7 new visuals answering the 20-KPI brainstorm's "director-grade" upgrade list: a bullet chart,
+// a linear banded gauge, a probability x impact heat-map, an AACE maturity ladder, a CPI
+// stoplight grid, and 2 diverging tornado bars -- each reusing an already-computed value, none
+// introducing a new fabricated number.
+["renderBulletForecast", "renderLinearGauge", "renderRiskHeatmap", "renderMaturityLadder",
+ "renderCpiStoplightGrid", "renderCvTornado", "renderSensitivityTornado"].forEach((fn) => {
+  check(indexHtml.includes("function " + fn + "("), `${fn}() is defined`);
+});
+// requestAnimationFrame doesn't exist in verify.cjs's Node vm sandbox -- every one of the 6
+// animated visuals must go through the runOnFrame() guard (established pattern: showTabDrawer's
+// getBoundingClientRect guard, the Monte Carlo histogram's own requestAnimationFrame guard), never
+// call requestAnimationFrame directly, or the headless suite throws before a single assertion runs.
+const bareRafCount = (indexHtml.match(/[^.]requestAnimationFrame\(function/g) || []).length;
+check(bareRafCount === 0, "no new visual calls requestAnimationFrame() directly -- all go through the guarded runOnFrame() helper", `found ${bareRafCount} bare calls`);
+check(indexHtml.includes("function runOnFrame(fn){"), "the shared runOnFrame() guard helper is defined");
+// Every new visual's HTML container actually exists, so a render*() call at load time isn't
+// silently writing into a null element (document.getElementById would return undefined -> the
+// function's own `if (!el) return null` early-return would mask a missing container as "fine").
+["bulletForecast", "drawdownGaugeWrap", "riskHeatmap", "maturityLadder", "cpiStoplightGrid",
+ "cvTornado", "sensitivityTornado"].forEach((id) => {
+  check(indexHtml.includes('id="' + id + '"'), `container #${id} exists in the HTML`);
+});
+// Every new visual gets its own explainer (the "educational" leg of the interactivity contract) --
+// the gauge is the one deliberate exception, sharing the pre-existing exp03 drawdown-ratio formula
+// explainer rather than duplicating it for the same underlying number.
+["expBullet", "expSensitivity", "expHeatmap", "expStoplight", "expCvTornado", "expMaturity"].forEach((id) => {
+  check(indexHtml.includes('data-explainer="' + id + '"'), `${id} explainer button is wired`);
+});
+// A real bug found via mobile Playwright inspection while verifying the visuals above -- a
+// PRE-EXISTING defect, not introduced this build: the 6-column CAPEX Budget Bridge flexbox chart
+// has no min-width floor, so its flex:1 columns' text labels force an uncontained ~100px
+// horizontal page overflow on a 390px mobile viewport (confirmed via document.documentElement.
+// scrollWidth). Fixed the same way 8 tables on this page already handle an oversized child:
+// overflow-x:auto wrapper + a min-width floor so bars stay legible instead of being squished to
+// illegibility. Committed separately from the director-grade-visuals feature work (B28).
+check(/<div style="overflow-x:auto"><div class="bridge" id="bridgeChart"/.test(indexHtml),
+  "the CAPEX Budget Bridge chart is wrapped in an overflow-x:auto container (mobile fix)");
+check(/\.bridge\{[^}]*min-width:540px/.test(indexHtml),
+  "the .bridge chart has a min-width floor so its 6 flex columns can't be squished illegible while scrolling");
 
 console.log("");
 if (failures > 0) {

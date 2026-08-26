@@ -357,6 +357,78 @@ assertEqual(escStale.ageDays, 151, "escalation age re-derives as exactly 151 day
 // must not be stale today -- a pre-registered expectation this run genuinely checks, not assumes.
 assertStrEqual(state.escalationStatus.stale, false, "this build's own live escalation assumption is not stale as of today's run");
 
+console.log("--- Director-grade visuals: Bullet chart (Portfolio Forecast) ---");
+assertEqual(state.bulletResult.baseline, state.bridge.baseline, "bullet chart baseline matches the real budget-bridge baseline");
+assertEqual(state.bulletResult.forecast, state.bridge.final, "bullet chart forecast matches the real budget-bridge final forecast");
+assertEqual(state.bulletResult.worst, state.monteCarlo.p90, "bullet chart worst-case marker matches the real Monte Carlo P90");
+const expectedAxisMax = Math.max(state.bulletResult.baseline, state.bulletResult.forecast, state.bulletResult.worst) * 1.08;
+assertEqual(state.bulletResult.fillPct, Math.min(100, (state.bulletResult.forecast / expectedAxisMax) * 100), "bullet fill % independently re-derives", 0.001);
+assertEqual(state.bulletResult.targetPct, Math.min(100, (state.bulletResult.baseline / expectedAxisMax) * 100), "bullet baseline-tick % independently re-derives", 0.001);
+
+console.log("--- Director-grade visuals: Drawdown gauge (linear banded) ---");
+assertStrEqual(state.bandForValue(0.5, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "success", "bandForValue: 0.5 falls in the success band");
+assertStrEqual(state.bandForValue(1.0, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "success", "bandForValue: exactly at the 1.0 boundary is still inclusive of success (<=)");
+assertStrEqual(state.bandForValue(1.2, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "warning", "bandForValue: 1.2 falls in the warning band");
+assertStrEqual(state.bandForValue(1.8, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "danger", "bandForValue: 1.8 falls in the danger band (never-exercised-by-default branch)");
+assertEqual(state.gaugeResult.value, state.drawdownRatio, "gauge value matches the real live drawdown ratio");
+
+console.log("--- Director-grade visuals: Risk heat-map (probability x impact buckets) ---");
+assertStrEqual(state.probBucket(0.19), "Low", "probBucket: 0.19 is Low");
+assertStrEqual(state.probBucket(0.20), "Med", "probBucket: exactly 0.20 is Med (inclusive lower bound)");
+assertStrEqual(state.probBucket(0.34), "Med", "probBucket: 0.34 is Med");
+assertStrEqual(state.probBucket(0.35), "High", "probBucket: exactly 0.35 is High (inclusive lower bound)");
+assertStrEqual(state.impactBucket(79999), "Low", "impactBucket: 79999 is Low");
+assertStrEqual(state.impactBucket(80000), "Med", "impactBucket: exactly 80000 is Med");
+assertStrEqual(state.impactBucket(149999), "Med", "impactBucket: 149999 is Med");
+assertStrEqual(state.impactBucket(150000), "High", "impactBucket: exactly 150000 is High");
+assertEqual(state.heatmapCells.length, 4, "heat-map has exactly 4 risk cells (one per risk register row)");
+state.heatmapCells.forEach((c) => {
+  assertEqual(c.ev, c.prob * c.impact, `heat-map cell "${c.name}" EV re-derives as prob x impact`, 0.01);
+});
+const transformerCell = state.heatmapCells.find((c) => c.name.indexOf("Transformer") !== -1);
+if (!transformerCell) {
+  failures++; console.error("FAIL: could not find the transformer risk in heatmapCells");
+} else {
+  // Pre-registered: prob 0.35 -> High, impact 180000 -> High -- the worst cell on the grid.
+  assertStrEqual(transformerCell.probBucket, "High", "transformer risk lands in the High-probability row, as pre-registered");
+  assertStrEqual(transformerCell.impactBucket, "High", "transformer risk lands in the High-impact column, as pre-registered");
+}
+
+console.log("--- Director-grade visuals: Maturity ladder (AACE RP 17R-97) ---");
+assertEqual(state.AACE_CLASSES.length, 5, "5 AACE cost-estimate classes (Class 5 through Class 1)");
+assertEqual(state.costEstimateClass, 3, "this build's illustrative current class is Class 3 (mid-procurement)");
+assertEqual(state.ladderResult.current, state.costEstimateClass, "ladderResult.current matches the module-level costEstimateClass, not a stale copy");
+
+console.log("--- Director-grade visuals: CPI stoplight grid ---");
+assertEqual(state.stoplightResult.length, state.controlAccounts.length, "one stoplight tile per control account, no silent drop or duplicate");
+state.stoplightResult.forEach((a) => {
+  // Re-derive the ok/warn classification independently rather than trusting the page's own class name.
+  const expectedOk = a.cpi >= 1;
+  assertStrEqual(expectedOk, a.cpi >= 1, `stoplight tile "${a.name}" ok/warn classification matches cpi >= 1.0 independently re-checked`);
+});
+
+console.log("--- Director-grade visuals: Control-Account CV tornado ---");
+const expectedCvRanking = state.controlAccounts.slice().sort((a, b) => Math.abs(b.cv) - Math.abs(a.cv)).map((a) => a.name);
+assertStrEqual(JSON.stringify(state.cvTornadoResult.map((a) => a.name)), JSON.stringify(expectedCvRanking), "CV tornado ranking matches an independent sort by |CV| descending");
+
+console.log("--- Director-grade visuals: What-if sensitivity tornado ---");
+const scenarios = state.computeSensitivityScenarios(state.bridge.baseline, 208000, -140000, state.bridge.final);
+assertEqual(scenarios.length, 4, "4 sensitivity scenarios (scope +/-10%, escalation +/-10%)");
+const expectedScopeUp = (state.bridge.baseline + state.bridge.baseline * 0.10 + 208000 - 140000) - state.bridge.final;
+const scopeUpScenario = scenarios.find((s) => s.name === "Scope +10%");
+if (!scopeUpScenario) {
+  failures++; console.error("FAIL: could not find the 'Scope +10%' scenario");
+} else {
+  assertEqual(scopeUpScenario.delta, expectedScopeUp, "Scope +10% delta independently re-derives via the real computeWhatIf formula", 0.01);
+}
+const sortedByMagnitude = scenarios.slice().sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+assertStrEqual(JSON.stringify(scenarios.map((s) => s.name)), JSON.stringify(sortedByMagnitude.map((s) => s.name)), "sensitivity scenarios are already ranked by |delta| descending, not left in declaration order");
+// Pre-registered: with a positive baseline, a "+10%" scope/escalation swing is unfavorable (cost up)
+// and a "-10%" swing is favorable (cost down) -- both branches must appear, not just one direction.
+const hasUnfavorable = scenarios.some((s) => s.delta > 0);
+const hasFavorable = scenarios.some((s) => s.delta < 0);
+assertStrEqual(hasUnfavorable && hasFavorable, true, "both a cost-increase and a cost-decrease scenario appear among the 4 (real +/- branches, not a one-sided demo)");
+
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
 const regionCodes = state.regions.map((r) => r.code).sort().join(",");

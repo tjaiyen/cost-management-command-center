@@ -16,7 +16,9 @@ pipeline is the one piece with a real dependency — see Verification below.)
 
 - **Overview** — a rolled-up KPI board reading live off the other tabs' own computed state (not a
   separately-typed summary), plus a "Signal / Model / Govern" framing, a jump pill on every KPI
-  tile straight to its source tab, and the entry point for the guided 20-stop Tour.
+  tile straight to its source tab, a **forecast bullet chart** (baseline vs. current forecast vs.
+  Monte Carlo P90 worst-case on one animated bar, click-through to Cost), and the entry point for
+  the guided 20-stop Tour.
 - **Executive Command** — a "90 seconds" board-status brief, reading live off Overview/Cost/
   Contingency/Operating Framework state. Has its own print stylesheet (⌘/Ctrl+P) that keeps only
   this brief on the printed page.
@@ -25,18 +27,29 @@ pipeline is the one piece with a real dependency — see Verification below.)
   data-center cost-driver benchmark card (real published cost-split percentages, per-MW premiums,
   and 5 real 2025 market $/W benchmarks) with an escalation-assumption governance card (last
   re-validated date vs. a fixed re-validation cadence, live-computed staleness), WBS cost
-  allocation, a **Long-Lead Equipment Schedule-Risk Tracker** (procurement lead time vs. available
-  schedule window per package, flagging a negative buffer as at-risk — the real, cited figure being
-  data-center substation transformer lead times running 160+ weeks in 2026, up from ~140 in 2023),
-  and a control-account drill-down ledger (BAC/EV/AC/CV/CPI per account).
-- **Contingency & Risk** — the contingency-drawdown early-warning slider, a real, re-runnable
-  triangular-distribution Monte Carlo simulation (**AACE International RP 57R-09**) with a live
-  Beta-PERT tri-point playground (drag optimistic/most-likely/pessimistic, min≤mode≤max enforced)
-  and a reliability note tying the real $208K variance to the simulated band, a priced risk
-  register (**AACE RP 40R-08**) — categorized into Execution / Escalation / Regulatory & Community
-  buckets, each tracked and re-priced separately rather than blended into one contingency number —
-  schedule float read as a cost-risk *input signal* (not schedule ownership), and an EMV-based
-  change-order settlement decision (settle vs. dispute).
+  allocation, an **AACE RP 17R-97 estimate-maturity ladder** (Class 5→1, click/hover any class for
+  its definition), a **Long-Lead Equipment Schedule-Risk Tracker** (procurement lead time vs.
+  available schedule window per package, flagging a negative buffer as at-risk — the real, cited
+  figure being data-center substation transformer lead times running 160+ weeks in 2026, up from
+  ~140 in 2023), a control-account drill-down ledger (BAC/EV/AC/CV/CPI per account) paired with a
+  **CPI stoplight grid** and a **CV tornado chart** ranking accounts by how far off-plan they are,
+  and a **"which lever moves the total most" sensitivity tornado** (±10% scope/escalation swing,
+  ranked by real $ impact via the same what-if forecast function as the sandbox above). Also has a
+  6-column CAPEX budget-bridge waterfall with a live what-if forecast sandbox (scope% / escalation%
+  sliders, holding the real $208K driver and real contingency drawdown constant), and a data-center
+  cost-driver benchmark card (real published cost-split percentages, per-MW premiums, and 5 real
+  2025 market $/W benchmarks) with an escalation-assumption governance card (last re-validated date
+  vs. a fixed re-validation cadence, live-computed staleness).
+- **Contingency & Risk** — the contingency-drawdown early-warning slider (now paired with a **live
+  banded gauge** that tracks the sliders in real time), a real, re-runnable triangular-distribution
+  Monte Carlo simulation (**AACE International RP 57R-09**) with a live Beta-PERT tri-point
+  playground (drag optimistic/most-likely/pessimistic, min≤mode≤max enforced) and a reliability
+  note tying the real $208K variance to the simulated band, a **probability × impact risk
+  heat-map** (click any bubble for its detail) feeding a priced risk register (**AACE RP 40R-08**)
+  — categorized into Execution / Escalation / Regulatory & Community buckets, each tracked and
+  re-priced separately rather than blended into one contingency number — schedule float read as a
+  cost-risk *input signal* (not schedule ownership), and an EMV-based change-order settlement
+  decision (settle vs. dispute).
 - **Vendor & Governance** — a consultant deliverable scorecard, a data-quality reconciliation
   health indicator, and a crew Labor Productivity Factor table by trade.
 - **Portfolio** — a multi-region cost rollup (North America / Asia-Pacific / Europe / Latin
@@ -151,9 +164,14 @@ legible, marked `illustrative` throughout.
    tab-rail status pill's real visible/hidden/text/class state, and (added with the proactive
    market-challenges build) independently re-deriving the Long-Lead Equipment buffer/at-risk math,
    the categorized risk-exposure subtotals, and the escalation-staleness age calculation against
-   injected fixture dates rather than the real clock.
-   **152 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 152) as of the last run. Exists because this repo was
+   injected fixture dates rather than the real clock, and (added with the director-grade-visuals
+   build) independently re-deriving the bullet chart's fill/target/worst-case percentages, the
+   gauge's band classification at both boundary and never-exercised-by-default values, the risk
+   heat-map's probability/impact bucket boundaries, the CPI stoplight and CV tornado's
+   classification/ranking against a fresh independent sort, and the sensitivity tornado's ±10%
+   scenario deltas re-derived via the real `computeWhatIf()` formula.
+   **190 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 190) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -168,8 +186,16 @@ legible, marked `illustrative` throughout.
    nobody can see, that TAB_INFO's 11 entries exactly match the 11 real tabs, that every
    anchor-rail link resolves to a real section id, and (added with the proactive market-challenges
    build) that the risk register's 4 category buckets, the LLE tracker's single real-badged row,
-   and both new GUARDS entries are actually present in the source. **45 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 45) as of the last
+   and both new GUARDS entries are actually present in the source. Also (added with the
+   director-grade-visuals build) that all 7 new visuals' render functions and HTML containers
+   exist, that every animated one goes through the shared `runOnFrame()` guard rather than calling
+   `requestAnimationFrame()` directly (it doesn't exist in verify.cjs's Node vm sandbox — a bare
+   call would throw before a single assertion ran), and a regression guard for a real mobile-layout
+   bug this build's own Playwright inspection caught — a pre-existing, uncontained ~100px
+   horizontal overflow in the 6-column CAPEX Budget Bridge chart on a 390px viewport, fixed with
+   the same overflow-x:auto + min-width floor pattern already used for 8 tables on this page.
+   **69 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 69) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -202,7 +228,14 @@ Added a proactive-solutions layer 2026-08-26, grounded in a vault market-challen
 Ada's own public data-center cost pressures: a Long-Lead Equipment Schedule-Risk Tracker (real
 transformer lead-time citation), risk-register category buckets (Execution / Escalation /
 Regulatory & Community), and 2 new Live Integrity Gate checks (escalation-assumption staleness,
-cross-region schema consistency).
+cross-region schema consistency). Added 7 director-grade visuals 2026-08-26 — a bullet chart, a
+live banded gauge, a probability×impact heat-map, an AACE maturity ladder, a CPI stoplight grid,
+and 2 diverging tornado charts — from a brainstorm of director-grade upgrades to the existing
+20-KPI catalog; each animates in, exposes its exact figure on hover/focus, and drills further on
+click, verified via real Playwright (light/dark/mobile, all 7 interactions, zero console errors)
+before shipping. Caught and fixed one real bug along the way (a bullet-chart CSS-scoping miss) and one pre-existing
+mobile bug unrelated to this build (the CAPEX Budget Bridge chart's uncontained overflow on narrow
+viewports, called out as its own item in the commit rather than folded in silently).
 
 ## Design lineage
 
