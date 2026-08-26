@@ -802,6 +802,12 @@ const aaceOnly = state.filterGlossaryItems(state.allGlossaryItems, "", "aace");
 const allAace = aaceOnly.every((r) => r.category === "aace");
 assertStrEqual(allAace, true, "category filter 'aace' returns only aace-category rows");
 assertEqual(aaceOnly.length, state.allGlossaryItems.filter((r) => r.category === "aace").length, "category filter count matches an independent count of aace-category rows");
+// New "Industry Vocabulary" category (AOR/EOR, LLE, QS) added per a JD-gap analysis -- confirm it's
+// real, filterable content, not just an unused category label with zero rows.
+const vocabOnly = state.filterGlossaryItems(state.allGlossaryItems, "", "vocab");
+assertEqual(vocabOnly.length, 3, "the new 'vocab' category has exactly 3 rows (AOR/EOR, LLE, Quantity Surveying)");
+const aorSearch = state.filterGlossaryItems(state.allGlossaryItems, "AOR", "all");
+assertStrEqual(aorSearch.some((r) => r.term.indexOf("AOR") !== -1), true, "searching 'AOR' actually finds the AOR/EOR glossary term");
 // A query that matches nothing must return an empty array, not throw or return everything.
 const noMatch = state.filterGlossaryItems(state.allGlossaryItems, "zzz-no-such-term-zzz", "all");
 assertEqual(noMatch.length, 0, "a nonsense query correctly returns zero results, not a fallback to everything");

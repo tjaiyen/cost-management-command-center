@@ -74,8 +74,11 @@ pipeline is the one piece with a real dependency — see Verification below.)
 - **Reference** — the 20-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
   badge → citation, one row per built visual across all 11 tabs), plus a searchable,
   category-filterable glossary of every AACE Recommended Practice, every real data-center cost
-  figure, and every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV) used
-  anywhere in the build, each with its own citation.
+  figure, every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV), and (added
+  from a real JD-gap analysis, 2026-08-26) an **Industry Vocabulary** category — AOR/EOR, LLE, and
+  Quantity Surveying, the real construction/data-center terms a job-posting comparison found
+  missing from the dashboard's own vocabulary — used anywhere in the build, each with its own
+  citation.
 
 ## Real vs. illustrative
 
@@ -180,9 +183,11 @@ legible, marked `illustrative` throughout.
    tolerance-band classification (including the one row that fails it), and the LPF diverging bar's
    ranking, and (added by a `/stress-test` audit) the gauge's needle-position math, Gate 4's
    never-exercised "cleared" band, and the EMV two-bar's never-exercised "dispute wins" layout
-   (extracted into its own pure `computeTwoBarLayout()` specifically so that branch is testable).
-   **225 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 225) as of the last run. Exists because this repo was
+   (extracted into its own pure `computeTwoBarLayout()` specifically so that branch is testable),
+   and (added with the JD-gap glossary category) that the new "Industry Vocabulary" category is
+   real, filterable content — 3 rows, a search for "AOR" actually finds the AOR/EOR term.
+   **227 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 227) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -216,9 +221,13 @@ legible, marked `illustrative` throughout.
    tiles relying on color alone with no ✓/⚠ marker, the maturity ladder's badge missing its
    real-vs-illustrative src-note, the "compliance sweep" GUARDS check's title overclaiming its own
    scope (broadened from 4 hardcoded containers to the real ~35), and the escalation-staleness
-   date math mixing a UTC-parsed date string with a local-time `new Date()` "now".
-   **117 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 117) as of the last
+   date math mixing a UTC-parsed date string with a local-time `new Date()` "now". Also (added
+   with a real JD-gap analysis against the vault's own AdaInfra_JD_InsightMap doc, 2026-08-26) that
+   `ada-fit.html` has all 22 coverage rows its own lede claims (a real audit found 9 missing), and a
+   general structural guard that every glossary category has a matching render target — the exact
+   defect class caught mid-build when the new "Industry Vocabulary" category was added without one.
+   **121 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 121) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -236,7 +245,11 @@ legible, marked `illustrative` throughout.
 [`ada-fit.html`](ada-fit.html) is a requirement-by-requirement coverage brief against a specific
 real job posting (Ada Infrastructure's Senior Associate, Cost Management — req R7887) — including
 the requirements this background does *not* clear. `noindex,nofollow` — not meant to be discovered
-by search engines, just linked directly when relevant.
+by search engines, just linked directly when relevant. **Audited against the vault's own JD Insight
+Map 2026-08-26** — the brief's own lede claims "requirement-by-requirement," but it was missing
+coverage rows for 9 of the JD's 21 Responsibilities/Requirements lines; all 9 added (13/13
+Responsibilities, 9/9 Requirements now have their own row), each sourced from the InsightMap's own
+already-written evidence, not a new claim.
 
 ## Status
 
@@ -267,6 +280,15 @@ diverging bar, an all-4-regions ranked bar, and a Gate 4 radial-style gauge (reu
 gauge's own primitive). Verified with real Playwright across light/dark/mobile/currency-toggle —
 zero new bugs found this pass, unlike Phase 1's two. Two shared reusable primitives (a small SVG
 line chart, a horizontal ranked bar) came out of this pass and now back 6 of the 12 visuals.
+
+Ran a real JD-gap analysis 2026-08-26 against the vault's own AdaInfra_JD_InsightMap_2026-08-20.md:
+added an "Industry Vocabulary" glossary category (AOR/EOR, LLE, Quantity Surveying — real
+construction/data-center terms this dashboard's own vocabulary was missing), and audited
+`ada-fit.html` against every JD line the InsightMap doc had already analyzed — found and filled 9
+missing coverage rows (its own lede claims "requirement-by-requirement"; it wasn't, until this
+pass). Caught and fixed one real bug introduced along the way: adding the glossary category without
+its own render target left it correctly counted/filterable but invisibly unrendered — a general
+structural guard now catches this defect class for any future category, not just this one.
 
 ## Design lineage
 

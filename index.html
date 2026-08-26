@@ -1087,6 +1087,12 @@
         <dl id="standardsGlossary"></dl>
       </div>
     </section>
+    <section>
+      <h2>Industry vocabulary (JD-gap analysis, 2026-08-26)</h2>
+      <div class="card">
+        <dl id="vocabGlossary"></dl>
+      </div>
+    </section>
   </div>
 
   <footer class="foot">
@@ -2672,6 +2678,11 @@
     { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
     { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
   ];
+  var industryVocab = [
+    { term:"AOR / EOR (Architect / Engineer of Record)", def:"The design professional(s) of legal record on a project — the party whose stamped drawings/specs the cost-management function budgets and tracks WBS commitments against, distinct from delivery-side GC/subcontractor roles. Real, standard AEC terminology; called out here explicitly rather than assumed familiar." },
+    { term:"LLE (Long-Lead Equipment)", def:"Procurement items (transformers, switchgear, generators, chillers) whose lead time is long enough to become the schedule-driving constraint on its own, independent of construction progress. See the Cost tab's own Long-Lead Equipment Schedule-Risk Tracker for a live, real-cited example (transformer lead times running 160+ weeks in 2026)." },
+    { term:"Quantity Surveying (QS)", def:"The cost-management discipline of measuring and pricing construction work directly from drawings/specifications — historically a UK/Commonwealth-origin credentialed profession (RICS-chartered), increasingly used as a title in US infrastructure and data-center cost-consultancy circles. Cited here as real professional vocabulary; construction cost/estimating experience is adjacent to this discipline, not a claim of QS chartership." }
+  ];
   /* ---------- Formula & methodology explainers for all 20 KPIs (extends the one AACE RP 57R-09
      explainer that existed before this build to 17 slots covering all 20 -- 3 pairs share one
      heading/section, so 17 buttons, 20 KPIs). Text lives in one object; the buttons/divs are
@@ -2786,12 +2797,14 @@
   /* ---------- Glossary: unified search + category filter across all 3 term lists ---------- */
   var allGlossaryItems = aaceTerms.map(function(t){ return { term:t.term, def:t.def, category:"aace" }; })
     .concat(realFigures.map(function(t){ return { term:t.term, def:t.def, category:"figures" }; }))
-    .concat(otherStandards.map(function(t){ return { term:t.term, def:t.def, category:"standards" }; }));
+    .concat(otherStandards.map(function(t){ return { term:t.term, def:t.def, category:"standards" }; }))
+    .concat(industryVocab.map(function(t){ return { term:t.term, def:t.def, category:"vocab" }; }));
   var glossaryCategories = [
     { key:"all", label:"All" },
     { key:"aace", label:"AACE Practices" },
     { key:"figures", label:"Cost Figures" },
-    { key:"standards", label:"Other Standards" }
+    { key:"standards", label:"Other Standards" },
+    { key:"vocab", label:"Industry Vocabulary" }
   ];
   var activeGlossaryCategory = "all";
   // Pure function: all glossary rows + a query + a category in, the matching rows out --
@@ -2831,6 +2844,7 @@
     renderCategory("aaceGlossary", "aace");
     renderCategory("figureGlossary", "figures");
     renderCategory("standardsGlossary", "standards");
+    renderCategory("vocabGlossary", "vocab");
     var countEl = document.getElementById("glossaryCount");
     if (countEl) countEl.textContent = visible.length + " of " + allGlossaryItems.length + " terms shown.";
     return visible;

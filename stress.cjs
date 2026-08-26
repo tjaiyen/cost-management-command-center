@@ -287,6 +287,36 @@ check(indexHtml.includes("GATE4_GAUGE_BANDS: GATE4_GAUGE_BANDS"), "GATE4_GAUGE_B
 // visitor's timezone, not just a theoretical concern.
 check(indexHtml.includes('new Date(lastValidatedStr + "T00:00:00")'), "escalation-age math parses the last-validated date in local time, matching new Date()'s own local-time \"now\"");
 
+console.log("--- ada-fit.html: coverage-brief completeness (JD-gap analysis, 2026-08-26) ---");
+// ada-fit.html's own lede claims "requirement-by-requirement coverage" -- a real audit against the
+// vault's AdaInfra_JD_InsightMap_2026-08-20.md found it was missing rows for 9 of the JD's 21
+// Responsibilities/Requirements lines (6 of 13, 3 of 8). This file has no JS and no verify.cjs
+// coverage, so this is a structural row-count floor, not a reconciliation check.
+const adaFitHtml = fs.readFileSync(path.join(__dirname, "ada-fit.html"), "utf8");
+const adaFitRows = (adaFitHtml.match(/<tr><td class="req">/g) || []).length;
+check(adaFitRows === 22, "ada-fit.html has all 22 coverage rows (13 Responsibilities + 9 Requirements, matching every JD line in the InsightMap doc)", `found ${adaFitRows}`);
+
+console.log("--- Glossary: every category has a real render target, not just a filter/count entry ---");
+// Real bug found and fixed in this same pass: adding a 4th "vocab" glossaryCategories entry without
+// a matching <dl> container + renderCategory() call left it correctly counted/filterable but
+// invisibly unrendered -- the category button existed, its items never appeared. Generalized so
+// ANY future category addition trips this the moment it's added, not after another live bug.
+const catKeysMatch = indexHtml.match(/var glossaryCategories = \[([\s\S]*?)\];/);
+check(!!catKeysMatch, "found the glossaryCategories array to check against");
+if (catKeysMatch) {
+  const catKeys = [...catKeysMatch[1].matchAll(/key:"(\w+)"/g)].map((m) => m[1]).filter((k) => k !== "all");
+  // The real invariant: a renderCategory(containerId, categoryKey) call whose SECOND argument is
+  // this key -- not an assumption about how the container id is spelled (a pre-existing category
+  // is "figures" rendering into id="figureGlossary", singular; naming isn't 1:1 and that's fine).
+  const renderCalls = [...indexHtml.matchAll(/renderCategory\("(\w+)",\s*"(\w+)"\)/g)];
+  const renderedKeys = renderCalls.map((m) => m[2]);
+  const containerIds = renderCalls.map((m) => m[1]);
+  const missingRenderCall = catKeys.filter((k) => !renderedKeys.includes(k));
+  check(missingRenderCall.length === 0, "every non-'all' glossary category has a matching renderCategory() call", JSON.stringify(missingRenderCall));
+  const missingContainer = containerIds.filter((id) => !indexHtml.includes(`id="${id}"`));
+  check(missingContainer.length === 0, "every renderCategory() target id has a matching <dl> container in the HTML", JSON.stringify(missingContainer));
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");
