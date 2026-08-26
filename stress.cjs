@@ -127,6 +127,19 @@ if (explainerObjMatch) {
   failures++; console.error("FAIL: could not find the kpiExplainers object in index.html to check against");
 }
 
+console.log("--- TAB_INFO (hover-preview drawer content) covers exactly the real 11 tabs ---");
+const tabInfoMatch = indexHtml.match(/var TAB_INFO = \{([\s\S]*?)\n  \};/);
+if (tabInfoMatch) {
+  const tabInfoKeys = [...tabInfoMatch[1].matchAll(/^\s*(\w+):\s*\{/gm)].map((m) => m[1]);
+  const realTabs = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"];
+  const missingFromInfo = realTabs.filter((t) => !tabInfoKeys.includes(t));
+  const extraInInfo = tabInfoKeys.filter((t) => !realTabs.includes(t));
+  check(missingFromInfo.length === 0, "every real tab has a TAB_INFO entry (no silent tab with an empty hover preview)", JSON.stringify(missingFromInfo));
+  check(extraInInfo.length === 0, "TAB_INFO has no stale/typo'd entry for a tab that no longer exists", JSON.stringify(extraInInfo));
+} else {
+  failures++; console.error("FAIL: could not find the TAB_INFO object in index.html to check against");
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

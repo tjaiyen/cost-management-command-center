@@ -208,6 +208,17 @@
   kbd{background:rgb(var(--c-bg-card2)); border:1px solid rgb(var(--c-text-secondary)/0.3);
     border-radius:5px; padding:2px 6px; font:600 11px ui-monospace,monospace}
 
+  /* hover/focus-preview mini-drawer on tab buttons -- one shared, repositioned element rather
+     than 11 always-in-DOM tooltips */
+  .tab-drawer{display:none; position:fixed; z-index:60; max-width:260px; background:rgb(var(--c-bg-card));
+    border:1px solid rgb(var(--c-accent)/0.4); border-radius:10px; padding:10px 12px; font-size:12px;
+    box-shadow:0 6px 20px rgb(0 0 0/0.25); pointer-events:none}
+  .tab-drawer.open{display:block}
+  .tab-drawer b{display:block; font-size:12.5px; margin-bottom:4px}
+  .tab-drawer p{margin:0 0 4px; color:rgb(var(--c-text-secondary))}
+  .tab-drawer p:last-child{margin-bottom:0; font-style:italic}
+  @media (max-width:720px){ .tab-drawer{display:none !important} }
+
   /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
      which tab is active on screen when Print is invoked. #id beats .class specificity so this
      wins over the .tabpanel{display:none} rule right above it. */
@@ -795,6 +806,8 @@
   </footer>
 </div>
 
+<div class="tab-drawer" id="tabDrawer" role="tooltip"></div>
+
 <div class="shortcuts-overlay" id="shortcutsOverlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" hidden>
   <div class="shortcuts-card">
     <h3 style="margin-top:0">Keyboard shortcuts</h3>
@@ -868,6 +881,47 @@
       if (e.key === "ArrowLeft") { e.preventDefault(); var p=(idx-1+tabButtons.length)%tabButtons.length; tabButtons[p].focus(); tabButtons[p].click(); }
     });
   });
+
+  /* ---------- hover/focus-preview mini-drawer on every tab button ---------- */
+  // One small hand-authored map (11 tabs, not duplicated per-KPI) -- labels are read from each
+  // button's own textContent at show-time, not re-typed here, so they can't drift out of sync.
+  var TAB_INFO = {
+    overview: { q:"Where do I start, and what does this program look like right now?", note:"4 KPIs read live off the other tabs, plus the guided Tour entry point." },
+    exec: { q:"For someone who has 90 seconds and needs to sign something, what does this program need?", note:"A board-status brief with its own print stylesheet." },
+    cost: { q:"What does this program actually cost, and where does the money go?", note:"Budget bridge, benchmarks, WBS, control-account ledger, what-if sandbox." },
+    contingency: { q:"Is the reserve keeping pace with real risk, or running out?", note:"Monte Carlo, drawdown ratio, priced risk register, float signal, EMV settlement." },
+    governance: { q:"Can leadership trust the numbers, and is the crew performing?", note:"Consultant scorecard, data-quality health, crew productivity." },
+    portfolio: { q:"How is this program doing across its own regions?", note:"Multi-region cost rollup." },
+    framework: { q:"What governance does this program actually run on?", note:"A genuinely computed Gate 4, plus the illustrative stage-gate track." },
+    actions: { q:"What's open, who owns it, and what's gone stale?", note:"A commercial action-item register with real staleness logic." },
+    triage: { q:"Out of everything on this dashboard, what actually needs a human right now?", note:"A cross-tab digest re-checking every alert already computed elsewhere." },
+    data: { q:"How does scattered data actually become these numbers?", note:"Pipeline architecture, plus a free local DuckDB parity layer." },
+    reference: { q:"What does this term mean, and which visual answers it?", note:"The 20-KPI catalog, plus a searchable glossary of every citation used." }
+  };
+  var tabDrawerEl = document.getElementById("tabDrawer");
+  function showTabDrawer(btn){
+    var info = TAB_INFO[btn.dataset.tab];
+    if (!info || !tabDrawerEl) return;
+    tabDrawerEl.innerHTML = "<b>" + btn.textContent + "</b><p>" + info.q + "</p><p>" + info.note + "</p>";
+    // getBoundingClientRect doesn't exist in this repo's Node-based verify.cjs sandbox (no layout
+    // engine there) -- guarded the same way requestAnimationFrame is guarded elsewhere on this
+    // page, so content-generation is still testable headlessly even though positioning isn't.
+    if (typeof btn.getBoundingClientRect === "function") {
+      var rect = btn.getBoundingClientRect();
+      tabDrawerEl.style.left = Math.round(rect.left) + "px";
+      tabDrawerEl.style.top = Math.round(rect.bottom + 8) + "px";
+    }
+    tabDrawerEl.classList.add("open");
+  }
+  function hideTabDrawer(){ if (tabDrawerEl) tabDrawerEl.classList.remove("open"); }
+  var tabDrawerTimer = null;
+  tabButtons.forEach(function(btn){
+    btn.addEventListener("mouseenter", function(){ clearTimeout(tabDrawerTimer); tabDrawerTimer = setTimeout(function(){ showTabDrawer(btn); }, 350); });
+    btn.addEventListener("mouseleave", function(){ clearTimeout(tabDrawerTimer); hideTabDrawer(); });
+    btn.addEventListener("focus", function(){ showTabDrawer(btn); });
+    btn.addEventListener("blur", hideTabDrawer);
+  });
+
   function activateTab(name){
     tabButtons.forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"); });
     document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });

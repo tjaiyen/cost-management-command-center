@@ -599,6 +599,23 @@ assertStrEqual(lastTabButtonStubs[2].dataset.tab, "cost", "the 3rd tab in real D
 assertStrEqual(lastTabButtonStubs[2].getAttribute("aria-selected"), "true", "pressing '3' (not typing) jumps straight to the 3rd tab (Cost)");
 overviewBtn.fire("click"); // reset back to Overview for later assertions
 
+console.log("--- Tab hover/focus-preview mini-drawer (actually firing focus/blur) ---");
+const costTabBtnForDrawer = lastTabButtonStubs.find((b) => b.dataset.tab === "cost");
+if (!costTabBtnForDrawer) {
+  failures++; console.error("FAIL: could not find the Cost tab button to test the drawer against");
+} else {
+  costTabBtnForDrawer.fire("focus");
+  const drawerEl = elementsById["tabDrawer"];
+  assertStrEqual(drawerEl.classList.contains("open"), true, "focusing a tab button opens its preview drawer");
+  if (drawerEl.innerHTML.indexOf("Budget bridge") === -1) {
+    failures++; console.error("FAIL: drawer content doesn't mention the Cost tab's real note text -- wrong tab's info shown?");
+  } else {
+    console.log("pass: drawer shows the focused tab's OWN real note text (Cost), not a different tab's");
+  }
+  costTabBtnForDrawer.fire("blur");
+  assertStrEqual(drawerEl.classList.contains("open"), false, "blurring the tab button closes the preview drawer");
+}
+
 console.log("--- Guided Tour (actually firing Start/Next/Prev/Exit, walking the real 20-KPI catalog) ---");
 const startTourBtnEl = elementsById["startTourBtn"];
 const tourNextBtnEl = elementsById["tourNextBtn"];
