@@ -127,9 +127,16 @@ const documentStub = {
       // All 11 real dataset.tab values the page defines (this list went stale at 7 during the
       // Phase 2/3 tab additions -- a real gap: it meant activateTab()/keyboard nav for exec,
       // framework, actions, and triage were never test-covered even by name. Fixed.)
+      // Real visible labels too (a prior version left textContent unset on these stubs -- a real
+      // gap: any test asserting a tab button's OWN displayed label, like the return-breadcrumb
+      // test below, silently got an empty string instead of a real mismatch or a real match).
+      var TAB_LABELS = { overview:"Overview", exec:"Executive Command", cost:"Cost", contingency:"Contingency & Risk",
+        governance:"Vendor & Governance", portfolio:"Portfolio", framework:"Operating Framework",
+        actions:"Actions", triage:"Attention & Triage", data:"Data Strategy", reference:"Reference" };
       lastTabButtonStubs = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"].map((name) => {
         const b = withProperties(makeElementStub());
         b.dataset = { tab: name };
+        b.textContent = TAB_LABELS[name];
         elementsById["panel-" + name] = elementsById["panel-" + name] || withProperties(makeElementStub());
         return b;
       });
@@ -188,6 +195,10 @@ elementsById["glossarySearch"] = glossarySearchStub;
 // otherwise shortcutsOpen() would read `hidden` as undefined (falsy) and report "open" at load.
 const shortcutsOverlayStub = makeElementStub(); shortcutsOverlayStub.hidden = true;
 elementsById["shortcutsOverlay"] = shortcutsOverlayStub;
+
+// Same reasoning: the real HTML declares jumpBreadcrumb with the `hidden` boolean attribute.
+const jumpBreadcrumbStub = makeElementStub(); jumpBreadcrumbStub.hidden = true;
+elementsById["jumpBreadcrumb"] = jumpBreadcrumbStub;
 
 // Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
 // The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
@@ -650,6 +661,28 @@ if (!startTourBtnEl || !tourNextBtnEl || !tourPrevBtnEl || !tourExitBtnEl) {
   // Reset to Overview so later assertions' implicit "Overview is active" assumption still holds.
   overviewBtn.fire("click");
 }
+
+console.log("--- Return-to-origin breadcrumb (actually firing a real cross-tab jump click) ---");
+const fakeJumpBtn = withProperties(makeElementStub());
+fakeJumpBtn.classList.add("triage-jump");
+fakeJumpBtn.dataset = { jump: "cost" };
+documentStub.fire("click", { target: fakeJumpBtn }); // currentTab is "overview" here -> jumps to "cost"
+assertStrEqual(elementsById["jumpBreadcrumb"].hidden, false, "jumping from Overview to Cost shows the return breadcrumb");
+assertStrEqual(elementsById["jumpBreadcrumbLabel"].textContent, "Overview", "breadcrumb label names the real origin tab (Overview), not a placeholder");
+elementsById["jumpBreadcrumbReturn"].fire("click");
+assertStrEqual(elementsById["panel-overview"].classList.contains("active"), true, "clicking the breadcrumb's Return button actually re-activates the real origin tab");
+assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "...and hides the breadcrumb again");
+
+overviewBtn.fire("click"); // back to Overview (an ordinary click) before jumping again
+documentStub.fire("click", { target: fakeJumpBtn }); // jump overview -> cost again
+elementsById["jumpBreadcrumbClose"].fire("click"); // dismiss via the X this time, not Return
+assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "the dismiss (X) button also hides the breadcrumb");
+
+overviewBtn.fire("click"); // back to Overview again before the third jump
+documentStub.fire("click", { target: fakeJumpBtn }); // jump overview -> cost a third time
+assertStrEqual(elementsById["jumpBreadcrumb"].hidden, false, "sanity check: breadcrumb is genuinely showing before the next assertion");
+overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, not a .triage-jump)
+assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- KPI Catalog: exactly 20 rows, every 'real' badge carries a real citation, every tab is real ---");
 assertEqual(state.kpiCatalog.length, 20, "KPI catalog has exactly 20 rows, not 19 or 21");
