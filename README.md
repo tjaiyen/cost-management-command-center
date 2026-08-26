@@ -4,7 +4,7 @@ A cost-management methodology demo — 7 tabs covering CAPEX budget bridges, AAC
 Carlo contingency sizing, vendor governance, multi-region portfolio rollup, and a data-strategy
 pipeline — built around a synthetic capital-development program.
 
-**Live:** (not yet published — see Status below)
+**Live:** https://tjaiyen.github.io/cost-management-command-center/
 
 **Zero dependencies · no build step · no server.** Every number is computed live in the page's own
 JavaScript. Open `index.html` directly in a browser and it works.
@@ -89,9 +89,9 @@ by search engines, just linked directly when relevant.
 
 ## Status
 
-Built 2026-08-25, expanded to 7 tabs the same day. **Local only — not yet pushed to GitHub, no live
-URL yet.** Publishing this (creating the remote repo, enabling GitHub Pages) is a deliberate,
-separate step from building it.
+Built 2026-08-25, expanded to 7 tabs the same day. **Published 2026-08-25** — public repo created,
+pushed to `main`, GitHub Pages enabled and confirmed live (build status `built`, page returns HTTP
+200) at https://tjaiyen.github.io/cost-management-command-center/.
 
 ## Design lineage
 
