@@ -328,6 +328,22 @@ inconsistency in one `ada-fit.html` row (a self-referential dashboard citation l
 and a minor edge-case gap (the interconnection tracker's exact tie boundary was never tested).
 verify.cjs 235 → 234 (net: -2 tautological, +1 tie-boundary), stress.cjs 129 → 132, both green.
 
+**Rescaled to a real hyperscale magnitude 2026-08-26**, after a direct question exposed a real
+tension: this program's capital figures ran in the millions while a "Global" data-center cost-
+management role's actual programs run in the billions. Underwriting baseline moved from $2.45M to
+**$1.75B** — a real 50MW-campus-scale figure (real cited $30–40M/MW all-in cost × a 50MW campus,
+midpoint priced), with the risk register, contingency reserve, and all 3 non-NA regions rescaled to
+match. The one number this build cannot adjust for narrative convenience — the real $208K
+labor-variance root-cause trace — stays at its true, unadjusted dollar value; at this program's real
+scale it's honestly small and is no longer the bridge's "largest single driver" (Scope Change is,
+correctly, now that the driver-selection logic excludes the contingency drawdown from consideration).
+That's the intended lesson, not a downgrade: the figure's value was always in a verifiable
+root-cause *methodology*, never in its dollar size dominating a synthetic chart. Market Escalation's
+new dollar figure is now transparently priced off the page's own already-cited real 5.5% YoY Turner
+&amp; Townsend rate (baseline × scope × rate) rather than an arbitrary illustrative number. verify.cjs
+and stress.cjs assertion counts are unchanged (234 / 132, both green) — this was a value rescale, not
+a new mechanism.
+
 ## Design lineage
 
 Architecture (single self-contained HTML file, tab-based navigation, theme tokens, real-vs-

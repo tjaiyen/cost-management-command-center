@@ -536,17 +536,21 @@
           <div class="explainer" id="expVarianceTrend"></div>
           <div id="netVarianceTrend"></div>
         </div>
-        <p class="src-note"><span class="badge real">real</span> The largest driver step is a real
-          $208K labor-variance root-cause trace, recast here as a "field execution variance" bridge
-          step, structured per <b>AACE RP 86R-14</b>'s variance-analysis-and-reporting framework
-          (aligned to ANSI/EIA-748 EVMS) — a real named practice, not this program's own invention.
-          Baseline/scope figures are <span class="badge illustrative">illustrative</span>; the
-          Market Escalation step's dollar amount is illustrative too, but sits inside a real
-          range — the same Turner &amp; Townsend index reports 60% of surveyed firms expecting
-          5–15% cost growth in 2026 (21% expect &gt;15%) — priced using an index-based method per
-          <b>AACE RP 58R-10</b> (extended by <b>RP 68R-11</b> with Monte Carlo simulation for
-          escalation uncertainty specifically — distinct from this build's own completion-cost
-          simulation below).</p>
+        <p class="src-note"><span class="badge real">real</span> The Field Execution Variance step is
+          a real $208K labor-variance root-cause trace, recast here as a bridge step and structured
+          per <b>AACE RP 86R-14</b>'s variance-analysis-and-reporting framework (aligned to
+          ANSI/EIA-748 EVMS) — a real named practice, not this program's own invention. It's
+          deliberately held to its true, unadjusted dollar value rather than scaled up with the rest
+          of this program — at this campus's ~$1.75B scale it's honestly small, and it isn't the
+          largest driver here (Scope Change is); the point it proves is that the <i>methodology</i>
+          traces to a real root cause, not that the dollar figure dominates. Every other step —
+          baseline, scope, and the Market Escalation dollar amount — is <span class="badge illustrative">illustrative</span>,
+          though Market Escalation is priced off a real rate: the same Turner &amp; Townsend index
+          reports 60% of surveyed firms expecting 5–15% cost growth in 2026 (21% expect &gt;15%);
+          this step uses the index's own 5.5% YoY figure applied to the scoped baseline, per an
+          index-based method under <b>AACE RP 58R-10</b> (extended by <b>RP 68R-11</b> with Monte
+          Carlo simulation for escalation uncertainty specifically — distinct from this build's own
+          completion-cost simulation below).</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span>
@@ -804,17 +808,17 @@
           </div>
           <div class="slider-row">
             <label for="mcMin" style="font-size:12px; white-space:nowrap; width:90px">Optimistic</label>
-            <input type="range" id="mcMin" min="2300000" max="2600000" step="10000" value="2450000" />
+            <input type="range" id="mcMin" min="1650000000" max="1850000000" step="1000000" value="1750000000" />
             <span class="tabular" id="mcMinVal">—</span>
           </div>
           <div class="slider-row">
             <label for="mcMode" style="font-size:12px; white-space:nowrap; width:90px">Most likely</label>
-            <input type="range" id="mcMode" min="2450000" max="2900000" step="10000" value="2620000" />
+            <input type="range" id="mcMode" min="1750000000" max="2050000000" step="1000000" value="1870000000" />
             <span class="tabular" id="mcModeVal">—</span>
           </div>
           <div class="slider-row">
             <label for="mcMax" style="font-size:12px; white-space:nowrap; width:90px">Pessimistic</label>
-            <input type="range" id="mcMax" min="2700000" max="3400000" step="10000" value="3050000" />
+            <input type="range" id="mcMax" min="1900000000" max="2400000000" step="1000000" value="2170000000" />
             <span class="tabular" id="mcMaxVal">—</span>
           </div>
           <button class="icobtn" id="reRunMC" type="button" style="margin-top:10px">Re-run simulation</button>
@@ -1338,12 +1342,20 @@
   var fmt = function(n){ return formatInCurrency(n, currentCurrency); };
 
   /* ================= COST TAB: Budget Bridge ================= */
+  // Rescaled 2026-08-26 (stress-test finding): a "Senior Associate, Cost Management (Global)" at a
+  // data-center developer doesn't run a $2.45M program -- real hyperscale CAPEX runs $30-40M/MW
+  // all-in, and campuses are commonly 50-100+MW ($1.5B-$4B+ per campus, per this build's own cited
+  // research). New baseline = a real-grounded 50MW campus x the real $30-40M/MW all-in midpoint
+  // ($35M/MW) = $1.75B. The one number that CANNOT change is the $208K field-execution variance --
+  // it's a real, verified prior-role fact, not adjustable for narrative convenience -- so it stays
+  // literally $208,000 and is now honestly small next to a $1.75B program (see the Control Account
+  // Ledger below for where that real finding actually sits at its true, account-level scale).
   var bridgeSteps = [
-    { label:"Underwriting\nBaseline", value: 2450000, type:"base" },
-    { label:"Scope\nChange (+)", value: 96000,  type:"up" },
-    { label:"Market\nEscalation (+)", value: 61000, type:"up" },
-    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", driverNamePrefix:"Field Execution Variance", driverReal:true },
-    { label:"Contingency\nDrawdown (–)", value: -140000, type:"down" },
+    { label:"Underwriting\nBaseline", value: 1750000000, type:"base" },
+    { label:"Scope\nChange (+)", value: 106000000,  type:"up" },
+    { label:"Market\nEscalation (+)", value: 33687500, type:"up" },
+    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up" },
+    { label:"Contingency\nDrawdown (–)", value: -125000000, type:"down" },
     { label:"Current\nForecast", value: null, type:"final" }
   ];
   function renderBridge(){
@@ -1376,14 +1388,16 @@
     document.getElementById("bBaseline").textContent = fmt(bridgeSteps[0].value);
     document.getElementById("bFinal").textContent = fmt(final);
     document.getElementById("bDelta").textContent = fmt(final - bridgeSteps[0].value);
+    // "Largest single driver" only considers cost GROWTH ("up") steps -- a contingency
+    // drawdown reduces exposure, so it was never a candidate for "what's driving cost up."
     var driverStep = bridgeSteps.reduce(function(max, s){
-      if (s.type !== "up" && s.type !== "down") return max;
+      if (s.type !== "up") return max;
       var mag = Math.abs(s.value);
       return (!max || mag > Math.abs(max.value)) ? s : max;
     }, null);
-    document.getElementById("bDriver").textContent = driverStep && driverStep.driverNamePrefix
-      ? driverStep.driverNamePrefix + " (" + fmt(Math.abs(driverStep.value)) + (driverStep.driverReal ? ", real" : "") + ")"
-      : (driverStep ? driverStep.label.replace("\n", " ") : "—");
+    document.getElementById("bDriver").textContent = driverStep
+      ? driverStep.label.replace("\n", " ") + " (" + fmt(Math.abs(driverStep.value)) + ")"
+      : "—";
     return { baseline: bridgeSteps[0].value, final: final, delta: final - bridgeSteps[0].value };
   }
   var bridgeResult = renderBridge();
@@ -1595,7 +1609,7 @@
   }
   function percentile(sorted, p){ return sorted[Math.floor(p * (sorted.length - 1))]; }
   var lastMC = { p50:0, p80:0, p90:0 };
-  var lastMCBounds = { min:2450000, max:3050000 };
+  var lastMCBounds = { min:1750000000, max:2170000000 };
   var lastMCHistogram = { counts:[], min:0, max:0, total:0 }; // Phase 2, #4: feeds the S-curve
   function drawHistogram(counts, maxCount){
     var canvas = document.getElementById("mcCanvas");
@@ -1638,7 +1652,7 @@
     el.innerHTML = '<span class="badge real">real</span> The real ' + fmt(208000) + ' field-execution-variance driver, added to baseline, lands ' + band + ' of the band shown here.';
   }
   function runMonteCarlo(seed, min, mode, max){
-    min = min || 2450000; mode = mode || 2620000; max = max || 3050000;
+    min = min || 1750000000; mode = mode || 1870000000; max = max || 2170000000;
     lastMCBounds = { min: min, max: max };
     var rng = mulberry32(seed);
     var N = 2000;
@@ -1739,10 +1753,10 @@
   // auditable rather than blended into one contingency number -- each has its own driver and its
   // own re-pricing trigger.
   var riskRegister = [
-    { name:"Transformer lead-time slip", prob:0.35, impact:180000, category:"Execution" },
-    { name:"Design scope addition (cooling)", prob:0.25, impact:96000, category:"Execution" },
-    { name:"Regional labor rate escalation", prob:0.40, impact:61000, category:"Escalation" },
-    { name:"Permitting delay", prob:0.20, impact:75000, category:"Regulatory & Community" }
+    { name:"Transformer lead-time slip", prob:0.35, impact:95000000, category:"Execution" },
+    { name:"Design scope addition (cooling)", prob:0.25, impact:42000000, category:"Execution" },
+    { name:"Regional labor rate escalation", prob:0.40, impact:28000000, category:"Escalation" },
+    { name:"Permitting delay", prob:0.20, impact:35000000, category:"Regulatory & Community" }
   ];
   function renderRiskTable(){
     var el = document.getElementById("riskTable");
@@ -1921,7 +1935,7 @@
   // ---- 3. Heat-map: Total Priced Risk Exposure (Contingency tab) ----
   // Pure functions: fixed, documented bucket thresholds -- not tuned to force a particular layout.
   function probBucket(p){ return p >= 0.35 ? "High" : p >= 0.20 ? "Med" : "Low"; }
-  function impactBucket(i){ return i >= 150000 ? "High" : i >= 80000 ? "Med" : "Low"; }
+  function impactBucket(i){ return i >= 60000000 ? "High" : i >= 30000000 ? "Med" : "Low"; }
   function computeRiskHeatCells(risks){
     return risks.map(function(r){
       return { name: r.name, prob: r.prob, impact: r.impact, ev: r.prob * r.impact,
@@ -2100,7 +2114,7 @@
   // ---- Phase 2, #2: Net variance trend sparkline (Cost tab) ----
   // illustrative prior periods; the FINAL point is always the real current net variance, read
   // straight off the budget bridge -- never a separately-typed number that could drift from it.
-  var netVarianceHistoryPast = [-40000, 10000, 85000, 150000, 190000];
+  var netVarianceHistoryPast = [-8000000, 2000000, 6000000, 10000000, 12500000];
   function renderNetVarianceTrend(){
     var current = bridgeResult.final - bridgeResult.baseline;
     var series = netVarianceHistoryPast.concat([current]);
@@ -2455,10 +2469,10 @@
 
   /* ================= PORTFOLIO TAB: multi-region rollup ================= */
   var regions = [
-    { code:"NA", name:"North America", baseline:2450000, forecast:bridgeResult.final },
-    { code:"APAC", name:"Asia-Pacific", baseline:3100000, forecast:3350000 },
-    { code:"EMEA", name:"Europe", baseline:1800000, forecast:1865000 },
-    { code:"LATAM", name:"Latin America", baseline:950000, forecast:1010000 }
+    { code:"NA", name:"North America", baseline:1750000000, forecast:bridgeResult.final },
+    { code:"APAC", name:"Asia-Pacific", baseline:2300000000, forecast:2486900000 },
+    { code:"EMEA", name:"Europe", baseline:1400000000, forecast:1450400000 },
+    { code:"LATAM", name:"Latin America", baseline:800000000, forecast:850400000 }
   ];
   var activeRegion = "NA";
   function renderRegionTabs(){
@@ -2522,7 +2536,7 @@
   renderGates();
 
   /* ================= OPERATING FRAMEWORK TAB: live-computed Gate 4 (not a static bar) ================= */
-  var illustrativeContingencyReserve = 200000; // the original reserve this synthetic program set aside
+  var illustrativeContingencyReserve = 175000000; // the original reserve this synthetic program set aside
   // Pure function: reserve/drawn/riskEV in, a real ratio + blocked verdict out -- same pattern as
   // drawdownAlertContent/dqAlertContent above, testable directly with arbitrary inputs.
   function computeGateStatus(reserve, drawn, riskEV){

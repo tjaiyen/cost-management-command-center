@@ -174,9 +174,9 @@ elementsById["pctComplete"] = pctCompleteStub;
 elementsById["drawdownPct"] = drawdownPctStub;
 
 // Phase 1 range-input stubs, values matching their real HTML defaults exactly.
-const mcMinStub = makeElementStub(); mcMinStub.value = "2450000";
-const mcModeStub = makeElementStub(); mcModeStub.value = "2620000";
-const mcMaxStub = makeElementStub(); mcMaxStub.value = "3050000";
+const mcMinStub = makeElementStub(); mcMinStub.value = "1750000000";
+const mcModeStub = makeElementStub(); mcModeStub.value = "1870000000";
+const mcMaxStub = makeElementStub(); mcMaxStub.value = "2170000000";
 elementsById["mcMin"] = mcMinStub;
 elementsById["mcMode"] = mcModeStub;
 elementsById["mcMax"] = mcMaxStub;
@@ -257,11 +257,11 @@ if (!state) {
 }
 
 console.log("--- Budget Bridge ---");
-// Independent re-derivation: baseline 2,450,000 + 96,000 + 61,000 + 208,000 - 140,000
-const expectedFinal = 2450000 + 96000 + 61000 + 208000 - 140000;
-assertEqual(state.bridge.baseline, 2450000, "bridge baseline");
+// Independent re-derivation: baseline 1,750,000,000 + 106,000,000 + 33,687,500 + 208,000 - 125,000,000
+const expectedFinal = 1750000000 + 106000000 + 33687500 + 208000 - 125000000;
+assertEqual(state.bridge.baseline, 1750000000, "bridge baseline");
 assertEqual(state.bridge.final, expectedFinal, "bridge final forecast");
-assertEqual(state.bridge.delta, expectedFinal - 2450000, "bridge net variance");
+assertEqual(state.bridge.delta, expectedFinal - 1750000000, "bridge net variance");
 
 console.log("--- Contingency Drawdown ---");
 // Independent re-derivation: default sliders are 18% complete, 35% drawn -> ratio = 35/18
@@ -275,7 +275,7 @@ if (state.drawdownRatio > 1.5) {
 
 console.log("--- Monte Carlo ---");
 // Stochastic — can't assert an exact value, but P50 < P80 < P90 must always hold, and all
-// three must fall within the [min, max] triangular bounds used by the page (2,450,000 / 3,050,000).
+// three must fall within the [min, max] triangular bounds used by the page (1,750,000,000 / 2,170,000,000).
 const mc = state.monteCarlo;
 if (mc.p50 < mc.p80 && mc.p80 < mc.p90) {
   console.log("pass: Monte Carlo percentiles are correctly ordered (P50 < P80 < P90)");
@@ -283,7 +283,7 @@ if (mc.p50 < mc.p80 && mc.p80 < mc.p90) {
   failures++;
   console.error("FAIL: Monte Carlo percentiles out of order:", mc);
 }
-if (mc.p50 >= 2450000 && mc.p90 <= 3050000) {
+if (mc.p50 >= 1750000000 && mc.p90 <= 2170000000) {
   console.log("pass: Monte Carlo percentiles fall within the declared triangular bounds");
 } else {
   failures++;
@@ -295,14 +295,14 @@ assertEqual(state.wbsSum, 100, "WBS percentages sum to 100");
 
 console.log("--- Risk Register ---");
 // Independent re-derivation of total expected value from the same 4 illustrative rows
-const expectedRiskEV = (0.35*180000) + (0.25*96000) + (0.40*61000) + (0.20*75000);
+const expectedRiskEV = (0.35*95000000) + (0.25*42000000) + (0.40*28000000) + (0.20*35000000);
 assertEqual(state.totalRiskEV, expectedRiskEV, "total risk expected value", 0.01);
 
 console.log("--- Risk Register: categorized exposure buckets (Execution / Escalation / Regulatory & Community) ---");
 // Independent re-derivation, not a read of the page's own subtotal object.
-const expectedExecutionEV = (0.35*180000) + (0.25*96000);
-const expectedEscalationEV = 0.40*61000;
-const expectedRegCommunityEV = 0.20*75000;
+const expectedExecutionEV = (0.35*95000000) + (0.25*42000000);
+const expectedEscalationEV = 0.40*28000000;
+const expectedRegCommunityEV = 0.20*35000000;
 assertEqual(state.riskCategorySubtotals["Execution"], expectedExecutionEV, "Execution bucket EV", 0.01);
 assertEqual(state.riskCategorySubtotals["Escalation"], expectedEscalationEV, "Escalation bucket EV", 0.01);
 assertEqual(state.riskCategorySubtotals["Regulatory & Community"], expectedRegCommunityEV, "Regulatory & Community bucket EV", 0.01);
@@ -314,10 +314,10 @@ assertEqual(
 );
 // Pure-function re-derivation directly, independent of the cached state object.
 const rederivedSubtotals = state.computeRiskCategorySubtotals([
-  { prob:0.35, impact:180000, category:"Execution" },
-  { prob:0.25, impact:96000, category:"Execution" },
-  { prob:0.40, impact:61000, category:"Escalation" },
-  { prob:0.20, impact:75000, category:"Regulatory & Community" }
+  { prob:0.35, impact:95000000, category:"Execution" },
+  { prob:0.25, impact:42000000, category:"Execution" },
+  { prob:0.40, impact:28000000, category:"Escalation" },
+  { prob:0.20, impact:35000000, category:"Regulatory & Community" }
 ]);
 assertEqual(rederivedSubtotals["Execution"], expectedExecutionEV, "computeRiskCategorySubtotals() called directly matches the independent re-derivation", 0.01);
 
@@ -395,10 +395,10 @@ assertStrEqual(state.probBucket(0.19), "Low", "probBucket: 0.19 is Low");
 assertStrEqual(state.probBucket(0.20), "Med", "probBucket: exactly 0.20 is Med (inclusive lower bound)");
 assertStrEqual(state.probBucket(0.34), "Med", "probBucket: 0.34 is Med");
 assertStrEqual(state.probBucket(0.35), "High", "probBucket: exactly 0.35 is High (inclusive lower bound)");
-assertStrEqual(state.impactBucket(79999), "Low", "impactBucket: 79999 is Low");
-assertStrEqual(state.impactBucket(80000), "Med", "impactBucket: exactly 80000 is Med");
-assertStrEqual(state.impactBucket(149999), "Med", "impactBucket: 149999 is Med");
-assertStrEqual(state.impactBucket(150000), "High", "impactBucket: exactly 150000 is High");
+assertStrEqual(state.impactBucket(29999999), "Low", "impactBucket: 29,999,999 is Low");
+assertStrEqual(state.impactBucket(30000000), "Med", "impactBucket: exactly 30,000,000 is Med");
+assertStrEqual(state.impactBucket(59999999), "Med", "impactBucket: 59,999,999 is Med");
+assertStrEqual(state.impactBucket(60000000), "High", "impactBucket: exactly 60,000,000 is High");
 assertEqual(state.heatmapCells.length, 4, "heat-map has exactly 4 risk cells (one per risk register row)");
 state.heatmapCells.forEach((c) => {
   assertEqual(c.ev, c.prob * c.impact, `heat-map cell "${c.name}" EV re-derives as prob x impact`, 0.01);
@@ -407,7 +407,7 @@ const transformerCell = state.heatmapCells.find((c) => c.name.indexOf("Transform
 if (!transformerCell) {
   failures++; console.error("FAIL: could not find the transformer risk in heatmapCells");
 } else {
-  // Pre-registered: prob 0.35 -> High, impact 180000 -> High -- the worst cell on the grid.
+  // Pre-registered: prob 0.35 -> High, impact 95,000,000 -> High -- the worst cell on the grid.
   assertStrEqual(transformerCell.probBucket, "High", "transformer risk lands in the High-probability row, as pre-registered");
   assertStrEqual(transformerCell.impactBucket, "High", "transformer risk lands in the High-impact column, as pre-registered");
 }
@@ -430,9 +430,9 @@ const expectedCvRanking = state.controlAccounts.slice().sort((a, b) => Math.abs(
 assertStrEqual(JSON.stringify(state.cvTornadoResult.map((a) => a.name)), JSON.stringify(expectedCvRanking), "CV tornado ranking matches an independent sort by |CV| descending");
 
 console.log("--- Director-grade visuals: What-if sensitivity tornado ---");
-const scenarios = state.computeSensitivityScenarios(state.bridge.baseline, 208000, -140000, state.bridge.final);
+const scenarios = state.computeSensitivityScenarios(state.bridge.baseline, 208000, -125000000, state.bridge.final);
 assertEqual(scenarios.length, 4, "4 sensitivity scenarios (scope +/-10%, escalation +/-10%)");
-const expectedScopeUp = (state.bridge.baseline + state.bridge.baseline * 0.10 + 208000 - 140000) - state.bridge.final;
+const expectedScopeUp = (state.bridge.baseline + state.bridge.baseline * 0.10 + 208000 - 125000000) - state.bridge.final;
 const scopeUpScenario = scenarios.find((s) => s.name === "Scope +10%");
 if (!scopeUpScenario) {
   failures++; console.error("FAIL: could not find the 'Scope +10%' scenario");
@@ -513,7 +513,7 @@ assertStrEqual(state.lpfDivergingBarResult[0].trade, "Mechanical / Piping", "the
 console.log("--- Phase 2 director-grade visuals: Region ranked bar (all 4 at once) ---");
 assertEqual(state.regionRankedBarResult.length, 4, "all 4 regions ranked together, not one at a time");
 const expectedNAPct = state.computeRegionVariancePct(state.regions.find((r) => r.code === "NA"));
-assertEqual(expectedNAPct, ((state.bridge.final - 2450000) / 2450000) * 100, "computeRegionVariancePct() independently re-derives NA's variance from its real baseline/forecast", 0.001);
+assertEqual(expectedNAPct, ((state.bridge.final - 1750000000) / 1750000000) * 100, "computeRegionVariancePct() independently re-derives NA's variance from its real baseline/forecast", 0.001);
 const regionSorted = state.regionRankedBarResult.every((r, i, arr) => i === 0 || arr[i - 1].value >= r.value);
 assertStrEqual(regionSorted, true, "regions are ranked descending by variance%, not left in declaration order");
 
@@ -533,13 +533,13 @@ assertEqual(state.interconnectionResult.dollarHigh, state.bridge.baseline * 0.37
 // program with a longer assumed schedule window would clear it -- a branch the live default
 // never exercises on its own.
 assertStrEqual(state.interconnectionResult.atRisk, true, "this build's own live assumptions (12yr wait vs. 3yr assumed schedule) are correctly flagged at risk");
-const clearedFixture = state.computeInterconnectionExposure(2450000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 12, assumedDevelopmentScheduleYears: 15 });
+const clearedFixture = state.computeInterconnectionExposure(1750000000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 12, assumedDevelopmentScheduleYears: 15 });
 assertStrEqual(clearedFixture.atRisk, false, "computeInterconnectionExposure() correctly clears a program whose assumed schedule exceeds the typical wait (never-exercised-by-default branch)");
 // Exact-tie boundary (assumed schedule === typical wait) -- neither the live default (12 vs 3) nor
 // the cleared fixture above (12 vs 15) exercises this exact edge, flagged by an independent
 // reviewer as a real coverage gap. atRisk uses strict '>' ("exceeds"), so an exact tie clears --
 // a program with zero schedule margin isn't flagged, which is the documented, intended semantic.
-const tieFixture = state.computeInterconnectionExposure(2450000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 5, assumedDevelopmentScheduleYears: 5 });
+const tieFixture = state.computeInterconnectionExposure(1750000000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 5, assumedDevelopmentScheduleYears: 5 });
 assertStrEqual(tieFixture.atRisk, false, "computeInterconnectionExposure() at the exact tie boundary (wait === assumed schedule) does not flag at-risk -- 'exceeds' is strict, not inclusive");
 
 console.log("--- Multi-Region Rollup ---");
@@ -717,19 +717,19 @@ assertEqual(acct0.cv, acct0.ev - acct0.ac, "control-account CV = EV - AC");
 assertEqual(acct0.cpi, acct0.ev / acct0.ac, "control-account CPI = EV / AC", 0.0001);
 
 console.log("--- Phase 1: What-If Forecast Sandbox (independent re-derivation) ---");
-const expectedWhatIf = state.bridge.baseline + state.bridge.baseline * 0.04 + state.bridge.baseline * 0.02 + 208000 - 140000;
+const expectedWhatIf = state.bridge.baseline + state.bridge.baseline * 0.04 + state.bridge.baseline * 0.02 + 208000 - 125000000;
 assertEqual(state.lastWhatIf, expectedWhatIf, "what-if forecast (default 4% scope / 2% escalation) matches independent re-derivation");
 // The real $208K driver and real contingency drawdown must never move with the sandbox sliders --
 // re-derive at a different scope/escalation pair and confirm those two terms are still present unchanged.
-const whatIfAtZero = state.computeWhatIf(state.bridge.baseline, 0, 0, 208000, -140000);
-assertEqual(whatIfAtZero, state.bridge.baseline + 208000 - 140000, "what-if at 0%/0% still carries the real $208K driver and real drawdown unchanged");
+const whatIfAtZero = state.computeWhatIf(state.bridge.baseline, 0, 0, 208000, -125000000);
+assertEqual(whatIfAtZero, state.bridge.baseline + 208000 - 125000000, "what-if at 0%/0% still carries the real $208K driver and real drawdown unchanged");
 
 console.log("--- Phase 1: Monte Carlo tri-point slider bounds + clamp function ---");
-assertEqual(state.mcBounds.min, 2450000, "Monte Carlo tri-point default optimistic bound");
-assertEqual(state.mcBounds.max, 3050000, "Monte Carlo tri-point default pessimistic bound");
-assertEqual(state.clampMode(2450000, 2620000, 3050000), 2620000, "clampMode: a mode already inside [min,max] passes through unchanged");
-assertEqual(state.clampMode(2450000, 2000000, 3050000), 2450000, "clampMode: a mode below min clamps up to min (never naturally triggered by a well-behaved drag)");
-assertEqual(state.clampMode(2450000, 3200000, 3050000), 3050000, "clampMode: a mode above max clamps down to max (never naturally triggered by a well-behaved drag)");
+assertEqual(state.mcBounds.min, 1750000000, "Monte Carlo tri-point default optimistic bound");
+assertEqual(state.mcBounds.max, 2170000000, "Monte Carlo tri-point default pessimistic bound");
+assertEqual(state.clampMode(1750000000, 1870000000, 2170000000), 1870000000, "clampMode: a mode already inside [min,max] passes through unchanged");
+assertEqual(state.clampMode(1750000000, 1600000000, 2170000000), 1750000000, "clampMode: a mode below min clamps up to min (never naturally triggered by a well-behaved drag)");
+assertEqual(state.clampMode(1750000000, 2300000000, 2170000000), 2170000000, "clampMode: a mode above max clamps down to max (never naturally triggered by a well-behaved drag)");
 
 console.log("--- Live tab-rail status pill (Gate 4) reflects the real computed gate state ---");
 const gate4Pill = elementsById["cntGate4"];
@@ -737,16 +737,17 @@ if (!gate4Pill) {
   failures++; console.error("FAIL: #cntGate4 was never registered by the page script");
 } else {
   // Pre-registered expectation: this build's real default numbers already put Gate 4 BLOCKED
-  // (0.47x coverage, established earlier this session) -- so the pill should be visible now.
+  // (~0.81x coverage post-rescale, still <1.0) -- so the pill should be visible now.
   assertStrEqual(gate4Pill.hidden, false, "Gate 4 is blocked on this build's real default state, so the tab-rail pill is visible");
   assertStrEqual(gate4Pill.textContent, "Gate 4 blocked", "the pill's real text says 'Gate 4 blocked', not a placeholder");
   assertStrEqual(gate4Pill.classList.contains("warn"), true, "the pill carries the warn styling class while blocked");
 }
 
 console.log("--- Phase 2: Operating Framework Gate 4 (independent re-derivation) ---");
-// Independent re-derivation of the exact gate math: reserve 200,000 - drawn 140,000 = 60,000
-// remaining; 60,000 / totalRiskEV must be < 1.00, i.e. genuinely BLOCKED, not a static "pending" bar.
-const expectedRemaining = 200000 - 140000;
+// Independent re-derivation of the exact gate math: reserve 175,000,000 - drawn 125,000,000 =
+// 50,000,000 remaining; 50,000,000 / totalRiskEV must be < 1.00, i.e. genuinely BLOCKED, not a
+// static "pending" bar.
+const expectedRemaining = 175000000 - 125000000;
 assertEqual(state.gateStatus.remaining, expectedRemaining, "Gate 4 remaining contingency = reserve - drawn");
 assertEqual(state.gateStatus.ratio, expectedRemaining / state.totalRiskEV, "Gate 4 coverage ratio matches independent re-derivation", 0.0001);
 assertStrEqual(state.gateStatus.blocked, true, "Gate 4 is genuinely computed BLOCKED with this build's real numbers, not just styled that way");

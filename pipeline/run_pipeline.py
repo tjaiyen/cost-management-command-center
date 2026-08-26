@@ -45,7 +45,7 @@ def main():
 
     # Parity check 1: budget-bridge final forecast = SUM(all step values), base + ups - downs.
     final_forecast = con.execute("SELECT SUM(value) FROM bridge_steps").fetchone()[0]
-    expected_final = 2450000 + 96000 + 61000 + 208000 - 140000
+    expected_final = 1750000000 + 106000000 + 33687500 + 208000 - 125000000
     if final_forecast == expected_final:
         print(f"pass: budget-bridge final forecast (SQL) = {final_forecast}, matches index.html's own JS derivation")
     else:
@@ -62,7 +62,7 @@ def main():
 
     # Parity check 3: control-account BAC per row = baseline * (pct/100), summing back to baseline
     # -- the same relationship index.html's computeControlAccounts() relies on.
-    baseline = 2450000
+    baseline = 1750000000
     bac_rows = con.execute(
         "SELECT name, ROUND(? * pct / 100.0) AS bac FROM wbs", [baseline]
     ).fetchall()
