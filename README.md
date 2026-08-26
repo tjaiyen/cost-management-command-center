@@ -193,8 +193,8 @@ legible, marked `illustrative` throughout.
    (added with the interconnection tracker, from a 20-item real industry/company research pass)
    the $ exposure re-derivation against the real cited 30–37% range and both the at-risk and
    cleared schedule-verdict branches.
-   **234 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 234) as of the last run. Exists because this repo was
+   **243 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 243) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -339,10 +339,27 @@ scale it's honestly small and is no longer the bridge's "largest single driver" 
 correctly, now that the driver-selection logic excludes the contingency drawdown from consideration).
 That's the intended lesson, not a downgrade: the figure's value was always in a verifiable
 root-cause *methodology*, never in its dollar size dominating a synthetic chart. Market Escalation's
-new dollar figure is now transparently priced off the page's own already-cited real 5.5% YoY Turner
-&amp; Townsend rate (baseline × scope × rate) rather than an arbitrary illustrative number. verify.cjs
-and stress.cjs assertion counts are unchanged (234 / 132, both green) — this was a value rescale, not
-a new mechanism.
+new dollar figure is computed (not hardcoded) as an illustrative 35% of baseline — the share of scope
+still exposed to market-rate escalation — × the page's own already-cited real 5.5% YoY Turner &amp;
+Townsend rate, rather than an arbitrary illustrative number. Deliberately left at their original
+magnitude: the change-order EMV scenario and the consultant deliverable scorecard, since individual
+change orders and third-party estimates on a $1.75B program are realistically sized in the tens of
+thousands to low millions, not a fixed proportion of program total.
+
+A same-day `/stress-test` pass (this session's own review + an independent fresh-context reviewer)
+on the rescale itself found and fixed 3 real gaps: the Market Escalation dollar figure was a bare
+hardcoded literal even though the src-note/README both described it as "priced off the real rate" —
+a claim the code didn't actually make true (now computed from named, checkable constants); the
+"largest single driver" selection logic — the exact thing this rescale's own narrative point rests
+on — had zero test coverage in either verify.cjs or GUARDS, so a future regression re-including the
+drawdown would have shipped silently (now extracted into its own pure function with direct and
+synthetic-fixture tests, plus 2 new GUARDS entries); and a developer comment falsely claimed the
+Control Account Ledger shows where the $208K finding "actually sits," when nothing in that ledger
+ever references it (removed). One limitation stated, not fixed: the reliability note comparing the
+real $208K driver against the Monte Carlo band now always lands "at or below P50" across every valid
+slider position, since $208K is under 1% of the new $1.75B baseline — the note now says this
+explicitly rather than leaving 3 of its 4 narrative branches silently unreachable.
+verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now expects 15 GUARDS entries, no new check needed), both green.
 
 ## Design lineage
 

@@ -547,10 +547,12 @@
           baseline, scope, and the Market Escalation dollar amount — is <span class="badge illustrative">illustrative</span>,
           though Market Escalation is priced off a real rate: the same Turner &amp; Townsend index
           reports 60% of surveyed firms expecting 5–15% cost growth in 2026 (21% expect &gt;15%);
-          this step uses the index's own 5.5% YoY figure applied to the scoped baseline, per an
-          index-based method under <b>AACE RP 58R-10</b> (extended by <b>RP 68R-11</b> with Monte
-          Carlo simulation for escalation uncertainty specifically — distinct from this build's own
-          completion-cost simulation below).</p>
+          this step is computed (not hardcoded) as an illustrative 35% of baseline — the share of
+          scope this program treats as still exposed to market-rate escalation, not yet locked by
+          contract — × the index's own real 5.5% YoY figure, per an index-based method under
+          <b>AACE RP 58R-10</b> (extended by <b>RP 68R-11</b> with Monte Carlo simulation for
+          escalation uncertainty specifically — distinct from this build's own completion-cost
+          simulation below).</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span>
@@ -1348,16 +1350,36 @@
   // research). New baseline = a real-grounded 50MW campus x the real $30-40M/MW all-in midpoint
   // ($35M/MW) = $1.75B. The one number that CANNOT change is the $208K field-execution variance --
   // it's a real, verified prior-role fact, not adjustable for narrative convenience -- so it stays
-  // literally $208,000 and is now honestly small next to a $1.75B program (see the Control Account
-  // Ledger below for where that real finding actually sits at its true, account-level scale).
+  // literally $208,000 and is now honestly small next to a $1.75B program.
+  var UNDERWRITING_BASELINE = 1750000000;
+  var MARKET_ESCALATION_RATE = 0.055; // real, cited: Turner & Townsend's 2025-2026 index's own 5.5% YoY figure (Cost tab benchmark card + Reference glossary)
+  var MARKET_ESCALATION_EXPOSED_PCT = 0.35; // illustrative: the share of baseline this program treats as still exposed to market-rate escalation (not yet locked by contract)
+  // Actually computed, not a bare literal (a stress-test finding: an earlier version hardcoded this
+  // result while the src-note/README claimed it was "priced off the real rate" -- a claim that
+  // wasn't true of the code, only of the number's origin. Named + computed so the claim is checkable.)
+  var marketEscalationValue = Math.round(UNDERWRITING_BASELINE * MARKET_ESCALATION_EXPOSED_PCT * MARKET_ESCALATION_RATE);
   var bridgeSteps = [
-    { label:"Underwriting\nBaseline", value: 1750000000, type:"base" },
+    { label:"Underwriting\nBaseline", value: UNDERWRITING_BASELINE, type:"base" },
     { label:"Scope\nChange (+)", value: 106000000,  type:"up" },
-    { label:"Market\nEscalation (+)", value: 33687500, type:"up" },
+    { label:"Market\nEscalation (+)", value: marketEscalationValue, type:"up" },
     { label:"Field Execution\nVariance* (+)", value: 208000, type:"up" },
     { label:"Contingency\nDrawdown (–)", value: -125000000, type:"down" },
     { label:"Current\nForecast", value: null, type:"final" }
   ];
+  // Pure function: bridge steps in, the largest cost-GROWTH ("up") step out -- a contingency
+  // drawdown reduces exposure, so it's never a candidate for "what's driving cost up" regardless of
+  // its own magnitude. Extracted as its own named function (not inlined in renderBridge()) so this
+  // exclusion rule is independently testable with a synthetic fixture, not just this build's own
+  // current numbers (a stress-test finding: this selection logic had zero test coverage, so a
+  // regression re-including "down" steps -- exactly the bug this was fixed from -- would have
+  // shipped silently).
+  function computeLargestDriver(steps){
+    return steps.reduce(function(max, s){
+      if (s.type !== "up") return max;
+      var mag = Math.abs(s.value);
+      return (!max || mag > Math.abs(max.value)) ? s : max;
+    }, null);
+  }
   function renderBridge(){
     var running = 0;
     var steps = bridgeSteps.map(function(s){
@@ -1388,13 +1410,7 @@
     document.getElementById("bBaseline").textContent = fmt(bridgeSteps[0].value);
     document.getElementById("bFinal").textContent = fmt(final);
     document.getElementById("bDelta").textContent = fmt(final - bridgeSteps[0].value);
-    // "Largest single driver" only considers cost GROWTH ("up") steps -- a contingency
-    // drawdown reduces exposure, so it was never a candidate for "what's driving cost up."
-    var driverStep = bridgeSteps.reduce(function(max, s){
-      if (s.type !== "up") return max;
-      var mag = Math.abs(s.value);
-      return (!max || mag > Math.abs(max.value)) ? s : max;
-    }, null);
+    var driverStep = computeLargestDriver(bridgeSteps);
     document.getElementById("bDriver").textContent = driverStep
       ? driverStep.label.replace("\n", " ") + " (" + fmt(Math.abs(driverStep.value)) + ")"
       : "—";
@@ -1649,7 +1665,17 @@
       : realPoint <= lastMC.p80 ? "between the P50 and P80 band — exactly why AACE guidance favors pricing contingency to P80, not P50"
       : realPoint <= lastMC.p90 ? "between P80 and P90 — a real driver this large would have breached a P80-sized reserve"
       : "above even the P90 tail of this particular tri-point estimate";
-    el.innerHTML = '<span class="badge real">real</span> The real ' + fmt(208000) + ' field-execution-variance driver, added to baseline, lands ' + band + ' of the band shown here.';
+    // At this program's real ~$1.75B scale, $208K is well under 1% of baseline -- small enough that
+    // this reliably lands in the "at or below P50" band across the sliders' entire declared range
+    // (a stress-test finding, verified by sweeping every slider corner: it wasn't reachable anywhere
+    // else, unlike before the 2026-08-26 rescale, when the same real driver was ~8.5% of a much
+    // smaller baseline and could cross into the higher bands). That's not a bug in this note -- it's
+    // the honest answer, worth stating plainly rather than leaving the reader to assume it's just
+    // chance that the other three bands never come up.
+    var scaleNote = (208000 / bridgeSteps[0].value) < 0.01
+      ? " At this program's real scale, this driver is under 1% of baseline — small enough that it reliably lands in the safe band regardless of where the sliders sit."
+      : "";
+    el.innerHTML = '<span class="badge real">real</span> The real ' + fmt(208000) + ' field-execution-variance driver, added to baseline, lands ' + band + ' of the band shown here.' + scaleNote;
   }
   function runMonteCarlo(seed, min, mode, max){
     min = min || 1750000000; mode = mode || 1870000000; max = max || 2170000000;
@@ -3072,6 +3098,22 @@
         var expectedHigh = bridgeResult.baseline * 0.37;
         var ok = Math.abs(expectedLow - interconnectionResult.dollarLow) < 1e-6 && Math.abs(expectedHigh - interconnectionResult.dollarHigh) < 1e-6;
         return [ok, fmt(expectedLow) + " – " + fmt(expectedHigh)];
+      }},
+    { n:"Largest single driver is the true max of the 'up' steps and never names the drawdown", run:function(){
+        // Independent re-derivation via direct inspection of each "up" step's own raw value, NOT a
+        // second call to computeLargestDriver() -- same tautology class GUARDS already avoids for
+        // the interconnection check above (found by a stress-test pass, 2026-08-26: this selection
+        // logic previously had zero test coverage at all).
+        var upValues = bridgeSteps.filter(function(s){ return s.type === "up"; }).map(function(s){ return Math.abs(s.value); });
+        var maxUp = Math.max.apply(null, upValues);
+        var shown = document.getElementById("bDriver").textContent;
+        var ok = shown.indexOf(fmt(maxUp)) !== -1 && shown.indexOf("Drawdown") === -1;
+        return [ok, shown];
+      }},
+    { n:"Market Escalation step recomputes from baseline x the cited 35% exposed share x the real cited 5.5% rate", run:function(){
+        var expected = Math.round(bridgeResult.baseline * 0.35 * 0.055);
+        var actual = bridgeSteps[2].value;
+        return [expected === actual, fmt(actual)];
       }}
   ];
   function renderGuards(){
@@ -3094,6 +3136,11 @@
   /* expose a minimal state object for a Node-based verify script (Phase 1 requirement) */
   window.__CMCC_STATE__ = {
     bridge: bridgeResult,
+    bridgeSteps: bridgeSteps,                   // exposed so verify.cjs can independently check driver selection
+    computeLargestDriver: computeLargestDriver, // pure function behind "largest single driver"
+    marketEscalationValue: marketEscalationValue,
+    MARKET_ESCALATION_RATE: MARKET_ESCALATION_RATE,
+    MARKET_ESCALATION_EXPOSED_PCT: MARKET_ESCALATION_EXPOSED_PCT,
     drawdownRatio: liveDrawdownRatio,
     monteCarlo: lastMC,
     totalRiskEV: totalRiskEV,

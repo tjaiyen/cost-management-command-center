@@ -174,7 +174,7 @@ const guardsBlockMatch = indexHtml.match(/var GUARDS = \[([\s\S]*?)\n  \];/);
 check(!!guardsBlockMatch, "found the GUARDS array literal to count structurally");
 if (guardsBlockMatch) {
   const guardEntryCount = (guardsBlockMatch[1].match(/\{ n:"/g) || []).length;
-  check(guardEntryCount === 13, "GUARDS array literal has exactly 13 check entries", `found ${guardEntryCount}`);
+  check(guardEntryCount === 15, "GUARDS array literal has exactly 15 check entries", `found ${guardEntryCount}`);
   check(guardsBlockMatch[1].includes("Escalation assumption re-validated"), "the escalation-staleness guard is registered");
   check(guardsBlockMatch[1].includes("Every region reports the same cost-reporting schema"), "the cross-region schema-consistency guard is registered");
 }

@@ -263,6 +263,45 @@ assertEqual(state.bridge.baseline, 1750000000, "bridge baseline");
 assertEqual(state.bridge.final, expectedFinal, "bridge final forecast");
 assertEqual(state.bridge.delta, expectedFinal - 1750000000, "bridge net variance");
 
+console.log("--- Budget Bridge: Market Escalation formula (independent stress-test finding, 2026-08-26) ---");
+// A stress-test finding: an earlier version hardcoded this step's dollar value as a bare literal
+// while the src-note/README claimed it was "priced off the real rate" -- a claim the CODE didn't
+// actually make true. Independent re-derivation via the raw literals (NOT a read of
+// MARKET_ESCALATION_RATE/MARKET_ESCALATION_EXPOSED_PCT, which would just be re-checking the same
+// constants the page's own formula already used).
+const expectedMarketEscalation = Math.round(1750000000 * 0.35 * 0.055);
+assertEqual(state.bridgeSteps[2].value, expectedMarketEscalation, "Market Escalation step value matches baseline x 35% exposed share x the real cited 5.5% rate");
+assertEqual(state.marketEscalationValue, expectedMarketEscalation, "the exposed marketEscalationValue variable matches the same independent re-derivation");
+
+console.log("--- Budget Bridge: 'largest single driver' selection (zero test coverage before this pass) ---");
+assertEqual(state.bridgeSteps.length, 6, "bridgeSteps has 6 rows (base, 3 up-steps, 1 down-step, final)");
+const upSteps = state.bridgeSteps.filter((s) => s.type === "up");
+assertEqual(upSteps.length, 3, "exactly 3 'up'-type bridge steps exist");
+// Independent re-derivation via Math.max over the raw values, NOT a second call to
+// computeLargestDriver() -- the same tautology class already avoided for the interconnection check.
+const expectedMaxUp = Math.max(...upSteps.map((s) => Math.abs(s.value)));
+assertEqual(expectedMaxUp, 106000000, "the largest 'up' step at this build's real numbers is Scope Change ($106M > ~$33.7M Market Escalation > $208K Field Execution)");
+const driverStep = state.computeLargestDriver(state.bridgeSteps);
+assertStrEqual(driverStep.label.indexOf("Scope") !== -1, true, "computeLargestDriver() on the real bridgeSteps picks Scope Change, matching the independent re-derivation");
+const bDriverText = elementsById["bDriver"].textContent;
+if (bDriverText.indexOf("Scope") === -1) {
+  failures++; console.error("FAIL: #bDriver does not name Scope Change as the largest driver:", bDriverText);
+} else {
+  console.log("pass: #bDriver correctly names Scope Change as the largest driver =", bDriverText);
+}
+// Direct test of the exclusion rule itself with a synthetic fixture, not just this build's own
+// numbers -- proves a "down" step is excluded from consideration no matter how large its magnitude,
+// the exact regression this function was extracted from renderBridge() to make testable.
+const fixtureSteps = [
+  { label:"Base", value: 1000, type:"base" },
+  { label:"Small Up", value: 50, type:"up" },
+  { label:"Huge Down", value: -99999, type:"down" },
+];
+const fixtureDriver = state.computeLargestDriver(fixtureSteps);
+assertStrEqual(fixtureDriver.label, "Small Up", "computeLargestDriver() excludes a huge-magnitude 'down' step even when it dwarfs every 'up' step (never-exercised-by-default branch)");
+const noUpFixture = [{ label:"Base", value: 1000, type:"base" }, { label:"Down only", value: -50, type:"down" }];
+assertStrEqual(state.computeLargestDriver(noUpFixture), null, "computeLargestDriver() returns null when there are no 'up' steps at all, not a crash or a false positive");
+
 console.log("--- Contingency Drawdown ---");
 // Independent re-derivation: default sliders are 18% complete, 35% drawn -> ratio = 35/18
 assertEqual(state.drawdownRatio, 35 / 18, "drawdown ratio (default sliders)", 0.0001);
@@ -975,14 +1014,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 13, "exactly 13 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 13, "renderGuards() actually ran all 13 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 15, "exactly 15 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 15, "renderGuards() actually ran all 15 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 13 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log("pass: all 15 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 13 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, "of 15 live integrity checks are failing:", JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and
