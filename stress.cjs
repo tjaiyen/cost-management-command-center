@@ -103,6 +103,16 @@ if (readmeTabCountMatch) {
   console.error("FAIL: README doesn't state a tab count in the expected 'N tabs' form -- can't check it");
 }
 
+console.log("--- Okabe-Ito status-color tokens: all 4 duplicated theme blocks stay in sync ---");
+// index.html declares dark-mode tokens in 2 places (:root and :root[data-theme="dark"]) and
+// light-mode tokens in 2 places (@media prefers-color-scheme + :root[data-theme="light"]) -- a
+// real risk this build has hit before (drift between duplicated blocks). Confirms all 4 actually
+// carry the real Okabe-Ito-derived, WCAG-AA-contrast-checked values, not a stale/half-updated copy.
+const darkTokenBlocks = (indexHtml.match(/--c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;/g) || []).length;
+const lightTokenBlocks = (indexHtml.match(/--c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;/g) || []).length;
+check(darkTokenBlocks === 2, "both dark-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${darkTokenBlocks}, expected 2`);
+check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${lightTokenBlocks}, expected 2`);
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

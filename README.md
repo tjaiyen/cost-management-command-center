@@ -91,6 +91,11 @@ legible, marked `illustrative` throughout.
 - **Structured, dual-encoded alert cards** — every warning (contingency drawdown, data quality,
   Gate 4, float erosion) shows Detected / Probable Cause / Suggested Action, with a shape (▲/●)
   alongside color, not color alone.
+- **Colorblind-safe status colors** — success/warning/danger now use hues from the real Okabe-Ito
+  (2008) colorblind-safe palette, not just a generic red/amber/green — the specific RGB values were
+  computed and WCAG 2.1 AA contrast-checked (≥4.5:1) against this page's own actual background
+  colors in both themes (an external doc's claim to use this palette turned out to cite the wrong
+  hex values entirely — verified independently before adopting the real ones instead).
 - **Live Beta-PERT tri-point sliders** driving the real Monte Carlo simulation, with a simplified
   progressive-reveal histogram animation (not a physical ball-drop — stated honestly, not oversold).
 - **A what-if forecast sandbox**, a searchable/filterable glossary, and a cross-tab triage digest
