@@ -546,6 +546,19 @@ if (!execBtn || !overviewBtn) {
   overviewBtn.fire("click");
 }
 
+console.log("--- KPI Catalog: exactly 20 rows, every 'real' badge carries a real citation, every tab is real ---");
+assertEqual(state.kpiCatalog.length, 20, "KPI catalog has exactly 20 rows, not 19 or 21");
+const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"];
+let realBadgeNoCitation = 0, unknownTab = 0;
+state.kpiCatalog.forEach((k) => {
+  if (k.badge === "real" && (!k.cite || k.cite === "—")) realBadgeNoCitation++;
+  if (KNOWN_TABS.indexOf(k.tab) === -1) unknownTab++;
+});
+assertEqual(realBadgeNoCitation, 0, "every 'real'-badged KPI row carries an actual citation, not a bare claim");
+assertEqual(unknownTab, 0, "every KPI row's jump target is one of the 11 real tabs, not a typo'd data-tab value");
+const kpiNames = state.kpiCatalog.map((k) => k.kpi);
+assertEqual(new Set(kpiNames).size, kpiNames.length, "no duplicate KPI names in the catalog");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " assertion(s) FAILED");

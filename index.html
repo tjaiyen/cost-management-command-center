@@ -664,6 +664,17 @@
   <!-- ============================================================ REFERENCE ============================================================ -->
   <div class="tabpanel" id="panel-reference" role="tabpanel" aria-labelledby="tab-reference">
     <section>
+      <h2>The 20-KPI Catalog <span class="badge illustrative">20 questions, all answered by a real built visual</span></h2>
+      <p class="lede" style="font-size:13px">Every KPI on this dashboard, the operational question
+        it actually answers, and a jump straight to the tab where it's computed live — not a
+        separate spec document, a map of what's already running.</p>
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table id="kpiCatalogTable"></table>
+        </div>
+      </div>
+    </section>
+    <section>
       <h2>Glossary — every term on this dashboard, searchable</h2>
       <div class="card">
         <div class="slider-row" style="margin:0 0 12px">
@@ -1477,6 +1488,41 @@
     { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
     { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
   ];
+  /* ---------- Reference tab: the 20-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
+  var kpiCatalog = [
+    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver" },
+    { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14" },
+    { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method" },
+    { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09" },
+    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 40R-08" },
+    { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11" },
+    { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97" },
+    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Archdesk 2026" },
+    { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026" },
+    { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
+    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"ANSI/EIA-748" },
+    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"ANSI/EIA-748" },
+    { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
+    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06" },
+    { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design" },
+    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"illustrative", cite:"—" },
+    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19" },
+    { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01" },
+    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"—" },
+    { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08" }
+  ];
+  function renderKpiCatalog(){
+    var el = document.getElementById("kpiCatalogTable");
+    if (!el) return;
+    var rows = kpiCatalog.map(function(k, i){
+      return "<tr><td class='tabular'>" + (i + 1) + "</td><td>" + k.q + "</td><td><b>" + k.kpi + "</b></td>" +
+        "<td><button class='icobtn triage-jump' type='button' data-jump='" + k.tab + "'>" + k.tabLabel + " →</button></td>" +
+        "<td><span class='badge " + k.badge + "'>" + k.badge + "</span></td><td>" + k.cite + "</td></tr>";
+    }).join("");
+    el.innerHTML = "<thead><tr><th scope='col'>#</th><th scope='col'>Operational question</th><th scope='col'>KPI</th><th scope='col'>Jump to tab</th><th scope='col'>Badge</th><th scope='col'>Citation</th></tr></thead><tbody>" + rows + "</tbody>";
+  }
+  renderKpiCatalog();
+
   /* ---------- Glossary: unified search + category filter across all 3 term lists ---------- */
   var allGlossaryItems = aaceTerms.map(function(t){ return { term:t.term, def:t.def, category:"aace" }; })
     .concat(realFigures.map(function(t){ return { term:t.term, def:t.def, category:"figures" }; }))
@@ -1601,7 +1647,8 @@
     computeLPF: computeLPF,
     allGlossaryItems: allGlossaryItems,         // Phase 5: unified searchable glossary
     filterGlossaryItems: filterGlossaryItems,
-    visibleGlossaryItems: visibleGlossaryItems
+    visibleGlossaryItems: visibleGlossaryItems,
+    kpiCatalog: kpiCatalog                      // KPI-catalog build: the 20 Q->KPI->tab->citation rows
   };
 })();
 </script>
