@@ -219,6 +219,17 @@
   .tab-drawer p:last-child{margin-bottom:0; font-style:italic}
   @media (max-width:720px){ .tab-drawer{display:none !important} }
 
+  /* sticky in-tab section-anchor rail (Cost + Contingency & Risk -- this build's two biggest tabs) */
+  .anchor-rail{margin:0 0 18px; border:1px solid rgb(var(--c-text-secondary)/0.15); border-radius:9px;
+    background:rgb(var(--c-bg-card2)); position:sticky; top:56px; z-index:15}
+  .anchor-rail summary{cursor:pointer; padding:8px 12px; font:600 11px/1.3 ui-monospace,monospace;
+    color:rgb(var(--c-text-secondary)); list-style:none}
+  .anchor-rail summary::-webkit-details-marker{display:none}
+  .anchor-rail nav{display:flex; gap:6px; flex-wrap:wrap; padding:0 12px 10px}
+  .anchor-rail nav a{padding:4px 10px; border-radius:7px; font-size:12px; font-weight:600;
+    color:rgb(var(--c-accent)); text-decoration:none; background:rgb(var(--c-bg-card))}
+  .anchor-rail nav a:hover, .anchor-rail nav a:focus-visible{background:rgb(var(--c-accent)/0.12)}
+
   /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
      which tab is active on screen when Print is invoked. #id beats .class specificity so this
      wins over the .tabpanel{display:none} rule right above it. */
@@ -353,6 +364,15 @@
 
   <!-- ============================================================ COST ============================================================ -->
   <div class="tabpanel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost">
+    <details class="anchor-rail">
+      <summary>Jump to a section on this tab</summary>
+      <nav>
+        <a href="#bridge-section">Budget Bridge</a>
+        <a href="#benchmark-section">Benchmarks</a>
+        <a href="#wbs-section">WBS Allocation</a>
+        <a href="#cal-section">Control Accounts</a>
+      </nav>
+    </details>
     <section id="bridge-section">
       <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span>
         <button class="info-toggle" type="button" data-explainer="exp0206" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
@@ -476,7 +496,16 @@
 
   <!-- ============================================================ CONTINGENCY & RISK ============================================================ -->
   <div class="tabpanel" id="panel-contingency" role="tabpanel" aria-labelledby="tab-contingency">
-    <section>
+    <details class="anchor-rail">
+      <summary>Jump to a section on this tab</summary>
+      <nav>
+        <a href="#drawdown-mc-section">Drawdown &amp; Monte Carlo</a>
+        <a href="#risk-register-section">Risk Register</a>
+        <a href="#float-section">Schedule Float</a>
+        <a href="#emv-section">Change-Order EMV</a>
+      </nav>
+    </details>
+    <section id="drawdown-mc-section">
       <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span>
         <button class="info-toggle" type="button" data-explainer="aace5709exp" aria-expanded="false" aria-label="What is AACE RP 57R-09?">i</button></h2>
       <div class="explainer" id="aace5709exp">Assigns Beta-PERT/Triangular/Log-Normal probability
@@ -545,7 +574,7 @@
       </div>
     </section>
 
-    <section>
+    <section id="risk-register-section">
       <h2>Priced Risk Register <span class="badge illustrative">illustrative rows, real methodology</span>
         <button class="info-toggle" type="button" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp05"></div>

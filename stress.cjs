@@ -140,6 +140,13 @@ if (tabInfoMatch) {
   failures++; console.error("FAIL: could not find the TAB_INFO object in index.html to check against");
 }
 
+console.log("--- Anchor-rail links resolve to a real section id (not a typo) ---");
+const anchorHrefs = [...indexHtml.matchAll(/class="anchor-rail"[\s\S]*?<\/details>/g)]
+  .flatMap((block) => [...block[0].matchAll(/href="#([\w-]+)"/g)].map((m) => m[1]));
+check(anchorHrefs.length === 8, "found all 8 expected anchor-rail links (4 per tab x 2 tabs)", `found ${anchorHrefs.length}`);
+const brokenAnchors = anchorHrefs.filter((id) => !indexHtml.includes('id="' + id + '"'));
+check(brokenAnchors.length === 0, "every anchor-rail href resolves to a real section id somewhere in the page", JSON.stringify(brokenAnchors));
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");
