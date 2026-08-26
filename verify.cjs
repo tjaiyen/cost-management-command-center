@@ -371,6 +371,16 @@ assertStrEqual(state.bandForValue(1.0, [{max:1.0,cls:"success"},{max:1.5,cls:"wa
 assertStrEqual(state.bandForValue(1.2, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "warning", "bandForValue: 1.2 falls in the warning band");
 assertStrEqual(state.bandForValue(1.8, [{max:1.0,cls:"success"},{max:1.5,cls:"warning"},{max:Infinity,cls:"danger"}]), "danger", "bandForValue: 1.8 falls in the danger band (never-exercised-by-default branch)");
 assertEqual(state.gaugeResult.value, state.drawdownRatio, "gauge value matches the real live drawdown ratio");
+// The gauge's needle POSITION (not just its value/band) was never independently re-derived before
+// this stress-test pass -- a hand-computed pct alongside the live one closes that hole.
+const expectedGaugePct = Math.max(0, Math.min(1, (state.drawdownRatio - 0) / (2.0 - 0)));
+assertEqual(state.gaugeResult.pct, expectedGaugePct, "gauge needle position (pct) independently re-derives from the real drawdown ratio over its declared 0-2.0x range", 0.0001);
+// Gate 4's gauge uses an inverted 2-band array (below 1.0 = danger here, unlike the drawdown
+// gauge's 3-band success-first ordering) -- its "success" (>= 1.0 coverage) branch was never
+// exercised by any test, since the live default state is always BLOCKED. Test the shared
+// bandForValue() helper directly against GATE4_GAUGE_BANDS with a synthetic cleared-gate value.
+assertStrEqual(state.bandForValue(1.2, state.GATE4_GAUGE_BANDS), "success", "Gate 4 bands: a coverage ratio of 1.2 (a cleared gate) correctly classifies as success (never-exercised-by-default branch)");
+assertStrEqual(state.bandForValue(0.4, state.GATE4_GAUGE_BANDS), "danger", "Gate 4 bands: a coverage ratio of 0.4 (this build's real, blocked state) classifies as danger");
 
 console.log("--- Director-grade visuals: Risk heat-map (probability x impact buckets) ---");
 assertStrEqual(state.probBucket(0.19), "Low", "probBucket: 0.19 is Low");
@@ -462,6 +472,13 @@ console.log("--- Phase 2 director-grade visuals: EMV two-bar comparison ---");
 assertEqual(state.emvTwoBarResult.settleWins, state.emvDecision.recommend === "settle", "two-bar 'settleWins' flag matches the real computeEMVDecision() recommendation");
 const expectedSettlePct = (state.emvDecision.settleNowCost / (Math.max(state.emvDecision.settleNowCost, state.emvDecision.disputeEV) * 1.15)) * 100;
 assertEqual(state.emvTwoBarResult.settlePct, expectedSettlePct, "settle-bar height % independently re-derives from the real EMV decision", 0.01);
+// The "dispute wins" branch (lose-styled settle bar, win-styled dispute bar) is never exercised by
+// this build's own demo data (settle always wins there) -- computeTwoBarLayout() is pure
+// specifically so this branch is directly testable with a synthetic fixture instead of needing to
+// mutate and restore module state.
+const disputeWinsLayout = state.computeTwoBarLayout(100000, 60000, "dispute");
+assertStrEqual(disputeWinsLayout.settleWins, false, "computeTwoBarLayout() correctly flags dispute as the winner when disputeEV < settleNowCost (never-exercised-by-default branch)");
+assertEqual(disputeWinsLayout.disputePct, (60000 / (100000 * 1.15)) * 100, "dispute-bar height % independently re-derives in the dispute-wins fixture", 0.01);
 
 console.log("--- Phase 2 director-grade visuals: Consultant scatter plot ---");
 assertEqual(state.consultantScatterResult.length, 3, "3 consultants plotted");
@@ -922,14 +939,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 10, "exactly 10 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 10, "renderGuards() actually ran all 10 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 12, "exactly 12 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 12, "renderGuards() actually ran all 12 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 10 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log("pass: all 12 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 10 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, "of 12 live integrity checks are failing:", JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and

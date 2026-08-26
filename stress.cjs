@@ -174,7 +174,7 @@ const guardsBlockMatch = indexHtml.match(/var GUARDS = \[([\s\S]*?)\n  \];/);
 check(!!guardsBlockMatch, "found the GUARDS array literal to count structurally");
 if (guardsBlockMatch) {
   const guardEntryCount = (guardsBlockMatch[1].match(/\{ n:"/g) || []).length;
-  check(guardEntryCount === 10, "GUARDS array literal has exactly 10 check entries", `found ${guardEntryCount}`);
+  check(guardEntryCount === 12, "GUARDS array literal has exactly 12 check entries", `found ${guardEntryCount}`);
   check(guardsBlockMatch[1].includes("Escalation assumption re-validated"), "the escalation-staleness guard is registered");
   check(guardsBlockMatch[1].includes("Every region reports the same cost-reporting schema"), "the cross-region schema-consistency guard is registered");
 }
@@ -251,6 +251,41 @@ if (currencyHandlerMatch) {
     check(currencyHandlerMatch[1].includes(fn + "()"), `${fn}() re-renders on currency toggle (it displays a $ figure)`);
   });
 }
+
+console.log("--- /stress-test audit (2026-08-26): regression guards for confirmed findings ---");
+// Two tornado-bar visuals (built in the first director-grade-visuals commit) were missing
+// tabindex="0" -- confirmed by both this session's own review AND an independent fresh-context
+// reviewer, the two highest-confidence findings of the whole pass.
+check(/id="cvBar' \+ i \+ '" tabindex="0"/.test(indexHtml), "CV tornado bars are keyboard-focusable");
+check(/id="sensBar' \+ i \+ '" tabindex="0"/.test(indexHtml), "sensitivity tornado bars are keyboard-focusable");
+// 4 dynamic alert/status containers had no aria-live, so slider-driven state changes went
+// unannounced to screen readers (independent-reviewer finding).
+["drawdownWarn", "floatWarn", "dqWarn", "gateFwStatus"].forEach((id) => {
+  check(indexHtml.includes('id="' + id + '" aria-live="polite"'), `#${id} has aria-live="polite"`);
+});
+// CPI stoplight tiles showed the bare CPI number with no non-color cue, unlike the ledger table's
+// own ✓/⚠ right above it on the same tab (independent-reviewer finding).
+check(/st-val">' \+ a\.cpi\.toFixed\(2\) \+ ' ' \+ \(ok \? "✓" : "⚠"\)/.test(indexHtml), "CPI stoplight tiles carry a ✓/⚠ marker, not color alone");
+// The maturity ladder's "real classification framework" badge had no src-note disambiguating that
+// the SPECIFIC class shown (Class 3) is illustrative -- the only new visual missing that pattern.
+check(/AACE RP 17R-97 verbatim[\s\S]{0,150}Class 3/.test(indexHtml), "the maturity ladder has its own real-vs-illustrative src-note (Class 3 is illustrative, the 5-class system is real)");
+// The "compliance sweep" GUARDS check's own title claimed to scan "this build's own rendered
+// content" while only checking 4 hardcoded ids -- broadened to the real set of data-bearing
+// containers found by scanning every getElementById(...).innerHTML= call site.
+const complianceIdsMatch = indexHtml.match(/var ids = \[("kpiCatalogTable"[\s\S]*?)\];/);
+check(!!complianceIdsMatch, "found the compliance sweep's ids array to count");
+if (complianceIdsMatch) {
+  const complianceIdCount = (complianceIdsMatch[1].match(/"/g) || []).length / 2;
+  check(complianceIdCount >= 30, `compliance sweep now scans >=30 real containers, not just 4`, `found ${complianceIdCount}`);
+}
+// Two branches that no test exercised before this pass: Gate 4's "success" band (the live default
+// is always BLOCKED) and the EMV two-bar's "dispute wins" layout (the live default always settles).
+check(indexHtml.includes("function computeTwoBarLayout("), "computeTwoBarLayout() was extracted as a pure function specifically so the dispute-wins branch is directly testable");
+check(indexHtml.includes("GATE4_GAUGE_BANDS: GATE4_GAUGE_BANDS"), "GATE4_GAUGE_BANDS is exposed to state so its success branch is directly testable");
+// The escalation-staleness date math mixed a UTC-parsed date string with a local-time `new Date()`
+// "now" -- confirmed via a real probe to cause a rounding-boundary day miscount depending on the
+// visitor's timezone, not just a theoretical concern.
+check(indexHtml.includes('new Date(lastValidatedStr + "T00:00:00")'), "escalation-age math parses the last-validated date in local time, matching new Date()'s own local-time \"now\"");
 
 console.log("");
 if (failures > 0) {

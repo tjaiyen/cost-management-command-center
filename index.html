@@ -625,6 +625,10 @@
         <div class="explainer" id="expMaturity"></div>
         <div id="maturityLadder" class="ladder"></div>
         <div id="maturityDetail" class="src-note" style="min-height:1.4em">Hover or click a class for its definition.</div>
+        <p class="src-note"><span class="badge real">real</span> The 5-class system and each
+          class's definition are AACE RP 17R-97 verbatim. <span class="badge illustrative">illustrative</span>
+          which class this synthetic program currently sits at (Class 3) — not any real capital
+          program's actual estimate maturity.</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Escalation assumption governance <span class="badge illustrative">illustrative dates, real cadence practice</span>
@@ -745,7 +749,7 @@
             <input type="range" id="drawdownPct" min="0" max="100" value="35" />
             <span class="tabular" id="drawdownPctVal">35%</span>
           </div>
-          <div id="drawdownWarn"></div>
+          <div id="drawdownWarn" aria-live="polite"></div>
           <div id="drawdownGaugeWrap" style="margin:12px 0"></div>
           <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> —
             the underlying early-warning pattern is grounded in a real 100+ bid-package
@@ -831,7 +835,7 @@
         scheduling territory, out of scope here).</p>
       <div class="card">
         <div class="kpis" id="floatKpis"></div>
-        <div id="floatWarn"></div>
+        <div id="floatWarn" aria-live="polite"></div>
         <div style="margin-top:12px">
           <h3 style="font-size:13px; margin:0 0 4px">Float burn-down <span class="badge illustrative">illustrative readings, real erosion-rate math</span>
             <button class="info-toggle" type="button" data-explainer="expFloatBurndown" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
@@ -889,7 +893,7 @@
         health indicator.</p>
       <div class="card">
         <div class="kpis" id="dqKpis"></div>
-        <div id="dqWarn"></div>
+        <div id="dqWarn" aria-live="polite"></div>
         <div style="margin-top:12px">
           <h3 style="font-size:13px; margin:0 0 4px">Sync-lag trend</h3>
           <div id="dqLagTrend"></div>
@@ -950,7 +954,7 @@
       <div class="card">
         <div class="kpis" id="gateFwKpis"></div>
         <div id="gate4Gauge" style="margin:12px 0"></div>
-        <div id="gateFwStatus"></div>
+        <div id="gateFwStatus" aria-live="polite"></div>
       </div>
     </section>
     <section>
@@ -1356,7 +1360,11 @@
   function computeEscalationAge(lastValidatedStr, cadenceDays, now){
     var msPerDay = 86400000;
     var nowDate = now || new Date();
-    var ageDays = Math.round((nowDate - new Date(lastValidatedStr)) / msPerDay);
+    // A bare "YYYY-MM-DD" string parses as UTC midnight, while `new Date()` uses the visitor's
+    // local time -- mixing the two silently shifts the day count by the visitor's UTC offset,
+    // near enough to a day boundary to flip the rounded result. Appending a local (no "Z")
+    // midnight time keeps both sides in the same local-time frame (stress-test finding).
+    var ageDays = Math.round((nowDate - new Date(lastValidatedStr + "T00:00:00")) / msPerDay);
     return { ageDays: ageDays, cadenceDays: cadenceDays, stale: ageDays > cadenceDays };
   }
   function renderEscalationGovernance(){
@@ -1927,7 +1935,7 @@
       var ok = a.cpi >= 1;
       return '<div class="stoplight-tile ' + (ok ? "ok" : "warn") + '" id="stoplightTile' + i + '" tabindex="0" ' +
         'title="' + a.name + ': CPI ' + a.cpi.toFixed(2) + '"><div class="st-name">' + a.name + '</div>' +
-        '<div class="st-val">' + a.cpi.toFixed(2) + '</div></div>';
+        '<div class="st-val">' + a.cpi.toFixed(2) + ' ' + (ok ? "✓" : "⚠") + '</div></div>';
     }).join("");
     controlAccounts.forEach(function(a, i){
       var tile = document.getElementById("stoplightTile" + i);
@@ -1957,7 +1965,7 @@
     el.innerHTML = ranked.map(function(a, i){
       var overBudget = a.cv < 0;
       return '<div class="tornado-row"><div class="tname">' + a.name + '</div>' +
-        '<div class="thalf"><div class="tbar ' + (overBudget ? "neg" : "pos") + '" id="cvBar' + i + '" ' +
+        '<div class="thalf"><div class="tbar ' + (overBudget ? "neg" : "pos") + '" id="cvBar' + i + '" tabindex="0" ' +
         'title="' + a.name + ': CV ' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '"></div></div>' +
         '<div class="tval">' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '</div></div>';
     }).join("");
@@ -1995,7 +2003,7 @@
     el.innerHTML = scenarios.map(function(s, i){
       var favorable = s.delta < 0;
       return '<div class="tornado-row"><div class="tname">' + s.name + '</div>' +
-        '<div class="thalf"><div class="tbar ' + (favorable ? "pos" : "neg") + '" id="sensBar' + i + '" ' +
+        '<div class="thalf"><div class="tbar ' + (favorable ? "pos" : "neg") + '" id="sensBar' + i + '" tabindex="0" ' +
         'title="' + s.name + ': ' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + ' vs. current forecast"></div></div>' +
         '<div class="tval">' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + '</div></div>';
     }).join("");
@@ -2191,25 +2199,34 @@
   // ---- Phase 2, #15: Settle-vs-dispute two-bar comparison (Contingency tab) -- the same
   // computeEMVDecision() result the table below already shows, as a side-by-side bar pair with
   // the winner highlighted. ----
+  // Pure function, same reasoning as computeEMVDecision itself -- testable directly with synthetic
+  // inputs, including the "dispute wins" branch a settle-favoring demo state never triggers on its
+  // own (stress-test finding: this branch had no test before, unlike every other never-exercised
+  // branch on this page, which do).
+  function computeTwoBarLayout(settleNowCost, disputeEV, recommend){
+    var maxVal = Math.max(settleNowCost, disputeEV) * 1.15 || 1;
+    return {
+      settlePct: (settleNowCost / maxVal) * 100,
+      disputePct: (disputeEV / maxVal) * 100,
+      settleWins: recommend === "settle"
+    };
+  }
   function renderEmvTwoBar(){
     var el = document.getElementById("emvTwoBar");
     if (!el) return null;
-    var maxVal = Math.max(emvDecision.settleNowCost, emvDecision.disputeEV) * 1.15 || 1;
-    var settlePct = (emvDecision.settleNowCost / maxVal) * 100;
-    var disputePct = (emvDecision.disputeEV / maxVal) * 100;
-    var settleWins = emvDecision.recommend === "settle";
+    var layout = computeTwoBarLayout(emvDecision.settleNowCost, emvDecision.disputeEV, emvDecision.recommend);
     el.innerHTML = '<div class="twobar">' +
       '<div class="twobar-col"><div class="twobar-val">' + fmt(emvDecision.settleNowCost) + '</div>' +
-      '<div class="twobar-bar ' + (settleWins ? "win" : "lose") + '" id="twoBarSettle" tabindex="0" title="Settle now: ' + fmt(emvDecision.settleNowCost) + '"></div>' +
-      '<div class="twobar-label">Settle now' + (settleWins ? " ✓" : "") + '</div></div>' +
+      '<div class="twobar-bar ' + (layout.settleWins ? "win" : "lose") + '" id="twoBarSettle" tabindex="0" title="Settle now: ' + fmt(emvDecision.settleNowCost) + '"></div>' +
+      '<div class="twobar-label">Settle now' + (layout.settleWins ? " ✓" : "") + '</div></div>' +
       '<div class="twobar-col"><div class="twobar-val">' + fmt(emvDecision.disputeEV) + '</div>' +
-      '<div class="twobar-bar ' + (!settleWins ? "win" : "lose") + '" id="twoBarDispute" tabindex="0" title="Dispute EV: ' + fmt(emvDecision.disputeEV) + '"></div>' +
-      '<div class="twobar-label">Dispute EV' + (!settleWins ? " ✓" : "") + '</div></div></div>';
+      '<div class="twobar-bar ' + (!layout.settleWins ? "win" : "lose") + '" id="twoBarDispute" tabindex="0" title="Dispute EV: ' + fmt(emvDecision.disputeEV) + '"></div>' +
+      '<div class="twobar-label">Dispute EV' + (!layout.settleWins ? " ✓" : "") + '</div></div></div>';
     runOnFrame(function(){
-      var s = document.getElementById("twoBarSettle"); if (s) s.style.height = settlePct + "%";
-      var d = document.getElementById("twoBarDispute"); if (d) d.style.height = disputePct + "%";
+      var s = document.getElementById("twoBarSettle"); if (s) s.style.height = layout.settlePct + "%";
+      var d = document.getElementById("twoBarDispute"); if (d) d.style.height = layout.disputePct + "%";
     });
-    return { settlePct: settlePct, disputePct: disputePct, settleWins: settleWins };
+    return layout;
   }
   var emvTwoBarResult = renderEmvTwoBar();
 
@@ -2911,7 +2928,16 @@
         // static-file sweep for the same literals -- same problem the reference build's own
         // compliance sweep documents hitting, solved the same way.
         var bad = [["Ada", " Infrastructure"].join(""), ["B.E.", " Meyers"].join("")];
-        var ids = ["kpiCatalogTable", "execBrief", "calTable", "riskTable"];
+        // Every container any render*() function actually writes data into -- broadened from an
+        // earlier 4-id sample (which the check's own title overclaimed as comprehensive) to the
+        // real set, found by scanning the source for getElementById(...).innerHTML= call sites.
+        var ids = ["kpiCatalogTable", "execBrief", "calTable", "riskTable", "overviewKpis",
+          "bridgeChart", "wbsDetail", "costDriverTreemap", "maturityLadder", "cpiStoplightGrid",
+          "cvTornado", "sensitivityTornado", "bulletForecast", "gateFwKpis", "gateFwStatus",
+          "gateTrack", "floatKpis", "floatWarn", "drawdownWarn", "dqKpis", "dqWarn", "emvTable",
+          "emvVerdict", "emvTwoBar", "consultantTable", "productivityTable", "lpfRankedBar",
+          "regionDetail", "regionTabs", "riskCategoryKpis", "actionsKpis", "actionsTable",
+          "triageList", "heatmapDetail", "stoplightDetail", "maturityDetail", "pipelineDiagram"];
         var text = ids.map(function(id){ var el = document.getElementById(id); return el ? el.innerHTML : ""; }).join(" ");
         var hit = bad.some(function(t){ return text.indexOf(t) !== -1; });
         return [!hit, hit ? "FOUND" : "clean"];
@@ -2926,6 +2952,18 @@
           return requiredKeys.some(function(k){ return typeof r[k] === "undefined"; });
         });
         return [bad.length === 0, bad.length === 0 ? regions.length + " regions consistent" : bad.length + " region(s) missing a field"];
+      }},
+    { n:"Sensitivity tornado's Scope +10% delta recomputes from the same real what-if function", run:function(){
+        var expected = computeWhatIf(bridgeResult.baseline, 10, 0, bridgeSteps[3].value, bridgeSteps[4].value) - bridgeResult.final;
+        var actual = sensitivityResult.filter(function(s){ return s.name === "Scope +10%"; })[0];
+        return [!!actual && Math.abs(actual.delta - expected) < 1e-6, fmt(expected)];
+      }},
+    { n:"All 4 regions' ranked order matches an independent sort by variance%", run:function(){
+        var expectedOrder = regions.slice().sort(function(a, b){ return computeRegionVariancePct(b) - computeRegionVariancePct(a); }).map(function(r){ return r.code; });
+        var actualOrder = regionRankedBarResult.map(function(r){ return r.label; });
+        var expectedNames = regions.slice().sort(function(a, b){ return computeRegionVariancePct(b) - computeRegionVariancePct(a); }).map(function(r){ return r.name; });
+        var ok = JSON.stringify(actualOrder) === JSON.stringify(expectedNames);
+        return [ok, expectedOrder.join(" > ")];
       }}
   ];
   function renderGuards(){
@@ -3015,6 +3053,8 @@
     lastMCHistogram: lastMCHistogram,
     floatBurndownResult: floatBurndownResult,
     emvTwoBarResult: emvTwoBarResult,
+    computeTwoBarLayout: computeTwoBarLayout,
+    GATE4_GAUGE_BANDS: GATE4_GAUGE_BANDS,
     consultantScatterResult: consultantScatterResult,
     dqLagTrendResult: dqLagTrendResult,
     lpfDivergingBarResult: lpfDivergingBarResult,
