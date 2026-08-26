@@ -65,6 +65,13 @@ function makeElementStub() {
     // through two verify.cjs runs. Fixed: fire(type) below lets tests actually trigger these.
     addEventListener(type, handler){ (listeners[type] = listeners[type] || []).push(handler); },
     fire(type, evt){ (listeners[type] || []).forEach((h) => h(evt || {})); },
+    // .focus() has no meaningful stub behavior to verify; .click() synthesizes a real click the
+    // same way a browser's element.click() does -- fires this element's own registered "click"
+    // listeners. Needed because the new 1-9 tab-jump keyboard handler calls both directly on a
+    // tab button (same pattern the pre-existing ArrowLeft/ArrowRight handler already used,
+    // untested until now because nothing had ever fired a keydown at the document level before).
+    focus(){},
+    click(){ el.fire("click"); },
     setAttribute(name, value){ attrs[name] = String(value); },
     getAttribute(name){ return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null; },
     appendChild(child){ el.children.push(child); },
@@ -102,9 +109,12 @@ function getOrCreate(id) {
   return elementsById[id];
 }
 
-// The one real DOM event this file needs to simulate: the top-level click-delegation listener
-// the page registers for the explainer-toggle feature. Captured here so verify.cjs can fire it.
-const documentClickHandlers = [];
+// Generic per-type capture for document-level listeners (a prior version only ever captured
+// "click", silently dropping any other event type -- meaning the new global keydown listener
+// for 1-9 tab-jump and "?" shortcuts would have been registered but untestable, the exact same
+// defect class as the earlier no-op addEventListener bug, just one level up. Fixed generically.)
+const documentHandlers = {};
+const documentClickHandlers = []; // kept as a live alias so existing click-specific tests are unaffected
 
 // Captured so verify.cjs can fire a real click on one of these AFTER the page script has already
 // wired its click/keydown listeners onto them (the page only calls querySelectorAll(".tabbtn")
@@ -129,7 +139,11 @@ const documentStub = {
     return [];
   },
   documentElement: { setAttribute(){}, getAttribute(){ return null; } },
-  addEventListener(type, handler){ if (type === "click") documentClickHandlers.push(handler); },
+  addEventListener(type, handler){
+    (documentHandlers[type] = documentHandlers[type] || []).push(handler);
+    if (type === "click") documentClickHandlers.push(handler);
+  },
+  fire(type, evt){ (documentHandlers[type] || []).forEach((h) => h(evt || {})); },
   createElement: () => withProperties(makeElementStub()),
 };
 
@@ -167,6 +181,13 @@ elementsById["wiEscalation"] = wiEscalationStub;
 // Phase 5: glossary search input, empty by default (matches the real HTML's no-value default).
 const glossarySearchStub = makeElementStub(); glossarySearchStub.value = "";
 elementsById["glossarySearch"] = glossarySearchStub;
+
+// The real HTML declares shortcutsOverlay with the `hidden` boolean attribute, which a real
+// browser reflects onto element.hidden = true automatically on parse. This stub doesn't parse
+// HTML, so it must be pre-seeded the same way pctComplete's declared `value="18"` is above --
+// otherwise shortcutsOpen() would read `hidden` as undefined (falsy) and report "open" at load.
+const shortcutsOverlayStub = makeElementStub(); shortcutsOverlayStub.hidden = true;
+elementsById["shortcutsOverlay"] = shortcutsOverlayStub;
 
 // Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
 // The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
@@ -561,6 +582,22 @@ if (!execBtn || !overviewBtn) {
   // Return focus to Overview so this test doesn't change which tab later assertions implicitly assume is active.
   overviewBtn.fire("click");
 }
+
+console.log("--- Global 1-9 tab-jump + \"?\" shortcuts overlay (actually firing document keydown) ---");
+assertStrEqual(elementsById["shortcutsOverlay"].hidden, true, "shortcuts overlay starts hidden, matching its real HTML default");
+documentStub.fire("keydown", { key: "?", target: {} });
+assertStrEqual(elementsById["shortcutsOverlay"].hidden, false, "pressing ? opens the shortcuts overlay");
+documentStub.fire("keydown", { key: "Escape", target: {} });
+assertStrEqual(elementsById["shortcutsOverlay"].hidden, true, "pressing Escape closes it again");
+// Typing "3" into a real form field must NOT jump tabs -- only a bare keypress should.
+overviewBtn.setAttribute("aria-selected", "true"); // reset known state before this check
+documentStub.fire("keydown", { key: "3", target: { tagName: "INPUT" } });
+assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "pressing '3' while typing in an input does NOT trigger the tab-jump shortcut");
+// A bare "3" keypress (not typing) must jump to the 3rd real tab -- cost, per the real tab order.
+documentStub.fire("keydown", { key: "3", target: {} });
+assertStrEqual(lastTabButtonStubs[2].dataset.tab, "cost", "the 3rd tab in real DOM order is 'cost' (sanity-check the index math against)");
+assertStrEqual(lastTabButtonStubs[2].getAttribute("aria-selected"), "true", "pressing '3' (not typing) jumps straight to the 3rd tab (Cost)");
+overviewBtn.fire("click"); // reset back to Overview for later assertions
 
 console.log("--- Guided Tour (actually firing Start/Next/Prev/Exit, walking the real 20-KPI catalog) ---");
 const startTourBtnEl = elementsById["startTourBtn"];
