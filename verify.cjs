@@ -460,6 +460,18 @@ assertEqual(state.clampMode(2450000, 2620000, 3050000), 2620000, "clampMode: a m
 assertEqual(state.clampMode(2450000, 2000000, 3050000), 2450000, "clampMode: a mode below min clamps up to min (never naturally triggered by a well-behaved drag)");
 assertEqual(state.clampMode(2450000, 3200000, 3050000), 3050000, "clampMode: a mode above max clamps down to max (never naturally triggered by a well-behaved drag)");
 
+console.log("--- Live tab-rail status pill (Gate 4) reflects the real computed gate state ---");
+const gate4Pill = elementsById["cntGate4"];
+if (!gate4Pill) {
+  failures++; console.error("FAIL: #cntGate4 was never registered by the page script");
+} else {
+  // Pre-registered expectation: this build's real default numbers already put Gate 4 BLOCKED
+  // (0.47x coverage, established earlier this session) -- so the pill should be visible now.
+  assertStrEqual(gate4Pill.hidden, false, "Gate 4 is blocked on this build's real default state, so the tab-rail pill is visible");
+  assertStrEqual(gate4Pill.textContent, "Gate 4 blocked", "the pill's real text says 'Gate 4 blocked', not a placeholder");
+  assertStrEqual(gate4Pill.classList.contains("warn"), true, "the pill carries the warn styling class while blocked");
+}
+
 console.log("--- Phase 2: Operating Framework Gate 4 (independent re-derivation) ---");
 // Independent re-derivation of the exact gate math: reserve 200,000 - drawn 140,000 = 60,000
 // remaining; 60,000 / totalRiskEV must be < 1.00, i.e. genuinely BLOCKED, not a static "pending" bar.
@@ -683,6 +695,28 @@ documentStub.fire("click", { target: fakeJumpBtn }); // jump overview -> cost a 
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, false, "sanity check: breadcrumb is genuinely showing before the next assertion");
 overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, not a .triage-jump)
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
+
+console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
+assertEqual(state.GUARDS.length, 8, "exactly 8 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 8, "renderGuards() actually ran all 8 checks at page load, not a subset");
+const guardsFailures = state.guardsResult.filter((r) => !r.pass);
+if (guardsFailures.length === 0) {
+  console.log("pass: all 8 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+} else {
+  failures++;
+  console.error("FAIL:", guardsFailures.length, "of 8 live integrity checks are failing:", JSON.stringify(guardsFailures));
+}
+// Independently re-run each check a second time by calling .run() directly (not just trusting
+// renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and
+// re-derives cleanly, not a fluke of render order.
+const rerunResults = state.GUARDS.map((g) => g.run());
+assertStrEqual(rerunResults.every((r) => r[0]), true, "every GUARDS check independently re-passes when called a second time, fresh");
+const complianceCheck = state.GUARDS.find((g) => g.n.indexOf("Compliance sweep") !== -1);
+if (!complianceCheck) {
+  failures++; console.error("FAIL: could not find the compliance-sweep check among GUARDS");
+} else {
+  assertStrEqual(complianceCheck.run()[1], "clean", "the compliance sweep reports 'clean' on this build's real rendered content");
+}
 
 console.log("--- KPI Catalog: exactly 20 rows, every 'real' badge carries a real citation, every tab is real ---");
 assertEqual(state.kpiCatalog.length, 20, "KPI catalog has exactly 20 rows, not 19 or 21");
