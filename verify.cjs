@@ -522,11 +522,12 @@ assertEqual(state.gate4GaugeResult.value, state.gateStatus.ratio, "Gate 4 gauge 
 assertStrEqual(state.gate4GaugeResult.cls, state.gateStatus.ratio < 1.0 ? "danger" : "success", "Gate 4 gauge band classification matches the real blocked/cleared threshold");
 
 console.log("--- Interconnection Cost & Schedule Exposure (20-item deep-research pass, 2026-08-26) ---");
-const expectedInterconnection = state.computeInterconnectionExposure(state.bridge.baseline, state.interconnectionAssumptions);
-assertEqual(state.interconnectionResult.dollarLow, expectedInterconnection.dollarLow, "interconnection $ exposure (low end) independently re-derives from the real baseline and cited 30% floor", 0.01);
-assertEqual(state.interconnectionResult.dollarHigh, expectedInterconnection.dollarHigh, "interconnection $ exposure (high end) independently re-derives from the real baseline and cited 37% ceiling", 0.01);
-assertEqual(state.interconnectionResult.dollarLow, state.bridge.baseline * 0.30, "interconnection $ exposure low end matches baseline x 30% exactly", 0.01);
-assertEqual(state.interconnectionResult.dollarHigh, state.bridge.baseline * 0.37, "interconnection $ exposure high end matches baseline x 37% exactly", 0.01);
+// Independent re-derivation via the raw formula (baseline x the cited % literals), NOT a second
+// call to computeInterconnectionExposure() -- calling the exact same pure function with the exact
+// same inputs would always agree with itself regardless of whether its own formula is correct, a
+// tautology found and fixed (both here and in the matching GUARDS entry) by a /stress-test pass.
+assertEqual(state.interconnectionResult.dollarLow, state.bridge.baseline * 0.30, "interconnection $ exposure low end independently re-derives as baseline x the real cited 30% floor", 0.01);
+assertEqual(state.interconnectionResult.dollarHigh, state.bridge.baseline * 0.37, "interconnection $ exposure high end independently re-derives as baseline x the real cited 37% ceiling", 0.01);
 // This build's own live default (12yr typical wait vs. a 3yr assumed schedule) is genuinely
 // AT RISK -- pre-registered, not assumed. Then prove the OK branch too, since a well-behaved
 // program with a longer assumed schedule window would clear it -- a branch the live default
@@ -534,6 +535,12 @@ assertEqual(state.interconnectionResult.dollarHigh, state.bridge.baseline * 0.37
 assertStrEqual(state.interconnectionResult.atRisk, true, "this build's own live assumptions (12yr wait vs. 3yr assumed schedule) are correctly flagged at risk");
 const clearedFixture = state.computeInterconnectionExposure(2450000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 12, assumedDevelopmentScheduleYears: 15 });
 assertStrEqual(clearedFixture.atRisk, false, "computeInterconnectionExposure() correctly clears a program whose assumed schedule exceeds the typical wait (never-exercised-by-default branch)");
+// Exact-tie boundary (assumed schedule === typical wait) -- neither the live default (12 vs 3) nor
+// the cleared fixture above (12 vs 15) exercises this exact edge, flagged by an independent
+// reviewer as a real coverage gap. atRisk uses strict '>' ("exceeds"), so an exact tie clears --
+// a program with zero schedule margin isn't flagged, which is the documented, intended semantic.
+const tieFixture = state.computeInterconnectionExposure(2450000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 5, assumedDevelopmentScheduleYears: 5 });
+assertStrEqual(tieFixture.atRisk, false, "computeInterconnectionExposure() at the exact tie boundary (wait === assumed schedule) does not flag at-risk -- 'exceeds' is strict, not inclusive");
 
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");

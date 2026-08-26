@@ -193,8 +193,8 @@ legible, marked `illustrative` throughout.
    (added with the interconnection tracker, from a 20-item real industry/company research pass)
    the $ exposure re-derivation against the real cited 30–37% range and both the at-risk and
    cleared schedule-verdict branches.
-   **235 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 235) as of the last run. Exists because this repo was
+   **234 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 234) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -236,8 +236,8 @@ legible, marked `illustrative` throughout.
    Also (added with the interconnection tracker) that its render targets, explainer, and
    currency-toggle re-render all actually exist, and that the LLE section's upgraded generator
    citation states the real range rather than a bare claim.
-   **129 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 129) as of the last
+   **132 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 132) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -313,6 +313,20 @@ structure, tenant-concentration/AI-bubble risk, GPU allocation risk). 2 items ar
 specific to Ada's own actual site (a 2026 moratorium vote covering its Spotsylvania County, VA
 campus) — deliberately kept vault-only, never the public dashboard, the same discipline already
 applied to the earlier market-challenges build.
+
+A `/stress-test` pass 2026-08-26 (this session's own review + an independent fresh-context
+reviewer, scoped to the two commits since the prior audit) found and fixed: a genuinely
+tautological new GUARDS/verify.cjs check (calling the exact same pure function with the exact same
+inputs it was already computed from, so it could never fail regardless of whether the underlying
+formula was correct — rewritten to re-derive via the raw baseline × cited-% literal instead,
+falsification-tested by temporarily breaking the real formula and confirming both the GUARDS entry
+and the verify.cjs assertion actually caught it); a citation-attribution gap (the upgraded generator
+lead-time figure shared its paragraph with the transformer citation's named sources without its own
+distinct attribution — now separately sourced to Terrapin Consulting Group and PowerMag); a tonal
+inconsistency in one `ada-fit.html` row (a self-referential dashboard citation lacked the
+"illustrates the claim, isn't the proof" hedge every other self-referential row in the file uses);
+and a minor edge-case gap (the interconnection tracker's exact tie boundary was never tested).
+verify.cjs 235 → 234 (net: -2 tautological, +1 tie-boundary), stress.cjs 129 → 132, both green.
 
 ## Design lineage
 

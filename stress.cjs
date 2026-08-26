@@ -327,6 +327,19 @@ check(indexHtml.includes('interconnectionResult: interconnectionResult'), "inter
 // LLE citation upgrade: the generator row is now a second independently-cited real figure, not
 // just the transformer -- confirm the source text actually states the new range, not a bare claim.
 check(/50–78 weeks[\s\S]{0,200}90–110 weeks/.test(indexHtml), "the LLE section's src-note states the real generator lead-time range (50-78wk / 90-110wk), not a bare claim");
+// Independent-reviewer finding: the generator claim shared the transformer claim's citation names
+// by proximity (the section-scoped "explained somewhere" check would have passed either way) but
+// carried no citation of its own. Confirm the generator figure now names its own distinct sources
+// (Terrapin, PowerMag), not just relying on Wood Mackenzie/Turner & Townsend appearing earlier for
+// the transformer claim in the same paragraph.
+check(/Terrapin Consulting Group's own 2026 lead-time survey/.test(indexHtml), "the generator lead-time figure has its own named source (Terrapin), distinct from the transformer citation");
+check(/PowerMag's 2026\s+reporting confirms/.test(indexHtml), "the Cummins sold-out-through-2028 claim has its own named source (PowerMag)");
+
+console.log("--- ada-fit.html: self-referential rows hedge consistently (independent-reviewer finding) ---");
+// The "Develop cost-focused KPI views" row cited the dashboard itself as supporting evidence for a
+// "Match" without the same "illustrates the claim, isn't the proof" hedge every other
+// self-referential row in this file uses -- a real tonal inconsistency, now fixed.
+check(/they illustrate the claim, they aren't themselves the proof of prior experience/.test(adaFitHtml), "the KPI-views row's dashboard reference is hedged the same way as every other self-referential row in the file");
 
 console.log("");
 if (failures > 0) {

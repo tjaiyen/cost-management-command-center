@@ -678,9 +678,11 @@
           survey), with the largest high-voltage units running up to ~200+ weeks (nearly 4 years) —
           corroborated across Turner &amp; Townsend's 2025-2026 index and independent 2026 industry
           reporting (Build.inc, PowerMag, Terrapin Consulting Group). Standby generators are a
-          second, independently real-cited figure: 50–78 weeks for 1,500–3,000 kW units, stretching
-          to 90–110 weeks for larger units — with at least one major manufacturer (Cummins) sold
-          out of high-horsepower units through 2028. The other packages' lead times and this
+          second, independently real-cited figure, sourced separately from the transformer figures
+          above: Terrapin Consulting Group's own 2026 lead-time survey puts 1,500–3,000 kW diesel
+          units at 50–78 weeks, stretching to 90–110 weeks for larger units, and PowerMag's 2026
+          reporting confirms at least one major manufacturer (Cummins) sold out of high-horsepower
+          units through 2028. The other packages' lead times and this
           program's available schedule windows are illustrative, sized to make the buffer math
           legible.</p>
       </div>
@@ -3047,9 +3049,15 @@
         return [ok, expectedOrder.join(" > ")];
       }},
     { n:"Interconnection $ exposure recomputes from the same real baseline and cited % range", run:function(){
-        var expected = computeInterconnectionExposure(bridgeResult.baseline, interconnectionAssumptions);
-        var ok = Math.abs(expected.dollarLow - interconnectionResult.dollarLow) < 1e-6 && Math.abs(expected.dollarHigh - interconnectionResult.dollarHigh) < 1e-6;
-        return [ok, fmt(expected.dollarLow) + " – " + fmt(expected.dollarHigh)];
+        // Independent re-derivation via the raw formula (baseline x the cited % literals), NOT a
+        // second call to computeInterconnectionExposure() -- calling the exact same pure function
+        // with the exact same inputs would always agree with itself regardless of whether that
+        // function's own formula is correct, the same tautology class GUARDS exists to avoid
+        // (stress-test finding, 2026-08-26).
+        var expectedLow = bridgeResult.baseline * 0.30;
+        var expectedHigh = bridgeResult.baseline * 0.37;
+        var ok = Math.abs(expectedLow - interconnectionResult.dollarLow) < 1e-6 && Math.abs(expectedHigh - interconnectionResult.dollarHigh) < 1e-6;
+        return [ok, fmt(expectedLow) + " – " + fmt(expectedHigh)];
       }}
   ];
   function renderGuards(){
