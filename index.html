@@ -418,6 +418,7 @@
         <a href="#bridge-section">Budget Bridge</a>
         <a href="#benchmark-section">Benchmarks</a>
         <a href="#wbs-section">WBS Allocation</a>
+        <a href="#lle-section">Long-Lead Equipment</a>
         <a href="#cal-section">Control Accounts</a>
       </nav>
     </details>
@@ -510,6 +511,21 @@
           vs. air-cooled equivalents — an independent second real source corroborating the
           liquid-cooling premium figure above.</p>
       </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Escalation assumption governance <span class="badge illustrative">illustrative dates, real cadence practice</span>
+          <button class="info-toggle" type="button" data-explainer="expEscGov" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expEscGov"></div>
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Last re-validated</div><div class="val" id="escalationLastValidated">—</div></div>
+          <div class="kpi"><div class="lbl">Re-validation cadence</div><div class="val" id="escalationCadence">—</div></div>
+          <div class="kpi"><div class="lbl">Days since last check</div><div class="val" id="escalationAgeDays">—</div></div>
+        </div>
+        <p class="src-note">Cost-escalation assumptions (like the 5.5% YoY figure above) go stale
+          as market indices move — re-anchoring them on a fixed cadence, rather than carrying a
+          number forward indefinitely, is what keeps an escalation line defensible months later.
+          The Live Integrity Gate (Data Strategy tab) checks this bucket's own freshness against
+          that cadence, live.</p>
+      </div>
     </section>
 
     <section id="wbs-section">
@@ -521,6 +537,26 @@
         <p class="src-note"><span class="badge illustrative">illustrative</span> Shaped around a
           real GC/subcontractor bid-package composition and design/engineering cost-partnership
           experience — not any real capital program's actual cost data.</p>
+      </div>
+    </section>
+
+    <section id="lle-section">
+      <h2>Long-Lead Equipment Schedule-Risk Tracker <span class="badge real">real lead-time data</span>
+        <button class="info-toggle" type="button" data-explainer="expLLE" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expLLE"></div>
+      <p class="lede" style="font-size:13px">Procurement lead time vs. the schedule window actually
+        available before energization, per long-lead package — a negative buffer is the package
+        driving (or about to drive) the completion date, a signal worth surfacing before it shows
+        up as a bridge-step variance after the fact.</p>
+      <div class="card">
+        <div style="overflow-x:auto"><table id="lleTable"></table></div>
+        <p class="src-note"><span class="badge real">real</span> Substation transformer lead times
+          have stretched from roughly 140 weeks in 2023 to 160+ weeks in 2026, with the largest
+          high-voltage units running up to ~200+ weeks (nearly 4 years) — corroborated across
+          Turner &amp; Townsend's 2025-2026 index and independent 2026 industry reporting
+          (Build.inc, PowerMag, Terrapin Consulting Group). The other packages' lead times and
+          this program's available schedule windows are illustrative, sized to make the buffer
+          math legible.</p>
       </div>
     </section>
 
@@ -631,6 +667,13 @@
         <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
           impact, prioritized for mitigation before pricing) follows <b>AACE RP 40R-08</b>'s
           risk-driver framework — a real, named practice, not this program's own invention.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Exposure by risk category <span class="badge illustrative">illustrative rows, real bucketing practice</span></h3>
+        <div class="kpis" id="riskCategoryKpis"></div>
+        <p class="src-note">Kept as separate, auditable buckets — Execution, Escalation, and
+          Regulatory &amp; Community — rather than one blended contingency number, so each driver
+          can be tracked and re-priced independently as its own conditions change.</p>
       </div>
     </section>
 
@@ -1144,6 +1187,27 @@
   }
   var bridgeResult = renderBridge();
 
+  /* ================= COST TAB: escalation assumption governance (staleness guard input) =================
+     "now" is an injectable parameter, defaulting to the real clock -- lets verify.cjs assert the
+     age/staleness math deterministically (a fixed reference date in, a fixed answer out) instead of
+     a test that silently drifts as real time passes. */
+  var escalationAssumptionLastValidated = "2026-08-20";
+  var escalationRevalidationCadenceDays = 90; // quarterly re-basing, a common escalation-index cadence
+  function computeEscalationAge(lastValidatedStr, cadenceDays, now){
+    var msPerDay = 86400000;
+    var nowDate = now || new Date();
+    var ageDays = Math.round((nowDate - new Date(lastValidatedStr)) / msPerDay);
+    return { ageDays: ageDays, cadenceDays: cadenceDays, stale: ageDays > cadenceDays };
+  }
+  function renderEscalationGovernance(){
+    var status = computeEscalationAge(escalationAssumptionLastValidated, escalationRevalidationCadenceDays);
+    document.getElementById("escalationLastValidated").textContent = escalationAssumptionLastValidated;
+    document.getElementById("escalationCadence").textContent = escalationRevalidationCadenceDays + " days";
+    document.getElementById("escalationAgeDays").textContent = status.ageDays + (status.stale ? " ⚠" : "");
+    return status;
+  }
+  var escalationStatus = renderEscalationGovernance();
+
   /* ================= COST TAB: WBS allocation ================= */
   var wbsData = [
     { name:"GCs & Trades", pct:52 },
@@ -1166,6 +1230,38 @@
     });
   }
   renderBarChart("wbsChart", wbsData);
+
+  /* ================= COST TAB: long-lead equipment schedule-risk tracker ================= */
+  var lleItems = [
+    { name:"Substation transformer (utility-scale HV)", leadWeeks:160, availableWeeks:130, real:true },
+    { name:"Medium-voltage switchgear", leadWeeks:60, availableWeeks:85, real:false },
+    { name:"Standby generators", leadWeeks:70, availableWeeks:90, real:false },
+    { name:"Chiller / CRAH units", leadWeeks:45, availableWeeks:80, real:false },
+    { name:"Structural steel package", leadWeeks:30, availableWeeks:65, real:false }
+  ];
+  // Pure function: lead time + available schedule window in, buffer + at-risk flag out.
+  function computeLLERisk(items){
+    return items.map(function(it){
+      var buffer = it.availableWeeks - it.leadWeeks;
+      return { name: it.name, leadWeeks: it.leadWeeks, availableWeeks: it.availableWeeks, real: it.real, buffer: buffer, atRisk: buffer < 0 };
+    });
+  }
+  function renderLLETable(){
+    var rows = computeLLERisk(lleItems);
+    var el = document.getElementById("lleTable");
+    var body = rows.map(function(r){
+      var bufferLabel = (r.buffer >= 0 ? "+" : "") + r.buffer + " wks";
+      return "<tr><td>" + r.name + (r.real ? " <span class='badge real' style='margin-left:6px'>real</span>" : "") + "</td>" +
+        "<td class='tabular'>" + r.leadWeeks + " wks</td><td class='tabular'>" + r.availableWeeks + " wks</td>" +
+        "<td class='tabular'><b>" + bufferLabel + "</b></td><td>" + (r.atRisk ? "⚠ AT RISK" : "✓ clear") + "</td></tr>";
+    }).join("");
+    var atRiskCount = rows.filter(function(r){ return r.atRisk; }).length;
+    el.innerHTML = "<thead><tr><th scope='col'>Package</th><th scope='col'>Procurement lead time</th>" +
+      "<th scope='col'>Available schedule window</th><th scope='col'>Buffer</th><th scope='col'>Status</th></tr></thead><tbody>" +
+      body + "<tr><td colspan='4'><b>Packages at risk</b></td><td><b>" + atRiskCount + " of " + rows.length + "</b></td></tr></tbody>";
+    return rows;
+  }
+  var lleResult = renderLLETable();
 
   /* ================= COST TAB: Control Account Ledger (drills down from WBS) ================= */
   var controlAccountPctComplete = [0.72, 0.55, 0.88, 0.40]; // illustrative physical % complete per WBS row
@@ -1380,25 +1476,46 @@
   renderWhatIf();
 
   /* ================= CONTINGENCY TAB: priced risk register ================= */
+  // category buckets Execution / Escalation / Regulatory & Community are kept separate and
+  // auditable rather than blended into one contingency number -- each has its own driver and its
+  // own re-pricing trigger.
   var riskRegister = [
-    { name:"Transformer lead-time slip", prob:0.35, impact:180000 },
-    { name:"Design scope addition (cooling)", prob:0.25, impact:96000 },
-    { name:"Regional labor rate escalation", prob:0.40, impact:61000 },
-    { name:"Permitting delay", prob:0.20, impact:75000 }
+    { name:"Transformer lead-time slip", prob:0.35, impact:180000, category:"Execution" },
+    { name:"Design scope addition (cooling)", prob:0.25, impact:96000, category:"Execution" },
+    { name:"Regional labor rate escalation", prob:0.40, impact:61000, category:"Escalation" },
+    { name:"Permitting delay", prob:0.20, impact:75000, category:"Regulatory & Community" }
   ];
   function renderRiskTable(){
     var el = document.getElementById("riskTable");
     var rows = riskRegister.map(function(r){
       var ev = r.prob * r.impact;
-      return "<tr><td>" + r.name + "</td><td class='tabular'>" + Math.round(r.prob*100) + "%</td>" +
+      return "<tr><td>" + r.name + "</td><td>" + r.category + "</td><td class='tabular'>" + Math.round(r.prob*100) + "%</td>" +
         "<td class='tabular'>" + fmt(r.impact) + "</td><td class='tabular'><b>" + fmt(ev) + "</b></td></tr>";
     }).join("");
     var totalEV = riskRegister.reduce(function(sum, r){ return sum + r.prob * r.impact; }, 0);
-    el.innerHTML = "<thead><tr><th scope='col'>Risk</th><th scope='col'>Probability</th><th scope='col'>Impact</th><th scope='col'>Expected value</th></tr></thead>" +
-      "<tbody>" + rows + "<tr><td colspan='3'><b>Total expected exposure</b></td><td class='tabular'><b>" + fmt(totalEV) + "</b></td></tr></tbody>";
+    el.innerHTML = "<thead><tr><th scope='col'>Risk</th><th scope='col'>Category</th><th scope='col'>Probability</th><th scope='col'>Impact</th><th scope='col'>Expected value</th></tr></thead>" +
+      "<tbody>" + rows + "<tr><td colspan='4'><b>Total expected exposure</b></td><td class='tabular'><b>" + fmt(totalEV) + "</b></td></tr></tbody>";
     return totalEV;
   }
   var totalRiskEV = renderRiskTable();
+  // Pure function: risk rows in, EV subtotal per category out.
+  function computeRiskCategorySubtotals(risks){
+    var byCat = {};
+    risks.forEach(function(r){
+      var ev = r.prob * r.impact;
+      byCat[r.category] = (byCat[r.category] || 0) + ev;
+    });
+    return byCat;
+  }
+  function renderRiskCategoryBreakdown(){
+    var subtotals = computeRiskCategorySubtotals(riskRegister);
+    var el = document.getElementById("riskCategoryKpis");
+    if (el) el.innerHTML = Object.keys(subtotals).map(function(cat){
+      return "<div class='kpi'><div class='lbl'>" + cat + "</div><div class='val tabular'>" + fmt(subtotals[cat]) + "</div><div class='sub'>expected value</div></div>";
+    }).join("");
+    return subtotals;
+  }
+  var riskCategorySubtotals = renderRiskCategoryBreakdown();
 
   /* ================= CONTINGENCY TAB: schedule float as a cost-risk input signal ================= */
   var floatHistory = [ { week:1, floatDays:22 }, { week:2, floatDays:19 }, { week:3, floatDays:14 }, { week:4, floatDays:13 } ];
@@ -1843,7 +1960,9 @@
     exp17: "Compares unposted PCOs and sync-lag days (field system vs. corporate ERP) against a threshold, aligned to AACE RP 108R-19's accounting-alignment principles. A lag past threshold means this month's reported numbers are provably stale, not just possibly stale.",
     exp18: "LPF = Earned Direct-Labor Hours ÷ Actual Direct-Labor Hours Expended (AACE RP 22R-01, direct labor productivity measurement). LPF ≥ 1.0 means the crew earned at least as much work as it spent hours on; below 1.0 is a real, quantified productivity loss, not a guess.",
     exp19: "Variance % = (Forecast − Baseline) ÷ Baseline, computed per region. Ranking by ratio rather than raw dollars means a small region running badly over doesn't hide behind a large region running fine.",
-    exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure. A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy."
+    exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure. A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy.",
+    expLLE: "Buffer = Available Schedule Window − Procurement Lead Time, per long-lead package. A negative buffer means that package's own delivery date is already later than the schedule it's meant to feed — it is the critical path, whether or not it's been named that yet. Real data-center transformer lead times running 160+ weeks (up to ~200+ for the largest HV units) are what make this check load-bearing rather than academic.",
+    expEscGov: "Age (days) = today − last re-validated date, compared against a fixed re-validation cadence (here, a 90-day/quarterly cadence). Escalation assumptions are index-driven and market conditions move continuously — treating a re-basing cadence as a hard check, not a calendar reminder someone can forget, is what keeps a cited escalation rate defensible months after it was first pulled."
   };
   Object.keys(kpiExplainers).forEach(function(id){
     var el = document.getElementById(id);
@@ -2060,6 +2179,17 @@
         var text = ids.map(function(id){ var el = document.getElementById(id); return el ? el.innerHTML : ""; }).join(" ");
         var hit = bad.some(function(t){ return text.indexOf(t) !== -1; });
         return [!hit, hit ? "FOUND" : "clean"];
+      }},
+    { n:"Escalation assumption re-validated within its cadence window (not stale)", run:function(){
+        var s = computeEscalationAge(escalationAssumptionLastValidated, escalationRevalidationCadenceDays);
+        return [!s.stale, s.ageDays + "d since last check (cadence " + s.cadenceDays + "d)"];
+      }},
+    { n:"Every region reports the same cost-reporting schema (no silent cross-region field drift)", run:function(){
+        var requiredKeys = ["code","name","baseline","forecast"];
+        var bad = regions.filter(function(r){
+          return requiredKeys.some(function(k){ return typeof r[k] === "undefined"; });
+        });
+        return [bad.length === 0, bad.length === 0 ? regions.length + " regions consistent" : bad.length + " region(s) missing a field"];
       }}
   ];
   function renderGuards(){
@@ -2118,7 +2248,14 @@
     getTourStep: function(){ return tourStep; }, // guided tour: exposed for direct test inspection
     isTourActive: function(){ return tourActive; },
     GUARDS: GUARDS,               // live Integrity Gate: exposed so tests can fire every check directly
-    guardsResult: guardsResult
+    guardsResult: guardsResult,
+    lleResult: lleResult,                       // Proactive-framework build: LLE schedule-risk tracker
+    computeLLERisk: computeLLERisk,
+    lleItems: lleItems,
+    escalationStatus: escalationStatus,         // Proactive-framework build: escalation staleness guard
+    computeEscalationAge: computeEscalationAge,
+    riskCategorySubtotals: riskCategorySubtotals, // Proactive-framework build: categorized risk exposure
+    computeRiskCategorySubtotals: computeRiskCategorySubtotals
   };
 })();
 </script>

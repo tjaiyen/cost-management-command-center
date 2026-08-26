@@ -116,7 +116,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 17, `found all 17 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 19, `found all 19 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
@@ -143,7 +143,7 @@ if (tabInfoMatch) {
 console.log("--- Anchor-rail links resolve to a real section id (not a typo) ---");
 const anchorHrefs = [...indexHtml.matchAll(/class="anchor-rail"[\s\S]*?<\/details>/g)]
   .flatMap((block) => [...block[0].matchAll(/href="#([\w-]+)"/g)].map((m) => m[1]));
-check(anchorHrefs.length === 8, "found all 8 expected anchor-rail links (4 per tab x 2 tabs)", `found ${anchorHrefs.length}`);
+check(anchorHrefs.length === 9, "found all 9 expected anchor-rail links (5 on Cost incl. Long-Lead Equipment, 4 on Contingency)", `found ${anchorHrefs.length}`);
 const brokenAnchors = anchorHrefs.filter((id) => !indexHtml.includes('id="' + id + '"'));
 check(brokenAnchors.length === 0, "every anchor-rail href resolves to a real section id somewhere in the page", JSON.stringify(brokenAnchors));
 
@@ -160,6 +160,25 @@ check(/function hideTabDrawer\(\)\{ clearTimeout\(tabDrawerTimer\)/.test(indexHt
 const clickHandlerMatch = indexHtml.match(/btn\.addEventListener\("click", function\(\)\{([\s\S]*?)\n    \}\);/);
 check(!!clickHandlerMatch && clickHandlerMatch[1].includes("activateTab(btn.dataset.tab)") && clickHandlerMatch[1].includes("hideTabDrawer()"),
   "the tab button's click handler calls both activateTab() and hideTabDrawer()");
+
+console.log("--- Proactive-framework build (Ada market-challenges doc): structural checks ---");
+// Ported per the vault's AdaInfra_MarketChallenges_ProactiveFramework doc: LLE schedule-risk
+// (Challenge A), categorized risk buckets (Challenge E), and 2 new live-integrity checks for
+// escalation staleness (Challenge B) and cross-region schema drift (Challenge D).
+const riskCategoryCount = (indexHtml.match(/category:"(Execution|Escalation|Regulatory & Community)"/g) || []).length;
+check(riskCategoryCount === 4, "all 4 risk-register rows carry a category field", `found ${riskCategoryCount}`);
+check(indexHtml.includes('var lleItems = ['), "the LLE items array is present");
+const lleRealCount = (indexHtml.match(/real:true/g) || []).length;
+check(lleRealCount === 1, "exactly one LLE row is badged real (the cited transformer lead-time figure)", `found ${lleRealCount}`);
+const guardsBlockMatch = indexHtml.match(/var GUARDS = \[([\s\S]*?)\n  \];/);
+check(!!guardsBlockMatch, "found the GUARDS array literal to count structurally");
+if (guardsBlockMatch) {
+  const guardEntryCount = (guardsBlockMatch[1].match(/\{ n:"/g) || []).length;
+  check(guardEntryCount === 10, "GUARDS array literal has exactly 10 check entries", `found ${guardEntryCount}`);
+  check(guardsBlockMatch[1].includes("Escalation assumption re-validated"), "the escalation-staleness guard is registered");
+  check(guardsBlockMatch[1].includes("Every region reports the same cost-reporting schema"), "the cross-region schema-consistency guard is registered");
+}
+check(/Substation transformer lead times[\s\S]{0,400}(140|160)/.test(indexHtml), "the LLE section's real-badged citation actually states the 140/160-week transformer figures, not a bare claim");
 
 console.log("");
 if (failures > 0) {

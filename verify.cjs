@@ -229,6 +229,9 @@ const sandbox = {
   // exercised the tab-drawer's actual timer path before that fix existed.
   setTimeout,
   clearTimeout,
+  // Real Date (Node's own) -- needed the moment renderEscalationGovernance() started calling
+  // new Date() at page load to compute the escalation-assumption staleness guard.
+  Date,
 };
 sandbox.window = sandbox; // window === global scope, same pattern the page's own IIFE expects
 
@@ -294,6 +297,65 @@ console.log("--- Risk Register ---");
 // Independent re-derivation of total expected value from the same 4 illustrative rows
 const expectedRiskEV = (0.35*180000) + (0.25*96000) + (0.40*61000) + (0.20*75000);
 assertEqual(state.totalRiskEV, expectedRiskEV, "total risk expected value", 0.01);
+
+console.log("--- Risk Register: categorized exposure buckets (Execution / Escalation / Regulatory & Community) ---");
+// Independent re-derivation, not a read of the page's own subtotal object.
+const expectedExecutionEV = (0.35*180000) + (0.25*96000);
+const expectedEscalationEV = 0.40*61000;
+const expectedRegCommunityEV = 0.20*75000;
+assertEqual(state.riskCategorySubtotals["Execution"], expectedExecutionEV, "Execution bucket EV", 0.01);
+assertEqual(state.riskCategorySubtotals["Escalation"], expectedEscalationEV, "Escalation bucket EV", 0.01);
+assertEqual(state.riskCategorySubtotals["Regulatory & Community"], expectedRegCommunityEV, "Regulatory & Community bucket EV", 0.01);
+assertEqual(
+  state.riskCategorySubtotals["Execution"] + state.riskCategorySubtotals["Escalation"] + state.riskCategorySubtotals["Regulatory & Community"],
+  state.totalRiskEV,
+  "the 3 category buckets sum back to the same total exposure the flat register reports (no risk silently dropped or double-counted by bucketing)",
+  0.01
+);
+// Pure-function re-derivation directly, independent of the cached state object.
+const rederivedSubtotals = state.computeRiskCategorySubtotals([
+  { prob:0.35, impact:180000, category:"Execution" },
+  { prob:0.25, impact:96000, category:"Execution" },
+  { prob:0.40, impact:61000, category:"Escalation" },
+  { prob:0.20, impact:75000, category:"Regulatory & Community" }
+]);
+assertEqual(rederivedSubtotals["Execution"], expectedExecutionEV, "computeRiskCategorySubtotals() called directly matches the independent re-derivation", 0.01);
+
+console.log("--- Long-Lead Equipment Schedule-Risk Tracker ---");
+assertEqual(state.lleItems.length, 5, "5 long-lead packages tracked");
+const transformerRow = state.lleResult.find((r) => r.name.indexOf("transformer") !== -1);
+if (!transformerRow) {
+  failures++; console.error("FAIL: could not find the transformer row in lleResult");
+} else {
+  assertEqual(transformerRow.leadWeeks, 160, "transformer lead time is the real cited 160-week figure");
+  assertEqual(transformerRow.buffer, transformerRow.availableWeeks - transformerRow.leadWeeks, "transformer buffer independently re-derives as available minus lead time");
+  assertStrEqual(transformerRow.atRisk, transformerRow.buffer < 0, "transformer atRisk flag matches buffer < 0, not a hardcoded true/false");
+  assertStrEqual(transformerRow.real, true, "the transformer row is the one badged 'real' (the only lead-time figure that's actually cited)");
+}
+// Every other row should NOT be badged real (only the cited transformer figure earns that badge).
+const nonTransformerRealCount = state.lleItems.filter((it) => it.name.indexOf("transformer") === -1 && it.real).length;
+assertEqual(nonTransformerRealCount, 0, "no illustrative LLE row is mis-badged as real");
+// computeLLERisk() re-run directly on a synthetic fixture proves the buffer/atRisk math itself,
+// not just this build's own current numbers (both branches: at-risk and clear).
+const lleFixture = state.computeLLERisk([
+  { name:"fixture at-risk item", leadWeeks:100, availableWeeks:80, real:false },
+  { name:"fixture clear item", leadWeeks:40, availableWeeks:80, real:false }
+]);
+assertStrEqual(lleFixture[0].atRisk, true, "computeLLERisk() flags a package whose lead time exceeds its available window as at-risk");
+assertStrEqual(lleFixture[1].atRisk, false, "computeLLERisk() clears a package with a positive buffer");
+
+console.log("--- Escalation Assumption Governance (staleness guard) ---");
+// computeEscalationAge() accepts an injectable "now" specifically so this test is deterministic
+// regardless of the real calendar date the suite happens to run on.
+const escNotStale = state.computeEscalationAge("2026-01-01", 90, new Date("2026-01-15"));
+assertEqual(escNotStale.ageDays, 14, "escalation age re-derives as exactly 14 days for a 14-day-old fixture");
+assertStrEqual(escNotStale.stale, false, "14 days old, 90-day cadence -> not stale");
+const escStale = state.computeEscalationAge("2026-01-01", 90, new Date("2026-06-01"));
+assertStrEqual(escStale.stale, true, "151 days old, 90-day cadence -> correctly trips stale");
+assertEqual(escStale.ageDays, 151, "escalation age re-derives as exactly 151 days for the stale fixture");
+// This build's own live default (real cadence, real "last validated" date, real current clock)
+// must not be stale today -- a pre-registered expectation this run genuinely checks, not assumes.
+assertStrEqual(state.escalationStatus.stale, false, "this build's own live escalation assumption is not stale as of today's run");
 
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
@@ -721,14 +783,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 8, "exactly 8 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 8, "renderGuards() actually ran all 8 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 10, "exactly 10 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 10, "renderGuards() actually ran all 10 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 8 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log("pass: all 10 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 8 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, "of 10 live integrity checks are failing:", JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and
