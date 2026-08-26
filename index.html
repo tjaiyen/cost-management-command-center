@@ -153,6 +153,30 @@
   footer.foot{margin-top:40px; padding-top:20px; border-top:1px solid rgb(var(--c-text-secondary)/0.15);
     color:rgb(var(--c-text-secondary)); font-size:12.5px}
   .src-note{font-size:11.5px; color:rgb(var(--c-text-secondary)); margin-top:8px}
+
+  /* prescriptive alert card — dual-encoded (color + shape), not color alone */
+  .alert-card{border-radius:10px; padding:12px 14px; margin-top:10px; font-size:12.5px}
+  .alert-card.ok{background:rgb(var(--c-success)/0.1); border:1px solid rgb(var(--c-success)/0.35)}
+  .alert-card.warn{background:rgb(var(--c-danger)/0.1); border:1px solid rgb(var(--c-danger)/0.35)}
+  .alert-card .alert-head{font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:6px}
+  .alert-card.ok .alert-head{color:rgb(var(--c-success))}
+  .alert-card.warn .alert-head{color:rgb(var(--c-danger))}
+  .alert-shape{font-size:14px; line-height:1}
+  .alert-row{margin:3px 0}
+  .alert-row b{color:rgb(var(--c-text-primary))}
+
+  /* contextual explainer toggle */
+  .info-toggle{background:none; border:1px solid rgb(var(--c-text-secondary)/0.4); color:rgb(var(--c-text-secondary));
+    border-radius:50%; width:16px; height:16px; font-size:10.5px; line-height:1; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; margin-left:4px; padding:0}
+  .info-toggle:hover{border-color:rgb(var(--c-accent)); color:rgb(var(--c-accent))}
+  .explainer{display:none; background:rgb(var(--c-bg-card2)); border-radius:8px; padding:10px 12px;
+    margin-top:8px; font-size:12px; color:rgb(var(--c-text-secondary))}
+  .explainer.open{display:block}
+
+  /* currency selector */
+  .currency-select{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary)/0.25);
+    color:rgb(var(--c-text-primary)); border-radius:8px; padding:5px 8px; font-size:12.5px; font-family:inherit}
 </style>
 </head>
 <body>
@@ -164,6 +188,12 @@
       <a href="ada-fit.html">Role fit brief</a>
       <a href="https://tjaiyen.github.io/tj-finance-portfolio/">Full portfolio</a>
     </div>
+    <select class="currency-select" id="currencySelect" aria-label="Display currency">
+      <option value="USD">USD $</option>
+      <option value="GBP">GBP £</option>
+      <option value="JPY">JPY ¥</option>
+      <option value="BRL">BRL R$</option>
+    </select>
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
   </div>
   <nav class="tabrail" id="tabrail" role="tablist" aria-label="Command center sections">
@@ -282,7 +312,13 @@
   <!-- ============================================================ CONTINGENCY & RISK ============================================================ -->
   <div class="tabpanel" id="panel-contingency" role="tabpanel" aria-labelledby="tab-contingency">
     <section>
-      <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span></h2>
+      <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span>
+        <button class="info-toggle" type="button" data-explainer="aace5709exp" aria-expanded="false" aria-label="What is AACE RP 57R-09?">i</button></h2>
+      <div class="explainer" id="aace5709exp">Assigns Beta-PERT/Triangular/Log-Normal probability
+        distributions (optimistic/most-likely/pessimistic bounds) to WBS cost and duration line
+        items, then runs many simulated draws to produce a cumulative distribution curve — P50
+        (median), P80, P90 confidence thresholds for sizing contingency reserves, instead of a
+        single-point estimate that hides the real range of outcomes.</div>
       <p class="lede" style="font-size:13px">An elevated drawdown ratio <em>early</em> in a project
         is itself the early-warning signal. The P50/P80/P90 band follows <b>AACE International RP
         57R-09</b> — a real, named industry practice.</p>
@@ -455,6 +491,17 @@
     try { localStorage.setItem("cmcc-theme", next); } catch(e){}
   });
 
+  /* ---------- contextual explainer toggles (event delegation, works for any .info-toggle) ---------- */
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest(".info-toggle") : null;
+    if (!btn) return;
+    var target = document.getElementById(btn.dataset.explainer);
+    if (!target) return;
+    var open = target.classList.contains("open");
+    target.classList.toggle("open", !open);
+    btn.setAttribute("aria-expanded", (!open).toString());
+  });
+
   /* ---------- tab navigation ---------- */
   var tabButtons = Array.prototype.slice.call(document.querySelectorAll(".tabbtn"));
   tabButtons.forEach(function(btn){
@@ -483,7 +530,21 @@
     };
   }
   var mcSeed = 12345;
-  var fmt = function(n){ return "$" + Math.round(n).toLocaleString("en-US"); };
+
+  /* ---------- currency toggle (illustrative approximate rates, not live FX) ---------- */
+  var CURRENCIES = {
+    USD: { symbol:"$",  rate:1,      locale:"en-US" },
+    GBP: { symbol:"£",  rate:0.79,   locale:"en-GB" },
+    JPY: { symbol:"¥",  rate:149.5,  locale:"ja-JP" },
+    BRL: { symbol:"R$", rate:5.4,    locale:"pt-BR" }
+  };
+  var currentCurrency = "USD";
+  var fmt = function(n){
+    var c = CURRENCIES[currentCurrency];
+    var converted = n * c.rate;
+    var decimals = currentCurrency === "JPY" ? 0 : 0; // whole-currency display in all cases
+    return c.symbol + Math.round(converted).toLocaleString(c.locale);
+  };
 
   /* ================= COST TAB: Budget Bridge ================= */
   var bridgeSteps = [
@@ -570,11 +631,16 @@
     var ratio = computeDrawdownRatio(pc, dd);
     var warnEl = document.getElementById("drawdownWarn");
     if (ratio > 1.5) {
-      warnEl.className = "warn-strip warn";
-      warnEl.textContent = "⚠ EARLY WARNING — contingency drawn " + ratio.toFixed(1) + "x faster than physical progress";
+      warnEl.className = "alert-card warn";
+      warnEl.innerHTML =
+        '<div class="alert-head"><span class="alert-shape">▲</span> EARLY WARNING — Contingency Drawdown</div>' +
+        '<div class="alert-row"><b>Detected:</b> contingency drawn ' + ratio.toFixed(1) + 'x faster than physical progress (' + dd + '% drawn vs. ' + pc + '% complete)</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> scope-definition gap at underwriting, or an overly aggressive baseline target</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> value-engineering review, or a scope reassessment before further drawdown</div>';
     } else {
-      warnEl.className = "warn-strip ok";
-      warnEl.textContent = "✓ ON TRACK — drawdown pacing roughly matches physical progress";
+      warnEl.className = "alert-card ok";
+      warnEl.innerHTML = '<div class="alert-head"><span class="alert-shape">●</span> ON TRACK — Contingency Drawdown</div>' +
+        '<div class="alert-row">Drawdown pacing roughly matches physical progress.</div>';
     }
     return ratio;
   }
@@ -679,9 +745,16 @@
       '<div class="kpi"><div class="lbl">Threshold</div><div class="val tabular">14 days</div></div>';
     var warnEl = document.getElementById("dqWarn");
     if (syncLagDays > 14) {
-      warnEl.className = "warn-strip warn"; warnEl.textContent = "⚠ WARNING — Data Unreconciled";
+      warnEl.className = "alert-card warn";
+      warnEl.innerHTML =
+        '<div class="alert-head"><span class="alert-shape">▲</span> WARNING — Data Unreconciled</div>' +
+        '<div class="alert-row"><b>Detected:</b> ' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag (threshold: 14 days)</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> reporting lag between the field system and the corporate ERP ledger</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> open the reconciliation queue and post the outstanding change orders</div>';
     } else {
-      warnEl.className = "warn-strip ok"; warnEl.textContent = "✓ Within reconciliation threshold";
+      warnEl.className = "alert-card ok";
+      warnEl.innerHTML = '<div class="alert-head"><span class="alert-shape">●</span> Within reconciliation threshold</div>' +
+        '<div class="alert-row">' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag — under the 14-day threshold.</div>';
     }
   }
   renderDQHealth();
@@ -793,6 +866,21 @@
       '<div class="kpi"><div class="lbl">Total risk exposure (EV)</div><div class="val tabular">' + fmt(totalRiskEV) + '</div></div>';
   }
   renderOverview();
+
+  /* ---------- currency toggle wiring ---------- */
+  var currencySelect = document.getElementById("currencySelect");
+  currencySelect.value = currentCurrency;
+  currencySelect.addEventListener("change", function(){
+    currentCurrency = currencySelect.value;
+    // re-render every section that displays a formatted dollar figure -- none of the
+    // underlying math changes, only how fmt() renders the same USD-based numbers.
+    renderBridge();
+    runMonteCarlo(mcSeed);
+    renderRiskTable();
+    renderConsultantTable();
+    renderRegionDetail();
+    renderOverview();
+  });
 
   /* expose a minimal state object for a Node-based verify script (Phase 1 requirement) */
   window.__CMCC_STATE__ = {

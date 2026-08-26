@@ -76,6 +76,7 @@ const documentStub = {
     return [];
   },
   documentElement: { setAttribute(){}, getAttribute(){ return null; } },
+  addEventListener(){}, // the page's top-level explainer-toggle delegation registers this; never fires here
   createElement: () => makeElementStub(),
 };
 
