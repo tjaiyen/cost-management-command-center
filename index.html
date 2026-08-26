@@ -647,6 +647,17 @@
   <!-- ============================================================ REFERENCE ============================================================ -->
   <div class="tabpanel" id="panel-reference" role="tabpanel" aria-labelledby="tab-reference">
     <section>
+      <h2>Glossary — every term on this dashboard, searchable</h2>
+      <div class="card">
+        <div class="slider-row" style="margin:0 0 12px">
+          <input type="text" id="glossarySearch" placeholder="Search terms and definitions…"
+            style="flex:1; background:rgb(var(--c-bg-card2)); border:1px solid rgb(var(--c-text-secondary)/0.25); color:rgb(var(--c-text-primary)); border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit" />
+        </div>
+        <div class="region-tabs" id="glossaryCatTabs"></div>
+        <p class="src-note" id="glossaryCount"></p>
+      </div>
+    </section>
+    <section>
       <h2>AACE Recommended Practices used in this build</h2>
       <div class="card">
         <dl id="aaceGlossary"></dl>
@@ -1434,15 +1445,62 @@
     { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
     { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
   ];
-  function renderGlossary(containerId, terms){
-    var el = document.getElementById(containerId);
-    el.innerHTML = terms.map(function(t){
-      return '<div class="glossary-item"><dt>' + t.term + '</dt><dd>' + t.def + '</dd></div>';
-    }).join("");
+  /* ---------- Glossary: unified search + category filter across all 3 term lists ---------- */
+  var allGlossaryItems = aaceTerms.map(function(t){ return { term:t.term, def:t.def, category:"aace" }; })
+    .concat(realFigures.map(function(t){ return { term:t.term, def:t.def, category:"figures" }; }))
+    .concat(otherStandards.map(function(t){ return { term:t.term, def:t.def, category:"standards" }; }));
+  var glossaryCategories = [
+    { key:"all", label:"All" },
+    { key:"aace", label:"AACE Practices" },
+    { key:"figures", label:"Cost Figures" },
+    { key:"standards", label:"Other Standards" }
+  ];
+  var activeGlossaryCategory = "all";
+  // Pure function: all glossary rows + a query + a category in, the matching rows out --
+  // testable directly, independent of the DOM.
+  function filterGlossaryItems(allItems, query, category){
+    var q = (query || "").toLowerCase().trim();
+    return allItems.filter(function(item){
+      var categoryMatch = category === "all" || item.category === category;
+      var textMatch = q === "" || (item.term + " " + item.def).toLowerCase().indexOf(q) !== -1;
+      return categoryMatch && textMatch;
+    });
   }
-  renderGlossary("aaceGlossary", aaceTerms);
-  renderGlossary("figureGlossary", realFigures);
-  renderGlossary("standardsGlossary", otherStandards);
+  function renderGlossaryCatTabs(){
+    var el = document.getElementById("glossaryCatTabs");
+    if (!el) return;
+    el.innerHTML = "";
+    glossaryCategories.forEach(function(c){
+      var btn = document.createElement("button");
+      btn.className = "region-btn"; btn.textContent = c.label;
+      btn.setAttribute("aria-pressed", c.key === activeGlossaryCategory ? "true" : "false");
+      btn.addEventListener("click", function(){ activeGlossaryCategory = c.key; renderGlossaryCatTabs(); applyGlossaryFilter(); });
+      el.appendChild(btn);
+    });
+  }
+  function applyGlossaryFilter(){
+    var searchInput = document.getElementById("glossarySearch");
+    var query = searchInput ? searchInput.value : "";
+    var visible = filterGlossaryItems(allGlossaryItems, query, activeGlossaryCategory);
+    function renderCategory(containerId, category){
+      var el = document.getElementById(containerId);
+      if (!el) return;
+      var rows = visible.filter(function(v){ return v.category === category; });
+      el.innerHTML = rows.map(function(t){
+        return '<div class="glossary-item"><dt>' + t.term + '</dt><dd>' + t.def + '</dd></div>';
+      }).join("");
+    }
+    renderCategory("aaceGlossary", "aace");
+    renderCategory("figureGlossary", "figures");
+    renderCategory("standardsGlossary", "standards");
+    var countEl = document.getElementById("glossaryCount");
+    if (countEl) countEl.textContent = visible.length + " of " + allGlossaryItems.length + " terms shown.";
+    return visible;
+  }
+  var glossarySearchInput = document.getElementById("glossarySearch");
+  if (glossarySearchInput) glossarySearchInput.addEventListener("input", applyGlossaryFilter);
+  renderGlossaryCatTabs();
+  var visibleGlossaryItems = applyGlossaryFilter();
 
   /* ================= OVERVIEW TAB: KPI rollup (reads from other tabs' real computed state) ================= */
   function renderOverview(){
@@ -1508,7 +1566,10 @@
     emvDecision: emvDecision,                   // Phase 4: change-order settlement EMV decision
     computeEMVDecision: computeEMVDecision,
     productivityResult: productivityResult,     // Phase 4: crew Labor Productivity Factor
-    computeLPF: computeLPF
+    computeLPF: computeLPF,
+    allGlossaryItems: allGlossaryItems,         // Phase 5: unified searchable glossary
+    filterGlossaryItems: filterGlossaryItems,
+    visibleGlossaryItems: visibleGlossaryItems
   };
 })();
 </script>

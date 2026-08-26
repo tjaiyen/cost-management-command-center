@@ -148,6 +148,10 @@ const wiEscalationStub = makeElementStub(); wiEscalationStub.value = "2";
 elementsById["wiScope"] = wiScopeStub;
 elementsById["wiEscalation"] = wiEscalationStub;
 
+// Phase 5: glossary search input, empty by default (matches the real HTML's no-value default).
+const glossarySearchStub = makeElementStub(); glossarySearchStub.value = "";
+elementsById["glossarySearch"] = glossarySearchStub;
+
 // Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
 // The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
 const infoToggleBtnStub = withProperties(makeElementStub());
@@ -464,6 +468,25 @@ if (lpfByTrade["Electrical"] >= 1 && lpfByTrade["Mechanical / Piping"] < 1 && lp
 } else {
   failures++; console.error("FAIL: expected exactly Mechanical/Piping to be the sub-1.0 LPF row, got", lpfByTrade);
 }
+
+console.log("--- Phase 5: Glossary search + category filter (independent re-derivation) ---");
+assertEqual(state.visibleGlossaryItems.length, state.allGlossaryItems.length, "with no query and 'all' category, every glossary item is visible by default");
+// Independent re-derivation: searching "escalation" must match at least RP 58R-10/68R-11's real
+// definitions (which literally contain the word) -- and must NOT match every single term.
+const escResults = state.filterGlossaryItems(state.allGlossaryItems, "escalation", "all");
+if (escResults.length > 0 && escResults.length < state.allGlossaryItems.length) {
+  console.log("pass: searching 'escalation' narrows to a real subset (" + escResults.length + " of " + state.allGlossaryItems.length + "), not everything or nothing");
+} else {
+  failures++; console.error("FAIL: expected 'escalation' search to narrow to a partial subset, got", escResults.length, "of", state.allGlossaryItems.length);
+}
+// Category filter alone (no search text) must return only that category's rows.
+const aaceOnly = state.filterGlossaryItems(state.allGlossaryItems, "", "aace");
+const allAace = aaceOnly.every((r) => r.category === "aace");
+assertStrEqual(allAace, true, "category filter 'aace' returns only aace-category rows");
+assertEqual(aaceOnly.length, state.allGlossaryItems.filter((r) => r.category === "aace").length, "category filter count matches an independent count of aace-category rows");
+// A query that matches nothing must return an empty array, not throw or return everything.
+const noMatch = state.filterGlossaryItems(state.allGlossaryItems, "zzz-no-such-term-zzz", "all");
+assertEqual(noMatch.length, 0, "a nonsense query correctly returns zero results, not a fallback to everything");
 
 console.log("");
 if (failures > 0) {
