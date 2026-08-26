@@ -47,7 +47,10 @@
   .tabular{font-variant-numeric:tabular-nums}
   a{color:rgb(var(--c-accent))}
   :focus-visible{outline:2px solid rgb(var(--c-accent)); outline-offset:2px; border-radius:4px}
-  .wrap{max-width:1080px; margin:0 auto; padding:0 20px 64px}
+  /* bottom padding widened from 64 to 92px -- a real Playwright inspection found the fixed
+     return-breadcrumb pill (bottom:20px, ~40px tall) slightly overlapping the last line of
+     footer-adjacent text on shorter tabs; this gives it clearance without moving the pill itself */
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px 92px}
 
   header.top{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
     background:rgb(var(--c-bg-primary) / 0.9); border-bottom:1px solid rgb(var(--c-text-secondary) / 0.15);}
@@ -62,6 +65,13 @@
   .icobtn:hover{border-color:rgb(var(--c-accent))}
 
   /* tab rail */
+  /* the rail measurably overflows its own visible width once every altitude-group label + tab is
+     in (1859px of content vs ~1080px visible, confirmed via a real Playwright measurement) --
+     this fade is the "there's more, scroll me" affordance that was missing, not a fix to the
+     overflow itself (a horizontally-scrolling tab rail is an accepted, standard pattern) */
+  .tabrail-wrap{position:relative}
+  .tabrail-fade{position:absolute; top:0; right:0; bottom:0; width:28px; pointer-events:none;
+    background:linear-gradient(to right, rgb(var(--c-bg-primary) / 0), rgb(var(--c-bg-primary)))}
   .tabrail{display:flex; gap:4px; overflow-x:auto; padding:10px 20px 0; max-width:1080px; margin:0 auto}
   .tabbtn{background:none; border:none; border-bottom:2px solid transparent; color:rgb(var(--c-text-secondary));
     padding:8px 12px; font-size:13px; cursor:pointer; white-space:nowrap; font-family:inherit}
@@ -290,6 +300,7 @@
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
     <button class="icobtn" id="shortcutsBtn" type="button" aria-haspopup="dialog">⌨ Shortcuts</button>
   </div>
+  <div class="tabrail-wrap">
   <nav class="tabrail" id="tabrail" role="tablist" aria-label="Command center sections">
     <span class="rail-group" aria-hidden="true">Executive</span>
     <button class="tabbtn" role="tab" data-tab="overview" aria-selected="true">Overview</button>
@@ -308,6 +319,8 @@
     <button class="tabbtn" role="tab" data-tab="data" aria-selected="false">Data Strategy</button>
     <button class="tabbtn" role="tab" data-tab="reference" aria-selected="false">Reference</button>
   </nav>
+  <div class="tabrail-fade" aria-hidden="true"></div>
+  </div>
 </header>
 
 <div class="wrap" id="main-content">
@@ -520,7 +533,7 @@
         computed per account, not just at the program level. CPI/CV need only physical % complete,
         not a schedule baseline — this stays cost-management territory, not schedule integration.</p>
       <div class="card">
-        <table id="calTable"></table>
+        <div style="overflow-x:auto"><table id="calTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> % complete and
           AC/EV ratios per account are invented to make the drill-down legible; the BAC split
           (WBS %) and the accounts themselves are the same real GC/subcontractor bid-package
@@ -614,7 +627,7 @@
         <button class="info-toggle" type="button" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp05"></div>
       <div class="card">
-        <table id="riskTable"></table>
+        <div style="overflow-x:auto"><table id="riskTable"></table></div>
         <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
           impact, prioritized for mitigation before pricing) follows <b>AACE RP 40R-08</b>'s
           risk-driver framework — a real, named practice, not this program's own invention.</p>
@@ -650,7 +663,7 @@
         priced the same probability × impact way as the risk register above, compared against a
         known settle-now cost.</p>
       <div class="card">
-        <table id="emvTable"></table>
+        <div style="overflow-x:auto"><table id="emvTable"></table></div>
         <div id="emvVerdict" style="margin-top:12px"></div>
       </div>
     </section>
@@ -666,7 +679,7 @@
         third-party cost consultants — generic methodology, never labeled as any specific vendor's
         real data.</p>
       <div class="card">
-        <table id="consultantTable"></table>
+        <div style="overflow-x:auto"><table id="consultantTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Grounded in real
           subcontractor/vendor pricing negotiation experience and BOM/data-quality-defect-fix work —
           not any real consultant's actual submissions.</p>
@@ -697,7 +710,7 @@
         trade — a cost-management-owned productivity signal (it needs only earned/actual hours,
         not a schedule baseline), scoped here to three trades rather than full crew-level tracking.</p>
       <div class="card">
-        <table id="productivityTable"></table>
+        <div style="overflow-x:auto"><table id="productivityTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Hours are invented;
           the LPF = earned/actual ratio itself follows <b>AACE RP 22R-01</b>'s direct labor
           productivity measurement method — a real, named practice, not this build's own invention.</p>
@@ -758,7 +771,7 @@
         RAID register (that's schedule/PM territory, out of scope here).</p>
       <div class="card">
         <div class="kpis" id="actionsKpis"></div>
-        <table id="actionsTable" style="margin-top:14px"></table>
+        <div style="overflow-x:auto"><table id="actionsTable" style="margin-top:14px"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Rows are invented;
           the ≥14-day staleness threshold reuses this build's own Data-Quality Reconciliation
           Health threshold for consistency, not a new arbitrary number.</p>
@@ -951,7 +964,15 @@
     // Derived from data-tab, not hand-duplicated per button, so it can't drift out of sync --
     // completes the WAI-ARIA tabs pattern (panels already had aria-labelledby pointing back).
     btn.setAttribute("aria-controls", "panel-" + btn.dataset.tab);
-    btn.addEventListener("click", function(){ activateTab(btn.dataset.tab); });
+    btn.addEventListener("click", function(){
+      activateTab(btn.dataset.tab);
+      // A mouse click also focuses the button, and focus alone (no hover delay) opens this same
+      // button's preview drawer -- confirmed live via a real Playwright inspection: the drawer is
+      // position:fixed, so left open it stays pinned over the page content at every scroll
+      // position, not just transiently at the top. A real click means "I'm navigating," not
+      // "I'm previewing," so dismiss it immediately once the tab has actually switched.
+      if (typeof hideTabDrawer === "function") hideTabDrawer();
+    });
     btn.addEventListener("keydown", function(e){
       var idx = tabButtons.indexOf(btn);
       if (e.key === "ArrowRight") { e.preventDefault(); tabButtons[(idx+1) % tabButtons.length].focus(); tabButtons[(idx+1) % tabButtons.length].click(); }
@@ -994,8 +1015,13 @@
     }
     tabDrawerEl.classList.add("open");
   }
-  function hideTabDrawer(){ if (tabDrawerEl) tabDrawerEl.classList.remove("open"); }
   var tabDrawerTimer = null;
+  // Centralized here (not just at each call site) so every caller -- mouseleave, blur, and the
+  // tab-click handler above -- reliably cancels a pending hover-open timer too. A real bug found
+  // via Playwright: a mouse click also fires mouseenter on its way to the button, arming this
+  // 350ms timer; hiding the drawer without also clearing the timer meant it silently reopened
+  // itself ~350ms after the click, undoing the very fix meant to prevent this.
+  function hideTabDrawer(){ clearTimeout(tabDrawerTimer); if (tabDrawerEl) tabDrawerEl.classList.remove("open"); }
   tabButtons.forEach(function(btn){
     btn.addEventListener("mouseenter", function(){ clearTimeout(tabDrawerTimer); tabDrawerTimer = setTimeout(function(){ showTabDrawer(btn); }, 350); });
     btn.addEventListener("mouseleave", function(){ clearTimeout(tabDrawerTimer); hideTabDrawer(); });

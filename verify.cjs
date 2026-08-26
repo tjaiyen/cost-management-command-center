@@ -223,6 +223,12 @@ const sandbox = {
   getComputedStyle: () => ({ getPropertyValue: () => "6 182 212" }),
   console,
   Math,
+  // Real setTimeout/clearTimeout (Node's own) -- needed the moment hideTabDrawer() started
+  // calling clearTimeout() to cancel a pending hover-open timer (a real bug fix, found via a live
+  // Playwright inspection). A prior version of this sandbox had neither at all, since nothing had
+  // exercised the tab-drawer's actual timer path before that fix existed.
+  setTimeout,
+  clearTimeout,
 };
 sandbox.window = sandbox; // window === global scope, same pattern the page's own IIFE expects
 

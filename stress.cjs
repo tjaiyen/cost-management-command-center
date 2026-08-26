@@ -147,6 +147,20 @@ check(anchorHrefs.length === 8, "found all 8 expected anchor-rail links (4 per t
 const brokenAnchors = anchorHrefs.filter((id) => !indexHtml.includes('id="' + id + '"'));
 check(brokenAnchors.length === 0, "every anchor-rail href resolves to a real section id somewhere in the page", JSON.stringify(brokenAnchors));
 
+console.log("--- Tab-drawer click-dismiss fix: structural regression guard ---");
+// Found via a real Playwright visual inspection: a mouse click also fires mouseenter on its way
+// to the button, arming the drawer's 350ms hover-open timer; the first fix attempt (calling
+// hideTabDrawer() in the click handler) didn't clear that pending timer, so the drawer silently
+// reopened itself ~350ms after the click -- confirmed live, not assumed. verify.cjs's synchronous,
+// no-real-elapsed-time test model can't exercise the actual 350ms timer path directly (accepted
+// limitation, stated explicitly rather than skipped silently) -- this is a structural guard that
+// the fix's two required pieces are both still present in the source.
+check(/function hideTabDrawer\(\)\{ clearTimeout\(tabDrawerTimer\)/.test(indexHtml),
+  "hideTabDrawer() clears the pending hover-open timer, not just the 'open' class");
+const clickHandlerMatch = indexHtml.match(/btn\.addEventListener\("click", function\(\)\{([\s\S]*?)\n    \}\);/);
+check(!!clickHandlerMatch && clickHandlerMatch[1].includes("activateTab(btn.dataset.tab)") && clickHandlerMatch[1].includes("hideTabDrawer()"),
+  "the tab button's click handler calls both activateTab() and hideTabDrawer()");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");
