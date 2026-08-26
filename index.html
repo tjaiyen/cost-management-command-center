@@ -123,8 +123,7 @@
   <div class="bar">
     <span class="brand"><span class="dot"></span>Cost Management Command Center</span>
     <div class="navlinks">
-      <a href="ada-fit.html">Ada fit brief</a>
-      <a href="https://github.com/tjaiyen/cost-management-command-center">Repo</a>
+      <a href="ada-fit.html">Role fit brief</a>
       <a href="https://tjaiyen.github.io/tj-finance-portfolio/">Full portfolio</a>
     </div>
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
@@ -141,10 +140,10 @@
     <b>The program is synthetic — no employer, client, or agency data appears anywhere in this
     repository.</b> Three real facts are threaded through it, each cited where it appears: a real
     $208K variance root-cause trace, a real 100+ bid-package contingency-tracking pattern, and
-    Turner &amp; Townsend's real published cost-index figures. Everything else — the program name,
-    dollar amounts, dates, vendor labels — is invented to make the methodology legible and is
-    marked <span class="badge illustrative">illustrative</span> throughout; real figures are marked
-    <span class="badge real">real</span>.
+    <b>AACE International RP 57R-09</b> as the real, named method behind the Monte Carlo band.
+    Everything else — the program name, dollar amounts, dates, vendor labels — is invented to make
+    the methodology legible and is marked <span class="badge illustrative">illustrative</span>
+    throughout; real figures are marked <span class="badge real">real</span>.
   </div>
 
   <section id="bridge-section">
@@ -192,14 +191,14 @@
           <span class="tabular" id="drawdownPctVal">35%</span>
         </div>
         <div class="warn-strip" id="drawdownWarn"></div>
-        <p class="src-note"><span class="badge real">real</span> Illustrative sliders — the
-          underlying pattern (drawdown outpacing physical completion = early warning) is grounded
+        <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> — the
+          underlying early-warning pattern (drawdown outpacing physical completion) is grounded
           in a real 100+ bid-package contingency/change-order-tracking history, $50M+ per project.</p>
       </div>
       <div class="card">
         <h3 style="margin:0 0 8px; font-size:14px">Monte Carlo completion cost (2,000 draws)</h3>
         <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
-        <div class="pctile-row">
+        <div class="pctile-row" aria-live="polite" aria-atomic="true">
           <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
           <div class="pctile">P80<b class="tabular" id="p80">—</b></div>
           <div class="pctile">P90<b class="tabular" id="p90">—</b></div>
@@ -216,9 +215,9 @@
   <section id="wbs-section">
     <h2>WBS Cost Allocation</h2>
     <p class="lede" style="font-size:13px">Cost broken out by work-breakdown-structure category —
-      Architect/Engineer of Record, General Contractors &amp; trades, long-lead equipment, and
-      utility interconnection — the standard categories a capital-program cost manager tracks
-      commitments and forecasts against.</p>
+      design/engineering, General Contractors &amp; trades, long-lead equipment, and site/utility
+      work — generic categories a capital-program cost manager tracks commitments and forecasts
+      against, regardless of asset class.</p>
     <div class="card">
       <div id="wbsChart"></div>
       <p class="src-note"><span class="badge illustrative">illustrative</span> Percentages are
@@ -288,7 +287,7 @@
     { label:"Underwriting\nBaseline", value: 2450000, type:"base" },
     { label:"Scope\nChange (+)", value: 96000,  type:"up" },
     { label:"Market\nEscalation (+)", value: 61000, type:"up" },
-    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up" },
+    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", real:true, driverName:"Field Execution Variance ($208K, real)" },
     { label:"Contingency\nDrawdown (–)", value: -140000, type:"down" },
     { label:"Current\nForecast", value: null, type:"final" }
   ];
@@ -322,7 +321,14 @@
     var final = steps[steps.length - 1].end;
     document.getElementById("bFinal").textContent = fmt(final);
     document.getElementById("bDelta").textContent = fmt(final - bridgeSteps[0].value);
-    document.getElementById("bDriver").textContent = "Field Execution Variance ($208K, real)";
+    var driverStep = bridgeSteps.reduce(function(max, s){
+      if (s.type !== "up" && s.type !== "down") return max;
+      var mag = Math.abs(s.value);
+      return (!max || mag > Math.abs(max.value)) ? s : max;
+    }, null);
+    document.getElementById("bDriver").textContent = driverStep && driverStep.driverName
+      ? driverStep.driverName
+      : (driverStep ? driverStep.label.replace("\n", " ") : "—");
   })();
 
   var pctComplete = document.getElementById("pctComplete");
@@ -391,8 +397,8 @@
   var wbsData = [
     { name:"GCs & Trades", pct:52 },
     { name:"Long Lead Equipment", pct:22 },
-    { name:"AOR/EOR (design)", pct:14 },
-    { name:"Utility Interconnection", pct:12 }
+    { name:"Design & Engineering", pct:14 },
+    { name:"Site & Utilities", pct:12 }
   ];
   (function renderWBS(){
     var el = document.getElementById("wbsChart");
