@@ -35,31 +35,68 @@ function assertStrEqual(actual, expected, label) {
   }
 }
 
-// ---- minimal DOM stub ----
+// ---- minimal DOM stub, now with a REAL classList and REAL attribute storage --
+// (a prior version of this file had no-op stubs for both, which meant the explainer-toggle
+// logic could never actually be exercised here even though the file existed. Fixed.)
 function makeElementStub() {
+  const classes = new Set();
+  const attrs = {};
   const el = {
     _text: "", _html: "",
     style: {},
-    classList: { add(){}, remove(){}, contains(){ return false; } },
+    classList: {
+      add(c){ classes.add(c); },
+      remove(c){ classes.delete(c); },
+      contains(c){ return classes.has(c); },
+      toggle(c, force){
+        const shouldHave = force !== undefined ? force : !classes.has(c);
+        if (shouldHave) classes.add(c); else classes.delete(c);
+        return shouldHave;
+      },
+    },
     dataset: {},
     children: [],
     addEventListener(){},
-    setAttribute(){},
-    getAttribute(){ return null; },
+    setAttribute(name, value){ attrs[name] = String(value); },
+    getAttribute(name){ return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null; },
     appendChild(child){ el.children.push(child); },
     querySelectorAll(){ return []; },
+    // real .closest(selector) support for a "class name" selector only (all this page's own
+    // code needs) -- checks the element itself, then walks up via a manually-wired _parent.
+    closest(selector){
+      let node = el;
+      while (node) {
+        const sel = selector.replace(/^\./, "");
+        if (node.classList && node.classList.contains(sel)) return node;
+        node = node._parent || null;
+      }
+      return null;
+    },
   };
-  Object.defineProperty(el, "textContent", { get(){ return el._text; }, set(v){ el._text = String(v); } });
-  Object.defineProperty(el, "innerHTML", { get(){ return el._html; }, set(v){ el._html = String(v); } });
-  Object.defineProperty(el, "className", { get(){ return el._class || ""; }, set(v){ el._class = v; } });
+  return el;
+}
+// textContent/innerHTML/className need get/set on the real object, added after creation so
+// `el` above can close over itself.
+function withProperties(el) {
+  let text = "", html = "", cls = "";
+  Object.defineProperty(el, "textContent", { get(){ return text; }, set(v){ text = String(v); } });
+  Object.defineProperty(el, "innerHTML", { get(){ return html; }, set(v){ html = String(v); } });
+  Object.defineProperty(el, "className", {
+    get(){ return cls; },
+    set(v){ cls = v; el.classList = makeElementStub().classList; String(v).split(/\s+/).filter(Boolean).forEach((c) => el.classList.add(c)); },
+  });
   return el;
 }
 
 const elementsById = {};
 function getOrCreate(id) {
-  if (!elementsById[id]) elementsById[id] = makeElementStub();
+  if (!elementsById[id]) elementsById[id] = withProperties(makeElementStub());
   return elementsById[id];
 }
+
+// The one real DOM event this file needs to simulate: the top-level click-delegation listener
+// the page registers for the explainer-toggle feature. Captured here so verify.cjs can fire it.
+const documentClickHandlers = [];
 
 const documentStub = {
   getElementById: (id) => getOrCreate(id),
@@ -67,7 +104,7 @@ const documentStub = {
     if (sel === ".tabbtn") {
       // return 7 fake tab buttons with the real dataset.tab values the page defines
       return ["overview","cost","contingency","governance","portfolio","data","reference"].map((name) => {
-        const b = makeElementStub();
+        const b = withProperties(makeElementStub());
         b.dataset = { tab: name };
         return b;
       });
@@ -76,8 +113,8 @@ const documentStub = {
     return [];
   },
   documentElement: { setAttribute(){}, getAttribute(){ return null; } },
-  addEventListener(){}, // the page's top-level explainer-toggle delegation registers this; never fires here
-  createElement: () => makeElementStub(),
+  addEventListener(type, handler){ if (type === "click") documentClickHandlers.push(handler); },
+  createElement: () => withProperties(makeElementStub()),
 };
 
 const canvasCtxStub = {
@@ -98,6 +135,13 @@ const pctCompleteStub = makeElementStub(); pctCompleteStub.value = "18";
 const drawdownPctStub = makeElementStub(); drawdownPctStub.value = "35";
 elementsById["pctComplete"] = pctCompleteStub;
 elementsById["drawdownPct"] = drawdownPctStub;
+
+// Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
+// The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
+const infoToggleBtnStub = withProperties(makeElementStub());
+infoToggleBtnStub.classList.add("info-toggle");
+infoToggleBtnStub.dataset = { explainer: "aace5709exp" };
+elementsById["aace5709exp"] = withProperties(makeElementStub()); // the explainer panel itself
 
 const localStorageStub = { getItem(){ return null; }, setItem(){} };
 
@@ -200,6 +244,61 @@ assertStrEqual(state.formatInCurrency(2450000, "GBP"), expectedGbp, "GBP convers
     console.log("pass: " + code + " formats with its own symbol =", out);
   }
 });
+
+console.log("--- Alert Cards (both branches, via the real pure functions) ---");
+// A prior stress-test round could only verify these by reading the code -- these now actually
+// call the page's real drawdownAlertContent/dqAlertContent functions with both a triggering and
+// a non-triggering input, and check the returned className/html, not a re-implementation.
+const warnDrawdown = state.drawdownAlertContent(18, 35); // the page's own default slider values
+assertStrEqual(warnDrawdown.level, "warn", "drawdown alert: default sliders produce the WARN branch");
+if (warnDrawdown.html.indexOf("Detected:") === -1 || warnDrawdown.html.indexOf("Probable cause:") === -1 || warnDrawdown.html.indexOf("Suggested action:") === -1) {
+  failures++; console.error("FAIL: drawdown WARN alert is missing one of the 3 required prescriptive sections");
+} else { console.log("pass: drawdown WARN alert carries all 3 prescriptive sections"); }
+const okDrawdown = state.drawdownAlertContent(90, 20); // physical progress far ahead of drawdown
+assertStrEqual(okDrawdown.level, "ok", "drawdown alert: a non-triggering input produces the OK branch (never exercised by the default demo state)");
+
+const warnDQ = state.dqAlertContent(4, 20, 14); // 20-day lag > 14-day threshold
+assertStrEqual(warnDQ.level, "warn", "data-quality alert: a lag over threshold produces the WARN branch (never exercised by the hardcoded demo values)");
+if (warnDQ.html.indexOf("Detected:") === -1 || warnDQ.html.indexOf("Probable cause:") === -1 || warnDQ.html.indexOf("Suggested action:") === -1) {
+  failures++; console.error("FAIL: data-quality WARN alert is missing one of the 3 required prescriptive sections");
+} else { console.log("pass: data-quality WARN alert carries all 3 prescriptive sections"); }
+const okDQ = state.dqAlertContent(4, 9, 14); // the page's own actual demo values
+assertStrEqual(okDQ.level, "ok", "data-quality alert: the page's real demo values (9-day lag) produce the OK branch");
+
+console.log("--- Explainer Toggle (actually firing the real click-delegation handler) ---");
+if (documentClickHandlers.length === 0) {
+  failures++;
+  console.error("FAIL: no click handler was registered on document -- the explainer-toggle delegation never ran");
+} else {
+  const explainerEl = elementsById["aace5709exp"];
+  const clickHandler = documentClickHandlers[0];
+  const fakeEvent = { target: infoToggleBtnStub };
+
+  const beforeOpen = explainerEl.classList.contains("open");
+  const beforeAria = infoToggleBtnStub.getAttribute("aria-expanded");
+  clickHandler(fakeEvent); // simulate the first real click
+  const afterFirstClick = explainerEl.classList.contains("open");
+  const ariaAfterFirstClick = infoToggleBtnStub.getAttribute("aria-expanded");
+
+  if (beforeOpen === true) {
+    failures++; console.error("FAIL: explainer started open before any click -- test setup invalid");
+  }
+  assertStrEqual(String(afterFirstClick), "true", "first click opens the explainer panel");
+  assertStrEqual(ariaAfterFirstClick, "true", "first click sets aria-expanded=true");
+
+  clickHandler(fakeEvent); // simulate a second click -- should close it again
+  const afterSecondClick = explainerEl.classList.contains("open");
+  const ariaAfterSecondClick = infoToggleBtnStub.getAttribute("aria-expanded");
+  assertStrEqual(String(afterSecondClick), "false", "second click closes the explainer panel again");
+  assertStrEqual(ariaAfterSecondClick, "false", "second click sets aria-expanded=false");
+
+  // A click that doesn't land on (or inside) an .info-toggle must be a no-op, not a crash.
+  const unrelatedEvent = { target: withProperties(makeElementStub()) };
+  let threw = false;
+  try { clickHandler(unrelatedEvent); } catch (e) { threw = true; }
+  if (threw) { failures++; console.error("FAIL: clicking an unrelated element threw instead of being ignored"); }
+  else { console.log("pass: clicking an unrelated element is a safe no-op"); }
+}
 
 console.log("");
 if (failures > 0) {

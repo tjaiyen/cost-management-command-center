@@ -628,26 +628,32 @@
   var pctComplete = document.getElementById("pctComplete");
   var drawdownPct = document.getElementById("drawdownPct");
   function computeDrawdownRatio(pc, dd){ return dd / Math.max(pc, 1); }
+  // Pure function: given the two slider values, returns the alert-card content. No DOM access,
+  // no closure state -- so it can be tested directly, including the "ok" branch, which the
+  // current default slider values never exercise.
+  function drawdownAlertContent(pc, dd){
+    var ratio = computeDrawdownRatio(pc, dd);
+    if (ratio > 1.5) {
+      return { level:"warn", ratio:ratio, className:"alert-card warn", html:
+        '<div class="alert-head"><span class="alert-shape">▲</span> EARLY WARNING — Contingency Drawdown</div>' +
+        '<div class="alert-row"><b>Detected:</b> contingency drawn ' + ratio.toFixed(1) + 'x faster than physical progress (' + dd + '% drawn vs. ' + pc + '% complete)</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> scope-definition gap at underwriting, or an overly aggressive baseline target</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> value-engineering review, or a scope reassessment before further drawdown</div>' };
+    }
+    return { level:"ok", ratio:ratio, className:"alert-card ok", html:
+      '<div class="alert-head"><span class="alert-shape">●</span> ON TRACK — Contingency Drawdown</div>' +
+      '<div class="alert-row">Drawdown pacing roughly matches physical progress.</div>' };
+  }
   function updateDrawdown(){
     var pc = parseInt(pctComplete.value, 10);
     var dd = parseInt(drawdownPct.value, 10);
     document.getElementById("pctCompleteVal").textContent = pc + "%";
     document.getElementById("drawdownPctVal").textContent = dd + "%";
-    var ratio = computeDrawdownRatio(pc, dd);
+    var content = drawdownAlertContent(pc, dd);
     var warnEl = document.getElementById("drawdownWarn");
-    if (ratio > 1.5) {
-      warnEl.className = "alert-card warn";
-      warnEl.innerHTML =
-        '<div class="alert-head"><span class="alert-shape">▲</span> EARLY WARNING — Contingency Drawdown</div>' +
-        '<div class="alert-row"><b>Detected:</b> contingency drawn ' + ratio.toFixed(1) + 'x faster than physical progress (' + dd + '% drawn vs. ' + pc + '% complete)</div>' +
-        '<div class="alert-row"><b>Probable cause:</b> scope-definition gap at underwriting, or an overly aggressive baseline target</div>' +
-        '<div class="alert-row"><b>Suggested action:</b> value-engineering review, or a scope reassessment before further drawdown</div>';
-    } else {
-      warnEl.className = "alert-card ok";
-      warnEl.innerHTML = '<div class="alert-head"><span class="alert-shape">●</span> ON TRACK — Contingency Drawdown</div>' +
-        '<div class="alert-row">Drawdown pacing roughly matches physical progress.</div>';
-    }
-    return ratio;
+    warnEl.className = content.className;
+    warnEl.innerHTML = content.html;
+    return content.ratio;
   }
   var liveDrawdownRatio;
   function updateDrawdownAndOverview(){
@@ -746,27 +752,33 @@
   renderConsultantTable();
 
   /* ================= GOVERNANCE TAB: data quality health ================= */
+  // Pure function, same reasoning as drawdownAlertContent above -- testable with arbitrary inputs,
+  // including the "warn" branch, which the hardcoded demo values below never trigger on their own.
+  function dqAlertContent(unpostedPCOs, syncLagDays, thresholdDays){
+    if (syncLagDays > thresholdDays) {
+      return { level:"warn", className:"alert-card warn", html:
+        '<div class="alert-head"><span class="alert-shape">▲</span> WARNING — Data Unreconciled</div>' +
+        '<div class="alert-row"><b>Detected:</b> ' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag (threshold: ' + thresholdDays + ' days)</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> reporting lag between the field system and the corporate ERP ledger</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> open the reconciliation queue and post the outstanding change orders</div>' };
+    }
+    return { level:"ok", className:"alert-card ok", html:
+      '<div class="alert-head"><span class="alert-shape">●</span> Within reconciliation threshold</div>' +
+      '<div class="alert-row">' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag — under the ' + thresholdDays + '-day threshold.</div>' };
+  }
   function renderDQHealth(){
     var unpostedPCOs = 4;
     var syncLagDays = 9;
+    var thresholdDays = 14;
     var el = document.getElementById("dqKpis");
     el.innerHTML =
       '<div class="kpi"><div class="lbl">Unposted PCOs</div><div class="val tabular">' + unpostedPCOs + '</div></div>' +
       '<div class="kpi"><div class="lbl">Sync lag</div><div class="val tabular">' + syncLagDays + ' days</div></div>' +
-      '<div class="kpi"><div class="lbl">Threshold</div><div class="val tabular">14 days</div></div>';
+      '<div class="kpi"><div class="lbl">Threshold</div><div class="val tabular">' + thresholdDays + ' days</div></div>';
+    var content = dqAlertContent(unpostedPCOs, syncLagDays, thresholdDays);
     var warnEl = document.getElementById("dqWarn");
-    if (syncLagDays > 14) {
-      warnEl.className = "alert-card warn";
-      warnEl.innerHTML =
-        '<div class="alert-head"><span class="alert-shape">▲</span> WARNING — Data Unreconciled</div>' +
-        '<div class="alert-row"><b>Detected:</b> ' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag (threshold: 14 days)</div>' +
-        '<div class="alert-row"><b>Probable cause:</b> reporting lag between the field system and the corporate ERP ledger</div>' +
-        '<div class="alert-row"><b>Suggested action:</b> open the reconciliation queue and post the outstanding change orders</div>';
-    } else {
-      warnEl.className = "alert-card ok";
-      warnEl.innerHTML = '<div class="alert-head"><span class="alert-shape">●</span> Within reconciliation threshold</div>' +
-        '<div class="alert-row">' + unpostedPCOs + ' unposted PCOs, ' + syncLagDays + '-day sync lag — under the 14-day threshold.</div>';
-    }
+    warnEl.className = content.className;
+    warnEl.innerHTML = content.html;
   }
   renderDQHealth();
 
@@ -902,6 +914,8 @@
     wbsSum: wbsData.reduce(function(s,r){ return s + r.pct; }, 0),
     regions: regions,
     formatInCurrency: formatInCurrency, // exposed for verify.cjs to test the real currency logic
+    drawdownAlertContent: drawdownAlertContent, // exposed to test both ok/warn branches directly
+    dqAlertContent: dqAlertContent,             // exposed to test both ok/warn branches directly
     CURRENCIES: CURRENCIES
   };
 })();

@@ -63,14 +63,20 @@ Beyond the 7 tabs and the marts they display:
 
 ## Verification
 
-`node verify.cjs` — an independent Node-based tie-out. Stubs just enough DOM to run the page's own
-`<script>` headlessly (no browser required), then independently re-derives the budget-bridge total,
-the contingency-drawdown ratio, the Monte Carlo percentile ordering and bounds, the WBS percentage
-sum, the risk register's total expected value, the region rollup, **and the currency-conversion
-logic itself** (calling the page's real `formatInCurrency` function, exposed on
-`window.__CMCC_STATE__` specifically so the test exercises production code, not a reimplementation)
-— asserting each against the page's own computed state. **17 assertions, all passing** as of the
-last run. This exists because a sandboxed environment building this repo could not get a live
+`node verify.cjs` — an independent Node-based tie-out. Stubs a real (not no-op) `classList`,
+attribute storage, and click-event delegation so the page's own `<script>` runs headlessly with
+its actual interaction logic exercised, not just its math. Independently re-derives the
+budget-bridge total, the contingency-drawdown ratio, the Monte Carlo percentile ordering and
+bounds, the WBS percentage sum, the risk register's total expected value, the region rollup, the
+currency-conversion logic (calling the page's real `formatInCurrency`), **both branches of both
+alert cards** (calling the real `drawdownAlertContent`/`dqAlertContent` pure functions directly,
+including the branches the hardcoded demo state never naturally triggers), and **the explainer
+toggle by actually firing its click handler** (open → verify `aria-expanded`/open class → click
+again → verify it closes, plus an unrelated-click no-op check) — all exposed on
+`window.__CMCC_STATE__` specifically so the tests exercise production code, never a
+reimplementation. **29 assertions, all passing** (`node verify.cjs | grep -c "^pass:"` → 29) as of
+the last run. This exists because a
+sandboxed environment building this repo could not get a live
 browser render (a domain-allowlist guard blocks it, deliberately) — a Node-based tie-out doesn't
 need one.
 
