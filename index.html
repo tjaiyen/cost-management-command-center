@@ -289,6 +289,27 @@
           escalation uncertainty specifically — distinct from this build's own completion-cost
           simulation below).</p>
       </div>
+      <div class="card" style="margin-top:16px">
+        <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span></h3>
+        <p class="lede" style="font-size:12.5px">Recomputes live off the same baseline, separate
+          from the "as-reported" bridge above — the real $208K driver and the contingency drawdown
+          are held constant so this sandbox can never quietly rewrite either. Directly demonstrates
+          the JD's "advanced financial/cost modeling — CAPEX, cash flow, return sensitivities" line.</p>
+        <div class="slider-row">
+          <label for="wiScope" style="font-size:12.5px; white-space:nowrap; width:110px">Scope change</label>
+          <input type="range" id="wiScope" min="-5" max="15" value="4" />
+          <span class="tabular" id="wiScopeVal">4%</span>
+        </div>
+        <div class="slider-row">
+          <label for="wiEscalation" style="font-size:12.5px; white-space:nowrap; width:110px">Escalation</label>
+          <input type="range" id="wiEscalation" min="0" max="20" value="2" />
+          <span class="tabular" id="wiEscalationVal">2%</span>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">What-if forecast</div><div class="val tabular" id="wiForecast">—</div></div>
+          <div class="kpi"><div class="lbl">Delta vs. current forecast</div><div class="val tabular" id="wiDelta">—</div></div>
+        </div>
+      </div>
     </section>
 
     <section id="benchmark-section">
@@ -336,6 +357,21 @@
           experience — not any real capital program's actual cost data.</p>
       </div>
     </section>
+
+    <section id="cal-section">
+      <h2>Control Account Ledger <span class="badge illustrative">illustrative rows, real structure</span></h2>
+      <p class="lede" style="font-size:13px">Drill-down from each WBS category above into its own
+        BAC / % complete / earned value / actual cost — Cost Performance Index and Cost Variance
+        computed per account, not just at the program level. CPI/CV need only physical % complete,
+        not a schedule baseline — this stays cost-management territory, not schedule integration.</p>
+      <div class="card">
+        <table id="calTable"></table>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> % complete and
+          AC/EV ratios per account are invented to make the drill-down legible; the BAC split
+          (WBS %) and the accounts themselves are the same real GC/subcontractor bid-package
+          structure cited above.</p>
+      </div>
+    </section>
   </div>
 
   <!-- ============================================================ CONTINGENCY & RISK ============================================================ -->
@@ -370,17 +406,37 @@
             contingency/change-order-tracking history, $50M+ per project.</p>
         </div>
         <div class="card">
-          <h3>Monte Carlo completion cost (2,000 draws)</h3>
+          <h3>Monte Carlo completion cost (2,000 draws) <span class="badge illustrative">tri-point playground</span></h3>
           <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
           <div class="pctile-row" aria-live="polite" aria-atomic="true">
             <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
             <div class="pctile">P80<b class="tabular" id="p80">—</b></div>
             <div class="pctile">P90<b class="tabular" id="p90">—</b></div>
           </div>
+          <div class="slider-row">
+            <label for="mcMin" style="font-size:12px; white-space:nowrap; width:90px">Optimistic</label>
+            <input type="range" id="mcMin" min="2300000" max="2600000" step="10000" value="2450000" />
+            <span class="tabular" id="mcMinVal">—</span>
+          </div>
+          <div class="slider-row">
+            <label for="mcMode" style="font-size:12px; white-space:nowrap; width:90px">Most likely</label>
+            <input type="range" id="mcMode" min="2450000" max="2900000" step="10000" value="2620000" />
+            <span class="tabular" id="mcModeVal">—</span>
+          </div>
+          <div class="slider-row">
+            <label for="mcMax" style="font-size:12px; white-space:nowrap; width:90px">Pessimistic</label>
+            <input type="range" id="mcMax" min="2700000" max="3400000" step="10000" value="3050000" />
+            <span class="tabular" id="mcMaxVal">—</span>
+          </div>
           <button class="icobtn" id="reRunMC" type="button" style="margin-top:10px">Re-run simulation</button>
+          <p class="src-note" id="reliabilityNote"></p>
           <p class="src-note">AACE also publishes a complementary expected-value method (RP 65R-11,
             extending RP 44R-08) for cases where a full simulation isn't warranted — real, distinct,
-            not used here.</p>
+            not used here. The three sliders are a real technique — a Beta-PERT/triangular
+            tri-point estimate (optimistic/most-likely/pessimistic) — with <span class="badge illustrative">illustrative</span>
+            starting values; dragging them (min ≤ mode ≤ max is enforced) re-runs the same real
+            simulation math above, live. The histogram animates its build-up in a real browser; this
+            is a simplified progressive reveal, not a physical ball-drop simulation.</p>
         </div>
       </div>
     </section>
@@ -657,6 +713,35 @@
   }
   renderBarChart("wbsChart", wbsData);
 
+  /* ================= COST TAB: Control Account Ledger (drills down from WBS) ================= */
+  var controlAccountPctComplete = [0.72, 0.55, 0.88, 0.40]; // illustrative physical % complete per WBS row
+  var controlAccountAcEvRatio =   [1.04, 1.11, 0.98, 1.06]; // illustrative AC/EV ratio (>1 = that account is over)
+  // Pure function: BAC comes straight from the real WBS % split of the real baseline; only
+  // % complete and the AC/EV ratio are invented, to make the drill-down legible.
+  function computeControlAccounts(baseline, wbs, pctCompleteArr, acEvRatioArr){
+    return wbs.map(function(w, i){
+      var bac = Math.round(baseline * (w.pct / 100));
+      var pc = pctCompleteArr[i];
+      var ev = Math.round(bac * pc);
+      var ac = Math.round(ev * acEvRatioArr[i]);
+      return { name: w.name, bac: bac, pctComplete: pc, ev: ev, ac: ac, cv: ev - ac, cpi: ac !== 0 ? ev / ac : 0 };
+    });
+  }
+  function renderControlAccounts(){
+    var accounts = computeControlAccounts(bridgeResult.baseline, wbsData, controlAccountPctComplete, controlAccountAcEvRatio);
+    var el = document.getElementById("calTable");
+    var rows = accounts.map(function(a){
+      var cpiFlag = a.cpi >= 1 ? "✓" : "⚠";
+      return "<tr><td>" + a.name + "</td><td class='tabular'>" + fmt(a.bac) + "</td>" +
+        "<td class='tabular'>" + Math.round(a.pctComplete * 100) + "%</td>" +
+        "<td class='tabular'>" + fmt(a.ev) + "</td><td class='tabular'>" + fmt(a.ac) + "</td>" +
+        "<td class='tabular'>" + fmt(a.cv) + "</td><td class='tabular'>" + a.cpi.toFixed(2) + " " + cpiFlag + "</td></tr>";
+    }).join("");
+    el.innerHTML = "<thead><tr><th>Control account</th><th>BAC</th><th>% complete</th><th>EV</th><th>AC</th><th>CV</th><th>CPI</th></tr></thead><tbody>" + rows + "</tbody>";
+    return accounts;
+  }
+  var controlAccounts = renderControlAccounts();
+
   /* ================= CONTINGENCY TAB: drawdown slider ================= */
   var pctComplete = document.getElementById("pctComplete");
   var drawdownPct = document.getElementById("drawdownPct");
@@ -706,10 +791,52 @@
   }
   function percentile(sorted, p){ return sorted[Math.floor(p * (sorted.length - 1))]; }
   var lastMC = { p50:0, p80:0, p90:0 };
-  function runMonteCarlo(seed){
+  var lastMCBounds = { min:2450000, max:3050000 };
+  function drawHistogram(counts, maxCount){
+    var canvas = document.getElementById("mcCanvas");
+    var ctx = canvas.getContext("2d");
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    var bins = counts.length, binW = w / bins;
+    var accentColor = getComputedStyle(document.documentElement).getPropertyValue("--c-accent").trim();
+    ctx.fillStyle = "rgb(" + accentColor + " / 0.75)";
+    counts.forEach(function(c, i){
+      var barH = maxCount > 0 ? (c / maxCount) * (h - 8) : 0;
+      ctx.fillRect(i * binW + 1, h - barH, binW - 2, barH);
+    });
+  }
+  // Simplified progressive-reveal animation -- bars grow in ~12 steps instead of snapping to the
+  // final state instantly. Falls back to one immediate full draw when requestAnimationFrame isn't
+  // defined (this repo's Node-based verify.cjs sandbox has no rAF) -- final state is identical
+  // either way, only the reveal is skipped. Not a physical ball-drop simulation; stated as such
+  // in the page's own src-note, not oversold.
+  function animateHistogram(counts, maxCount){
+    if (typeof requestAnimationFrame !== "function") { drawHistogram(counts, maxCount); return; }
+    var steps = 12, step = 0;
+    (function frame(){
+      step++;
+      var partial = counts.map(function(c){ return Math.round(c * Math.min(step / steps, 1)); });
+      drawHistogram(partial, maxCount);
+      if (step < steps) requestAnimationFrame(frame);
+    })();
+  }
+  function renderReliabilityNote(){
+    var el = document.getElementById("reliabilityNote");
+    if (!el) return;
+    // Ties the one real number in this whole simulation (the $208K field-execution variance) to
+    // the illustrative Monte Carlo band -- recomputed live every time the sliders move.
+    var realPoint = bridgeSteps[0].value + 208000;
+    var band = realPoint <= lastMC.p50 ? "at or below the P50 (median) forecast"
+      : realPoint <= lastMC.p80 ? "between the P50 and P80 band — exactly why AACE guidance favors pricing contingency to P80, not P50"
+      : realPoint <= lastMC.p90 ? "between P80 and P90 — a real driver this large would have breached a P80-sized reserve"
+      : "above even the P90 tail of this particular tri-point estimate";
+    el.innerHTML = '<span class="badge real">real</span> The real $208K field-execution-variance driver, added to baseline, lands ' + band + ' of the band shown here.';
+  }
+  function runMonteCarlo(seed, min, mode, max){
+    min = min || 2450000; mode = mode || 2620000; max = max || 3050000;
+    lastMCBounds = { min: min, max: max };
     var rng = mulberry32(seed);
     var N = 2000;
-    var min = 2450000, mode = 2620000, max = 3050000;
     var draws = [];
     for (var i = 0; i < N; i++) draws.push(triangular(rng, min, mode, max));
     draws.sort(function(a,b){ return a - b; });
@@ -718,31 +845,82 @@
     document.getElementById("p80").textContent = fmt(lastMC.p80);
     document.getElementById("p90").textContent = fmt(lastMC.p90);
 
-    var canvas = document.getElementById("mcCanvas");
-    var ctx = canvas.getContext("2d");
-    var w = canvas.width, h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-    var bins = 30, binW = w / bins;
+    var bins = 30;
     var counts = new Array(bins).fill(0);
     draws.forEach(function(v){
-      var b = Math.min(bins - 1, Math.floor(((v - min) / (max - min)) * bins));
+      var b = Math.min(bins - 1, Math.max(0, Math.floor(((v - min) / (max - min)) * bins)));
       counts[b]++;
     });
     var maxCount = Math.max.apply(null, counts);
-    var accentColor = getComputedStyle(document.documentElement).getPropertyValue("--c-accent").trim();
-    ctx.fillStyle = "rgb(" + accentColor + " / 0.75)";
-    counts.forEach(function(c, i){
-      var barH = (c / maxCount) * (h - 8);
-      ctx.fillRect(i * binW + 1, h - barH, binW - 2, barH);
-    });
+    animateHistogram(counts, maxCount);
+    renderReliabilityNote();
     return lastMC;
   }
-  runMonteCarlo(mcSeed);
+
+  /* ---------- Beta-PERT tri-point sliders driving the same real simulation math above ---------- */
+  var mcMinInput = document.getElementById("mcMin");
+  var mcModeInput = document.getElementById("mcMode");
+  var mcMaxInput = document.getElementById("mcMax");
+  // Pure function, same reasoning as drawdownAlertContent/dqAlertContent above -- testable
+  // directly with arbitrary inputs, including the two clamping branches a well-behaved drag never
+  // triggers (mode already between min/max) but a fast or out-of-order drag legitimately can.
+  function clampMode(min, mode, max){
+    if (mode < min) return min;
+    if (mode > max) return max;
+    return mode;
+  }
+  function readMcSliders(){
+    var mn = parseInt(mcMinInput.value, 10);
+    var md = clampMode(mn, parseInt(mcModeInput.value, 10), parseInt(mcMaxInput.value, 10));
+    var mx = parseInt(mcMaxInput.value, 10);
+    mcModeInput.value = md; // reflect the clamp back onto the slider itself
+    document.getElementById("mcMinVal").textContent = fmt(mn);
+    document.getElementById("mcModeVal").textContent = fmt(md);
+    document.getElementById("mcMaxVal").textContent = fmt(mx);
+    return { min: mn, mode: md, max: mx };
+  }
+  function reRunFromSliders(){
+    var b = readMcSliders();
+    runMonteCarlo(mcSeed, b.min, b.mode, b.max);
+    if (typeof renderOverview === "function") renderOverview();
+  }
+  mcMinInput.addEventListener("input", reRunFromSliders);
+  mcModeInput.addEventListener("input", reRunFromSliders);
+  mcMaxInput.addEventListener("input", reRunFromSliders);
+
+  var initialMcBounds = readMcSliders();
+  runMonteCarlo(mcSeed, initialMcBounds.min, initialMcBounds.mode, initialMcBounds.max);
   document.getElementById("reRunMC").addEventListener("click", function(){
     mcSeed += 7919;
-    runMonteCarlo(mcSeed);
+    var b = readMcSliders();
+    runMonteCarlo(mcSeed, b.min, b.mode, b.max);
     if (typeof renderOverview === "function") renderOverview();
   });
+
+  /* ================= COST TAB: what-if forecast sandbox (separate from the as-reported bridge) ================= */
+  var wiScopeInput = document.getElementById("wiScope");
+  var wiEscalationInput = document.getElementById("wiEscalation");
+  // Pure function: holds the real $208K field-execution variance and the real contingency
+  // drawdown constant, only scope% and escalation% move -- so this sandbox can never quietly
+  // rewrite the "as-reported" bridge's own real figures.
+  function computeWhatIf(baseline, scopePct, escalationPct, fieldVariance, drawdown){
+    return baseline + baseline * (scopePct / 100) + baseline * (escalationPct / 100) + fieldVariance + drawdown;
+  }
+  var lastWhatIf = 0;
+  function renderWhatIf(){
+    var scopePct = parseInt(wiScopeInput.value, 10);
+    var escalationPct = parseInt(wiEscalationInput.value, 10);
+    document.getElementById("wiScopeVal").textContent = scopePct + "%";
+    document.getElementById("wiEscalationVal").textContent = escalationPct + "%";
+    lastWhatIf = computeWhatIf(bridgeResult.baseline, scopePct, escalationPct, 208000, -140000);
+    document.getElementById("wiForecast").textContent = fmt(lastWhatIf);
+    var delta = lastWhatIf - bridgeResult.final;
+    document.getElementById("wiDelta").textContent = (delta >= 0 ? "+" : "") + fmt(delta);
+    return lastWhatIf;
+  }
+  wiScopeInput.addEventListener("input", renderWhatIf);
+  wiEscalationInput.addEventListener("input", renderWhatIf);
+  renderWhatIf();
 
   /* ================= CONTINGENCY TAB: priced risk register ================= */
   var riskRegister = [
@@ -942,7 +1120,10 @@
     // re-render every section that displays a formatted dollar figure -- none of the
     // underlying math changes, only how fmt() renders the same USD-based numbers.
     renderBridge();
-    runMonteCarlo(mcSeed);
+    renderControlAccounts();
+    var mcVals = readMcSliders();
+    runMonteCarlo(mcSeed, mcVals.min, mcVals.mode, mcVals.max);
+    renderWhatIf();
     renderRiskTable();
     renderConsultantTable();
     renderRegionDetail();
@@ -960,7 +1141,13 @@
     formatInCurrency: formatInCurrency, // exposed for verify.cjs to test the real currency logic
     drawdownAlertContent: drawdownAlertContent, // exposed to test both ok/warn branches directly
     dqAlertContent: dqAlertContent,             // exposed to test both ok/warn branches directly
-    CURRENCIES: CURRENCIES
+    CURRENCIES: CURRENCIES,
+    controlAccounts: controlAccounts,           // Phase 1: control-account drill-down ledger
+    computeControlAccounts: computeControlAccounts,
+    computeWhatIf: computeWhatIf,               // Phase 1: what-if sandbox pure function
+    lastWhatIf: lastWhatIf,
+    mcBounds: lastMCBounds,                     // Phase 1: current tri-point slider bounds
+    clampMode: clampMode                        // Phase 1: tri-point ordering-enforcement pure function
   };
 })();
 </script>

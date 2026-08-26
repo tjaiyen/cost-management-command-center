@@ -136,6 +136,18 @@ const drawdownPctStub = makeElementStub(); drawdownPctStub.value = "35";
 elementsById["pctComplete"] = pctCompleteStub;
 elementsById["drawdownPct"] = drawdownPctStub;
 
+// Phase 1 range-input stubs, values matching their real HTML defaults exactly.
+const mcMinStub = makeElementStub(); mcMinStub.value = "2450000";
+const mcModeStub = makeElementStub(); mcModeStub.value = "2620000";
+const mcMaxStub = makeElementStub(); mcMaxStub.value = "3050000";
+elementsById["mcMin"] = mcMinStub;
+elementsById["mcMode"] = mcModeStub;
+elementsById["mcMax"] = mcMaxStub;
+const wiScopeStub = makeElementStub(); wiScopeStub.value = "4";
+const wiEscalationStub = makeElementStub(); wiEscalationStub.value = "2";
+elementsById["wiScope"] = wiScopeStub;
+elementsById["wiEscalation"] = wiEscalationStub;
+
 // Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
 // The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
 const infoToggleBtnStub = withProperties(makeElementStub());
@@ -353,6 +365,32 @@ if (html.indexOf("not as evidence of having overseen one directly") === -1) {
 } else {
   console.log("pass: RICS/ICMS citation explicitly disclaims oversight-experience overclaim");
 }
+
+console.log("--- Phase 1: Control Account Ledger (drills down from WBS) ---");
+// Independent re-derivation: BAC per account = baseline * (WBS % / 100); since WBS % sums to 100,
+// the accounts' BAC must sum back to the exact same baseline.
+const bacSum = state.controlAccounts.reduce((s, a) => s + a.bac, 0);
+assertEqual(bacSum, state.bridge.baseline, "control-account BAC sum reconciles to bridge baseline");
+// Independent re-derivation of CPI/CV for one account, from the same inputs the page itself used.
+const acct0 = state.computeControlAccounts(state.bridge.baseline, [{ name: "x", pct: 52 }], [0.72], [1.04])[0];
+assertEqual(acct0.bac, Math.round(state.bridge.baseline * 0.52), "control-account BAC re-derivation (52% WBS row)");
+assertEqual(acct0.cv, acct0.ev - acct0.ac, "control-account CV = EV - AC");
+assertEqual(acct0.cpi, acct0.ev / acct0.ac, "control-account CPI = EV / AC", 0.0001);
+
+console.log("--- Phase 1: What-If Forecast Sandbox (independent re-derivation) ---");
+const expectedWhatIf = state.bridge.baseline + state.bridge.baseline * 0.04 + state.bridge.baseline * 0.02 + 208000 - 140000;
+assertEqual(state.lastWhatIf, expectedWhatIf, "what-if forecast (default 4% scope / 2% escalation) matches independent re-derivation");
+// The real $208K driver and real contingency drawdown must never move with the sandbox sliders --
+// re-derive at a different scope/escalation pair and confirm those two terms are still present unchanged.
+const whatIfAtZero = state.computeWhatIf(state.bridge.baseline, 0, 0, 208000, -140000);
+assertEqual(whatIfAtZero, state.bridge.baseline + 208000 - 140000, "what-if at 0%/0% still carries the real $208K driver and real drawdown unchanged");
+
+console.log("--- Phase 1: Monte Carlo tri-point slider bounds + clamp function ---");
+assertEqual(state.mcBounds.min, 2450000, "Monte Carlo tri-point default optimistic bound");
+assertEqual(state.mcBounds.max, 3050000, "Monte Carlo tri-point default pessimistic bound");
+assertEqual(state.clampMode(2450000, 2620000, 3050000), 2620000, "clampMode: a mode already inside [min,max] passes through unchanged");
+assertEqual(state.clampMode(2450000, 2000000, 3050000), 2450000, "clampMode: a mode below min clamps up to min (never naturally triggered by a well-behaved drag)");
+assertEqual(state.clampMode(2450000, 3200000, 3050000), 3050000, "clampMode: a mode above max clamps down to max (never naturally triggered by a well-behaved drag)");
 
 console.log("");
 if (failures > 0) {
