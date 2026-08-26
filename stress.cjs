@@ -116,7 +116,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 25, `found all 25 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 29, `found all 29 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
@@ -220,6 +220,37 @@ check(/<div style="overflow-x:auto"><div class="bridge" id="bridgeChart"/.test(i
   "the CAPEX Budget Bridge chart is wrapped in an overflow-x:auto container (mobile fix)");
 check(/\.bridge\{[^}]*min-width:540px/.test(indexHtml),
   "the .bridge chart has a min-width floor so its 6 flex columns can't be squished illegible while scrolling");
+
+console.log("--- Phase 2 director-grade visuals: structural checks ---");
+// The remaining 12 visuals from the 20-item brainstorm (the 13th, escalation staleness, was
+// already director-grade from the proactive-framework build -- no new work needed there).
+["renderNetVarianceTrend", "renderMcScurve", "renderCostDriverTreemap", "renderMarketBenchmarkBar",
+ "renderFloatBurndown", "renderEmvTwoBar", "renderConsultantScatter", "renderDqLagTrend",
+ "renderLpfDivergingBar", "renderRegionRankedBar", "renderGate4Gauge",
+ "renderLineChart", "renderRankedBar"].forEach((fn) => {
+  check(indexHtml.includes("function " + fn + "("), `${fn}() is defined`);
+});
+const bareRafCount2 = (indexHtml.match(/[^.]requestAnimationFrame\(function/g) || []).length;
+check(bareRafCount2 === 0, "Phase 2 still has zero direct requestAnimationFrame() calls -- everything routes through runOnFrame()", `found ${bareRafCount2}`);
+["netVarianceTrend", "mcScurve", "costDriverTreemap", "marketBenchmarkBar", "floatBurndown",
+ "emvTwoBar", "consultantScatter", "dqLagTrend", "lpfRankedBar", "regionRankedBar", "gate4Gauge"].forEach((id) => {
+  check(indexHtml.includes('id="' + id + '"'), `container #${id} exists in the HTML`);
+});
+["expVarianceTrend", "expScurve", "expTreemap", "expFloatBurndown"].forEach((id) => {
+  check(indexHtml.includes('data-explainer="' + id + '"'), `${id} explainer button is wired`);
+});
+// The WBS bar (#10) is a light interactivity upgrade to the EXISTING chart, not a second chart --
+// confirm the click-to-detail handler actually landed, not just described in a comment.
+check(indexHtml.includes('document.getElementById("wbsDetail")'), "the WBS bar's click-to-detail handler is wired to the real #wbsDetail container");
+// Currency-dependent Phase 2 visuals must actually refresh on the currency toggle, the same class
+// of gap the proactive-framework build's own riskCategorySubtotals fix closed earlier.
+const currencyHandlerMatch = indexHtml.match(/currencySelect\.addEventListener\("change", function\(\)\{([\s\S]*?)\n  \}\);/);
+check(!!currencyHandlerMatch, "found the currency-toggle change handler to check against");
+if (currencyHandlerMatch) {
+  ["renderNetVarianceTrend", "renderCostDriverTreemap", "renderEmvTwoBar", "renderConsultantScatter"].forEach((fn) => {
+    check(currencyHandlerMatch[1].includes(fn + "()"), `${fn}() re-renders on currency toggle (it displays a $ figure)`);
+  });
+}
 
 console.log("");
 if (failures > 0) {

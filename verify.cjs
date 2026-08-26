@@ -429,6 +429,73 @@ const hasUnfavorable = scenarios.some((s) => s.delta > 0);
 const hasFavorable = scenarios.some((s) => s.delta < 0);
 assertStrEqual(hasUnfavorable && hasFavorable, true, "both a cost-increase and a cost-decrease scenario appear among the 4 (real +/- branches, not a one-sided demo)");
 
+console.log("--- Phase 2 director-grade visuals: Net variance trend ---");
+assertEqual(state.netVarianceTrendResult.values.length, 6, "net-variance trend has 6 points (5 illustrative + 1 real)");
+assertEqual(state.netVarianceTrendResult.values[5], state.bridge.final - state.bridge.baseline, "the trend's final point is the real current net variance, not a 6th invented number");
+
+console.log("--- Phase 2 director-grade visuals: Monte Carlo S-curve ---");
+const flatCurve = state.computeCumulativeCurve([1, 1, 1, 1]);
+assertStrEqual(JSON.stringify(flatCurve), JSON.stringify([25, 50, 75, 100]), "computeCumulativeCurve on 4 equal bins produces 25/50/75/100");
+const realCurve = state.computeCumulativeCurve(state.lastMCHistogram.counts);
+assertEqual(realCurve[realCurve.length - 1], 100, "the real S-curve's last bin reaches exactly 100% cumulative", 0.001);
+let curveIsMonotonic = true;
+for (let i = 1; i < realCurve.length; i++) { if (realCurve[i] < realCurve[i - 1]) curveIsMonotonic = false; }
+assertStrEqual(curveIsMonotonic, true, "the real S-curve never decreases (a cumulative curve by construction)");
+
+console.log("--- Phase 2 director-grade visuals: Cost-driver treemap ---");
+assertEqual(state.treemapResult.total, state.bridge.baseline, "treemap's total BAC reconciles to the real budget-bridge baseline (same reconciliation GUARDS already checks)");
+assertEqual(state.treemapResult.blocks.length, state.controlAccounts.length, "one treemap block per control account");
+const treemapPctSum = state.treemapResult.blocks.reduce((s, b) => s + b.pct, 0);
+assertEqual(treemapPctSum, 100, "treemap block percentages sum to 100", 0.01);
+
+console.log("--- Phase 2 director-grade visuals: Market $/W ranked bar ---");
+assertEqual(state.marketBenchmarkResult.length, 5, "5 real market benchmarks ranked");
+const marketSorted = state.marketBenchmarkResult.every((m, i, arr) => i === 0 || arr[i - 1].value >= m.value);
+assertStrEqual(marketSorted, true, "market benchmarks are ranked descending by $/W, not left in citation order");
+assertEqual(state.marketBenchmarkResult[0].value, 15.2, "the top-ranked market is the real $15.2/W figure (Tokyo)");
+
+console.log("--- Phase 2 director-grade visuals: Float burn-down ---");
+assertEqual(state.floatBurndownResult.values.length, 4, "float burn-down plots all 4 real weekly readings");
+assertStrEqual(JSON.stringify(state.floatBurndownResult.values), JSON.stringify([22, 19, 14, 13]), "float burn-down values match the real floatHistory readings exactly");
+
+console.log("--- Phase 2 director-grade visuals: EMV two-bar comparison ---");
+assertEqual(state.emvTwoBarResult.settleWins, state.emvDecision.recommend === "settle", "two-bar 'settleWins' flag matches the real computeEMVDecision() recommendation");
+const expectedSettlePct = (state.emvDecision.settleNowCost / (Math.max(state.emvDecision.settleNowCost, state.emvDecision.disputeEV) * 1.15)) * 100;
+assertEqual(state.emvTwoBarResult.settlePct, expectedSettlePct, "settle-bar height % independently re-derives from the real EMV decision", 0.01);
+
+console.log("--- Phase 2 director-grade visuals: Consultant scatter plot ---");
+assertEqual(state.consultantScatterResult.length, 3, "3 consultants plotted");
+const expectedTolerance = [
+  Math.abs((1310000 - 1240000) / 1240000 * 100) <= 5,
+  Math.abs((2085000 - 2100000) / 2100000 * 100) <= 5,
+  Math.abs((702000 - 640000) / 640000 * 100) <= 5
+];
+state.consultantScatterResult.forEach((c, i) => {
+  assertStrEqual(c.withinTolerance, expectedTolerance[i], `consultant #${i + 1} (${c.name}) tolerance flag independently re-derives from its real pre-bid/actual figures`);
+});
+assertStrEqual(state.consultantScatterResult[0].withinTolerance, false, "Consultant A (+5.6%) correctly falls OUTSIDE the +/-5% tolerance band (never-exercised-by-a-passing-demo branch)");
+
+console.log("--- Phase 2 director-grade visuals: DQ sync-lag trend ---");
+assertEqual(state.dqLagTrendResult.values.length, 5, "DQ lag trend has 5 points (4 illustrative + 1 real)");
+assertEqual(state.dqLagTrendResult.values[4], 9, "the DQ trend's final point is the real dqDemoState.syncLagDays (9), not a 5th invented number");
+
+console.log("--- Phase 2 director-grade visuals: LPF diverging bar ---");
+assertEqual(state.lpfDivergingBarResult.length, 3, "3 trades ranked");
+const lpfSorted = state.lpfDivergingBarResult.every((p, i, arr) => i === 0 || arr[i - 1].lpf <= p.lpf);
+assertStrEqual(lpfSorted, true, "LPF diverging bar ranks worst (lowest LPF) first");
+assertStrEqual(state.lpfDivergingBarResult[0].trade, "Mechanical / Piping", "the worst-ranked trade is the real Mechanical/Piping row (the only one below 1.0 LPF)");
+
+console.log("--- Phase 2 director-grade visuals: Region ranked bar (all 4 at once) ---");
+assertEqual(state.regionRankedBarResult.length, 4, "all 4 regions ranked together, not one at a time");
+const expectedNAPct = state.computeRegionVariancePct(state.regions.find((r) => r.code === "NA"));
+assertEqual(expectedNAPct, ((state.bridge.final - 2450000) / 2450000) * 100, "computeRegionVariancePct() independently re-derives NA's variance from its real baseline/forecast", 0.001);
+const regionSorted = state.regionRankedBarResult.every((r, i, arr) => i === 0 || arr[i - 1].value >= r.value);
+assertStrEqual(regionSorted, true, "regions are ranked descending by variance%, not left in declaration order");
+
+console.log("--- Phase 2 director-grade visuals: Gate 4 radial gauge ---");
+assertEqual(state.gate4GaugeResult.value, state.gateStatus.ratio, "Gate 4 gauge value matches the real live gateStatus.ratio");
+assertStrEqual(state.gate4GaugeResult.cls, state.gateStatus.ratio < 1.0 ? "danger" : "success", "Gate 4 gauge band classification matches the real blocked/cleared threshold");
+
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
 const regionCodes = state.regions.map((r) => r.code).sort().join(",");

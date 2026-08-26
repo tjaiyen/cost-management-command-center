@@ -334,6 +334,38 @@
   .tornado-row .tbar.neg{right:0; background:rgb(var(--c-danger))}
   .tornado-row .tbar.pos{left:0; background:rgb(var(--c-success))}
   .tornado-row .tval{width:90px; font-variant-numeric:tabular-nums; font-size:11.5px}
+
+  /* ===== Phase 2 director-grade visuals: line chart, ranked bar, scatter, treemap, two-bar ===== */
+  .linechart{opacity:0; transition:opacity 600ms}
+  .linechart.shown{opacity:1}
+  .linechart circle{cursor:pointer}
+
+  .rbar-row{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px}
+  .rbar-name{width:140px; flex-shrink:0; text-align:right}
+  .rbar-track{flex:1; height:16px; background:rgb(var(--c-bg-card2)); border-radius:4px; overflow:hidden}
+  .rbar-fill{height:100%; width:0; border-radius:4px; transition:width 700ms cubic-bezier(.2,.8,.2,1); cursor:pointer}
+  .rbar-fill.pos{background:rgb(var(--c-accent))}
+  .rbar-fill.warn{background:rgb(var(--c-warning))}
+  .rbar-fill.danger{background:rgb(var(--c-danger))}
+  .rbar-val{width:80px; font-variant-numeric:tabular-nums; font-size:11.5px}
+
+  .scatter-dot{transition:r 500ms cubic-bezier(.34,1.56,.64,1); cursor:pointer}
+  .scatter-dot.ok{fill:rgb(var(--c-success))}
+  .scatter-dot.warn{fill:rgb(var(--c-danger))}
+
+  .treemap{display:flex; height:70px; border-radius:6px; overflow:hidden; margin:14px 0}
+  .treemap-block{display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; font-size:11px; text-align:center; cursor:pointer; width:0; overflow:hidden;
+    white-space:nowrap; transition:width 700ms cubic-bezier(.2,.8,.2,1)}
+  .treemap-block .tb-val{font-weight:700; font-size:13px}
+
+  .twobar{display:flex; gap:16px; margin:14px 0; align-items:flex-end; height:120px}
+  .twobar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%}
+  .twobar-bar{width:70%; border-radius:6px 6px 0 0; height:0; cursor:pointer; transition:height 700ms cubic-bezier(.2,.8,.2,1)}
+  .twobar-bar.win{background:rgb(var(--c-success))}
+  .twobar-bar.lose{background:rgb(var(--c-text-secondary)/0.4)}
+  .twobar-label{font-size:11.5px; margin-top:6px; text-align:center}
+  .twobar-val{font-weight:700; font-size:13px; margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -497,6 +529,12 @@
           <div class="kpi"><div class="lbl">Net variance</div><div class="val tabular" id="bDelta">—</div></div>
           <div class="kpi"><div class="lbl">Largest single driver</div><div class="val" id="bDriver" style="font-size:14px">—</div></div>
         </div>
+        <div style="margin-top:10px">
+          <h3 style="font-size:13px; margin:0 0 4px">Net variance trend <span class="badge illustrative">illustrative history, real current point</span>
+            <button class="info-toggle" type="button" data-explainer="expVarianceTrend" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <div class="explainer" id="expVarianceTrend"></div>
+          <div id="netVarianceTrend"></div>
+        </div>
         <p class="src-note"><span class="badge real">real</span> The largest driver step is a real
           $208K labor-variance root-cause trace, recast here as a "field execution variance" bridge
           step, structured per <b>AACE RP 86R-14</b>'s variance-analysis-and-reporting framework
@@ -563,13 +601,7 @@
         <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span>
           <button class="info-toggle" type="button" data-explainer="exp09" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="exp09"></div>
-        <div class="kpis">
-          <div class="kpi"><div class="lbl">Tokyo</div><div class="val">$15.2/W</div></div>
-          <div class="kpi"><div class="lbl">Singapore</div><div class="val">$14.5/W</div></div>
-          <div class="kpi"><div class="lbl">Zurich</div><div class="val">$14.2/W</div></div>
-          <div class="kpi"><div class="lbl">Silicon Valley</div><div class="val">$13.3/W</div></div>
-          <div class="kpi"><div class="lbl">New Jersey</div><div class="val">$12.9/W</div></div>
-        </div>
+        <div id="marketBenchmarkBar"></div>
         <p class="src-note"><span class="badge real">real</span> Turner &amp; Townsend's
           <i>Data Centre Construction Cost Index 2025-2026</i> (9th year, 52 markets, ~250 experts
           surveyed) — the 5 most expensive markets by US$/W. The same report also finds a 5.5%
@@ -577,6 +609,15 @@
           from 9.0% in 2024) and a 7–10% construction-cost premium for liquid-cooled AI data centers
           vs. air-cooled equivalents — an independent second real source corroborating the
           liquid-cooling premium figure above.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Where the budget actually sits <span class="badge illustrative">illustrative rows, real $ from the ledger below</span>
+          <button class="info-toggle" type="button" data-explainer="expTreemap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expTreemap"></div>
+        <div id="costDriverTreemap" class="treemap"></div>
+        <p class="src-note">Block width = share of total BAC (Budget at Completion) — the same
+          control-account dollar amounts as the ledger further down this tab, not a second,
+          separately-invented split. Click any block for its exact figure.</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Estimate maturity <span class="badge real">real classification framework</span>
@@ -608,6 +649,8 @@
       <div class="explainer" id="exp10"></div>
       <div class="card">
         <div id="wbsChart"></div>
+        <div id="wbsDetail" class="src-note" style="min-height:1.4em">Click any row for its dollar
+          amount and where it sits on the ledger below.</div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Shaped around a
           real GC/subcontractor bid-package composition and design/engineering cost-partnership
           experience — not any real capital program's actual cost data.</p>
@@ -713,6 +756,12 @@
             <button class="info-toggle" type="button" data-explainer="exp04" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
           <div class="explainer" id="exp04"></div>
           <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
+          <div style="margin:10px 0 4px">
+            <h4 style="font-size:12px; margin:0 0 4px; font-weight:600">Cumulative probability (S-curve) <span class="badge real">real method</span>
+              <button class="info-toggle" type="button" data-explainer="expScurve" aria-expanded="false" aria-label="Formula and methodology">i</button></h4>
+            <div class="explainer" id="expScurve"></div>
+            <div id="mcScurve"></div>
+          </div>
           <div class="pctile-row" aria-live="polite" aria-atomic="true">
             <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
             <div class="pctile">P80<b class="tabular" id="p80">—</b></div>
@@ -783,6 +832,12 @@
       <div class="card">
         <div class="kpis" id="floatKpis"></div>
         <div id="floatWarn"></div>
+        <div style="margin-top:12px">
+          <h3 style="font-size:13px; margin:0 0 4px">Float burn-down <span class="badge illustrative">illustrative readings, real erosion-rate math</span>
+            <button class="info-toggle" type="button" data-explainer="expFloatBurndown" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <div class="explainer" id="expFloatBurndown"></div>
+          <div id="floatBurndown"></div>
+        </div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> 4 weekly float
           readings, invented; the erosion-rate math and the "reassess within N weeks" framing are
           real and reused as-is from how a leading indicator works elsewhere on this build (the
@@ -801,6 +856,7 @@
         priced the same probability × impact way as the risk register above, compared against a
         known settle-now cost.</p>
       <div class="card">
+        <div id="emvTwoBar"></div>
         <div style="overflow-x:auto"><table id="emvTable"></table></div>
         <div id="emvVerdict" style="margin-top:12px"></div>
       </div>
@@ -817,6 +873,7 @@
         third-party cost consultants — generic methodology, never labeled as any specific vendor's
         real data.</p>
       <div class="card">
+        <div id="consultantScatter"></div>
         <div style="overflow-x:auto"><table id="consultantTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Grounded in real
           subcontractor/vendor pricing negotiation experience and BOM/data-quality-defect-fix work —
@@ -833,6 +890,10 @@
       <div class="card">
         <div class="kpis" id="dqKpis"></div>
         <div id="dqWarn"></div>
+        <div style="margin-top:12px">
+          <h3 style="font-size:13px; margin:0 0 4px">Sync-lag trend</h3>
+          <div id="dqLagTrend"></div>
+        </div>
         <p class="src-note"><span class="badge real">real</span> Grounded in a real master-data
           validation control that "eliminated recurring downstream reconciliation failures" — the
           strongest single direct proof point in this whole build. Sync-lag numbers shown are
@@ -848,6 +909,7 @@
         trade — a cost-management-owned productivity signal (it needs only earned/actual hours,
         not a schedule baseline), scoped here to three trades rather than full crew-level tracking.</p>
       <div class="card">
+        <div id="lpfRankedBar"></div>
         <div style="overflow-x:auto"><table id="productivityTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Hours are invented;
           the LPF = earned/actual ratio itself follows <b>AACE RP 22R-01</b>'s direct labor
@@ -866,7 +928,9 @@
         data-center platform typically operates across, used here only as realistic labels for an
         illustrative rollup, not any specific employer's real cost data.</p>
       <div class="card">
-        <div class="region-tabs" id="regionTabs"></div>
+        <h3 style="font-size:13px; margin:0 0 4px">All 4 regions, ranked</h3>
+        <div id="regionRankedBar"></div>
+        <div class="region-tabs" id="regionTabs" style="margin-top:16px"></div>
         <div id="regionDetail"></div>
       </div>
     </section>
@@ -885,6 +949,7 @@
         "pending."</p>
       <div class="card">
         <div class="kpis" id="gateFwKpis"></div>
+        <div id="gate4Gauge" style="margin:12px 0"></div>
         <div id="gateFwStatus"></div>
       </div>
     </section>
@@ -1313,15 +1378,27 @@
   function renderBarChart(containerId, data){
     var el = document.getElementById(containerId);
     el.innerHTML = "";
-    data.forEach(function(row){
+    data.forEach(function(row, i){
       var r = document.createElement("div"); r.className = "barrow";
+      r.tabIndex = 0; r.style.cursor = "pointer";
       var name = document.createElement("div"); name.className = "wname"; name.textContent = row.name;
       var track = document.createElement("div"); track.className = "wtrack";
-      var fill = document.createElement("div"); fill.className = "wfill"; fill.style.width = row.pct + "%";
+      var fill = document.createElement("div"); fill.className = "wfill"; fill.style.width = "0%";
+      fill.style.transition = "width 700ms cubic-bezier(.2,.8,.2,1)";
       track.appendChild(fill);
       var pct = document.createElement("div"); pct.className = "wpct tabular"; pct.textContent = row.pct + "%";
       r.appendChild(name); r.appendChild(track); r.appendChild(pct);
+      // Phase 2, #10: click-to-detail -- cross-references the real control-account $ figure for
+      // this same category rather than duplicating a second invented number.
+      r.addEventListener("click", function(){
+        var d = document.getElementById("wbsDetail");
+        if (!d) return;
+        var account = (typeof controlAccounts !== "undefined" ? controlAccounts : []).filter(function(a){ return a.name === row.name; })[0];
+        d.innerHTML = "<b>" + row.name + "</b> — " + row.pct + "% of baseline" +
+          (account ? " = " + fmt(account.bac) + " BAC (CPI " + account.cpi.toFixed(2) + ")" : "") + ".";
+      });
       el.appendChild(r);
+      runOnFrame(function(){ fill.style.width = row.pct + "%"; });
     });
   }
   renderBarChart("wbsChart", wbsData);
@@ -1438,6 +1515,7 @@
   function percentile(sorted, p){ return sorted[Math.floor(p * (sorted.length - 1))]; }
   var lastMC = { p50:0, p80:0, p90:0 };
   var lastMCBounds = { min:2450000, max:3050000 };
+  var lastMCHistogram = { counts:[], min:0, max:0, total:0 }; // Phase 2, #4: feeds the S-curve
   function drawHistogram(counts, maxCount){
     var canvas = document.getElementById("mcCanvas");
     var ctx = canvas.getContext("2d");
@@ -1500,6 +1578,8 @@
     var maxCount = Math.max.apply(null, counts);
     animateHistogram(counts, maxCount);
     renderReliabilityNote();
+    lastMCHistogram = { counts: counts, min: min, max: max, total: draws.length };
+    renderMcScurve();
     return lastMC;
   }
 
@@ -1632,6 +1712,71 @@
   function runOnFrame(fn){
     if (typeof requestAnimationFrame === "function") requestAnimationFrame(fn); else fn();
   }
+  // ---- shared (Phase 2): a small SVG line chart -- trend history + optional reference line +
+  // optional dashed projection segment. Used for the net-variance trend, the DQ sync-lag trend,
+  // and the float burn-down (the Monte Carlo S-curve draws its own, since it plots a full 30-bin
+  // cumulative curve rather than a handful of period readings). ----
+  function renderLineChart(containerId, values, opts){
+    opts = opts || {};
+    var el = document.getElementById(containerId);
+    if (!el) return null;
+    var w = opts.width || 280, h = opts.height || 70, pad = 8;
+    var min = opts.min !== undefined ? opts.min : Math.min.apply(null, values);
+    var max = opts.max !== undefined ? opts.max : Math.max.apply(null, values);
+    var range = (max - min) || 1;
+    var stepX = (w - pad * 2) / Math.max(1, values.length - 1);
+    var pts = values.map(function(v, i){
+      return { x: pad + i * stepX, y: h - pad - ((v - min) / range) * (h - pad * 2) };
+    });
+    var pathD = pts.map(function(p, i){ return (i === 0 ? "M" : "L") + p.x.toFixed(1) + " " + p.y.toFixed(1); }).join(" ");
+    var refSvg = "";
+    if (opts.refValue !== undefined) {
+      var ry = h - pad - ((opts.refValue - min) / range) * (h - pad * 2);
+      refSvg = '<line x1="' + pad + '" y1="' + ry.toFixed(1) + '" x2="' + (w - pad) + '" y2="' + ry.toFixed(1) + '" stroke="rgb(var(--c-text-secondary)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
+    }
+    var lastPt = pts[pts.length - 1];
+    var projSvg = "";
+    if (opts.projectSteps) {
+      var px = lastPt.x + opts.projectSteps * stepX;
+      var py = h - pad - ((opts.projectValue - min) / range) * (h - pad * 2);
+      projSvg = '<line x1="' + lastPt.x.toFixed(1) + '" y1="' + lastPt.y.toFixed(1) + '" x2="' + px.toFixed(1) + '" y2="' + py.toFixed(1) + '" stroke="rgb(var(--c-danger))" stroke-width="2" stroke-dasharray="4,3"/>' +
+        '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="3.5" fill="rgb(var(--c-danger))"/>';
+    }
+    var dotsSvg = pts.map(function(p, i){
+      return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3" fill="rgb(var(--c-accent))" tabindex="0" title="' + (opts.pointLabels ? opts.pointLabels[i] : values[i]) + '"/>';
+    }).join("");
+    el.innerHTML = '<svg id="' + containerId + 'Svg" class="linechart" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + (opts.ariaLabel || "trend line chart") + '">' +
+      refSvg + '<path d="' + pathD + '" fill="none" stroke="rgb(var(--c-accent))" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + dotsSvg + projSvg + '</svg>';
+    runOnFrame(function(){
+      var svg = document.getElementById(containerId + "Svg");
+      if (svg) svg.classList.add("shown");
+    });
+    return { pts: pts, min: min, max: max, values: values };
+  }
+  // ---- shared (Phase 2): a horizontal ranked bar chart. Caller pre-sorts `items` -- ranking logic
+  // stays visible/testable at the call site, not hidden inside a shared renderer. ----
+  function renderRankedBar(containerId, items, opts){
+    opts = opts || {};
+    var el = document.getElementById(containerId);
+    if (!el) return null;
+    var maxAbs = Math.max.apply(null, items.map(function(it){ return Math.abs(it.value); })) || 1;
+    el.innerHTML = items.map(function(it, i){
+      var cls = it.cls || "pos";
+      var label = opts.fmt ? opts.fmt(it.value) : it.value;
+      return '<div class="rbar-row"><div class="rbar-name">' + it.label + '</div>' +
+        '<div class="rbar-track"><div class="rbar-fill ' + cls + '" id="' + containerId + 'Bar' + i + '" tabindex="0" title="' + it.label + ': ' + label + '"></div></div>' +
+        '<div class="rbar-val">' + label + '</div></div>';
+    }).join("");
+    runOnFrame(function(){
+      items.forEach(function(it, i){
+        var pct = Math.abs(it.value) / maxAbs * 100;
+        var bar = document.getElementById(containerId + "Bar" + i);
+        if (bar) bar.style.width = pct + "%";
+      });
+    });
+    return items;
+  }
+
   // ---- shared: a linear banded gauge (track split into colored zones + an animated needle) ----
   function renderLinearGauge(containerId, value, min, max, bands, unit){
     var el = document.getElementById(containerId);
@@ -1871,6 +2016,82 @@
   var cvTornadoResult = renderCvTornado();
   var sensitivityResult = renderSensitivityTornado();
 
+  // ---- Phase 2, #2: Net variance trend sparkline (Cost tab) ----
+  // illustrative prior periods; the FINAL point is always the real current net variance, read
+  // straight off the budget bridge -- never a separately-typed number that could drift from it.
+  var netVarianceHistoryPast = [-40000, 10000, 85000, 150000, 190000];
+  function renderNetVarianceTrend(){
+    var current = bridgeResult.final - bridgeResult.baseline;
+    var series = netVarianceHistoryPast.concat([current]);
+    return renderLineChart("netVarianceTrend", series, {
+      width: 260, height: 60, refValue: 0,
+      ariaLabel: "Net variance trend, ending at the real current value of " + fmt(current),
+      pointLabels: series.map(function(v, i){ return (i === series.length - 1 ? "Current: " : "Period " + (i + 1) + ": ") + fmt(v); })
+    });
+  }
+  var netVarianceTrendResult = renderNetVarianceTrend();
+
+  // ---- Phase 2, #8: Cost-driver treemap (Cost tab) -- dollar-weighted, not the WBS %-bar's
+  // categories re-drawn a second time; reuses the same real control-account BAC amounts. ----
+  var TREEMAP_COLORS = ["accent", "accent2", "success", "warning"];
+  function renderCostDriverTreemap(){
+    var el = document.getElementById("costDriverTreemap");
+    if (!el) return null;
+    var total = controlAccounts.reduce(function(s, a){ return s + a.bac; }, 0);
+    el.innerHTML = controlAccounts.map(function(a, i){
+      var pct = (a.bac / total) * 100;
+      return '<div class="treemap-block" id="treemapBlock' + i + '" style="background:rgb(var(--c-' + TREEMAP_COLORS[i % TREEMAP_COLORS.length] + '))" ' +
+        'tabindex="0" title="' + a.name + ': ' + fmt(a.bac) + ' (' + pct.toFixed(0) + '% of total BAC)">' +
+        '<div>' + a.name + '</div><div class="tb-val">' + pct.toFixed(0) + '%</div></div>';
+    }).join("");
+    runOnFrame(function(){
+      controlAccounts.forEach(function(a, i){
+        var pct = (a.bac / total) * 100;
+        var block = document.getElementById("treemapBlock" + i);
+        if (block) block.style.width = pct + "%";
+      });
+    });
+    return { total: total, blocks: controlAccounts.map(function(a){ return { name: a.name, bac: a.bac, pct: a.bac / total * 100 }; }) };
+  }
+  var treemapResult = renderCostDriverTreemap();
+
+  // ---- Phase 2, #9: Market $/W benchmark ranked bar (Cost tab) -- the same 5 real Turner &
+  // Townsend figures as flat tiles before, now ranked. No "our site" marker: this synthetic
+  // program's own $ scale doesn't correspond to any real MW capacity, so overlaying one would
+  // manufacture a comparison that isn't real -- an honest gap, not filled in for symmetry. ----
+  var marketBenchmarks = [
+    { city: "Tokyo", perWatt: 15.2 },
+    { city: "Singapore", perWatt: 14.5 },
+    { city: "Zurich", perWatt: 14.2 },
+    { city: "Silicon Valley", perWatt: 13.3 },
+    { city: "New Jersey", perWatt: 12.9 }
+  ];
+  function renderMarketBenchmarkBar(){
+    var items = marketBenchmarks.slice().sort(function(a, b){ return b.perWatt - a.perWatt; })
+      .map(function(m){ return { label: m.city, value: m.perWatt, cls: "pos" }; });
+    return renderRankedBar("marketBenchmarkBar", items, { fmt: function(v){ return "$" + v.toFixed(1) + "/W"; } });
+  }
+  var marketBenchmarkResult = renderMarketBenchmarkBar();
+
+  // ---- Phase 2, #4: Monte Carlo cumulative-probability S-curve (Contingency tab) -- reuses the
+  // same 30-bin histogram counts runMonteCarlo() already computed, not a second simulation. Called
+  // from inside runMonteCarlo() itself (defined above, hoisted function -- see runOnFrame's own
+  // comment for why forward references to a later function declaration are safe here). ----
+  function computeCumulativeCurve(counts){
+    var total = counts.reduce(function(s, c){ return s + c; }, 0) || 1;
+    var running = 0;
+    return counts.map(function(c){ running += c; return (running / total) * 100; });
+  }
+  function renderMcScurve(){
+    var curve = computeCumulativeCurve(lastMCHistogram.counts);
+    if (!curve.length) return null;
+    return renderLineChart("mcScurve", curve, {
+      width: 280, height: 60, min: 0, max: 100, refValue: 80,
+      ariaLabel: "Monte Carlo cumulative probability S-curve, dashed reference line at 80th percentile",
+      pointLabels: curve.map(function(v, i){ return "bin " + (i + 1) + "/" + curve.length + ": " + v.toFixed(0) + "% cumulative"; })
+    });
+  }
+
   /* ================= CONTINGENCY TAB: schedule float as a cost-risk input signal ================= */
   var floatHistory = [ { week:1, floatDays:22 }, { week:2, floatDays:19 }, { week:3, floatDays:14 }, { week:4, floatDays:13 } ];
   // Pure function: a float-reading history in, the average weekly erosion rate out.
@@ -1908,6 +2129,24 @@
     return signal;
   }
   var floatSignal = renderFloatSignal();
+
+  // ---- Phase 2, #14: Float burn-down line (Contingency tab) -- the same 4 readings and the same
+  // computeFloatErosionRate()/floatRiskSignal() math already driving the KPI tiles above, plotted
+  // instead of just read as numbers, with a dashed projection to the real "weeks to zero" figure. ----
+  function renderFloatBurndown(){
+    var series = floatHistory.map(function(f){ return f.floatDays; });
+    var opts = {
+      width: 260, height: 60, min: 0,
+      ariaLabel: "Float burn-down, projected to zero at the current erosion rate",
+      pointLabels: floatHistory.map(function(f){ return "Week " + f.week + ": " + f.floatDays + " days"; })
+    };
+    if (floatSignal.weeksToZero !== Infinity) {
+      opts.projectSteps = floatSignal.weeksToZero;
+      opts.projectValue = 0;
+    }
+    return renderLineChart("floatBurndown", series, opts);
+  }
+  var floatBurndownResult = renderFloatBurndown();
 
   /* ================= CONTINGENCY TAB: change-order settlement decision (EMV) ================= */
   var changeOrderDispute = {
@@ -1949,6 +2188,31 @@
   }
   var emvDecision = renderEmv();
 
+  // ---- Phase 2, #15: Settle-vs-dispute two-bar comparison (Contingency tab) -- the same
+  // computeEMVDecision() result the table below already shows, as a side-by-side bar pair with
+  // the winner highlighted. ----
+  function renderEmvTwoBar(){
+    var el = document.getElementById("emvTwoBar");
+    if (!el) return null;
+    var maxVal = Math.max(emvDecision.settleNowCost, emvDecision.disputeEV) * 1.15 || 1;
+    var settlePct = (emvDecision.settleNowCost / maxVal) * 100;
+    var disputePct = (emvDecision.disputeEV / maxVal) * 100;
+    var settleWins = emvDecision.recommend === "settle";
+    el.innerHTML = '<div class="twobar">' +
+      '<div class="twobar-col"><div class="twobar-val">' + fmt(emvDecision.settleNowCost) + '</div>' +
+      '<div class="twobar-bar ' + (settleWins ? "win" : "lose") + '" id="twoBarSettle" tabindex="0" title="Settle now: ' + fmt(emvDecision.settleNowCost) + '"></div>' +
+      '<div class="twobar-label">Settle now' + (settleWins ? " ✓" : "") + '</div></div>' +
+      '<div class="twobar-col"><div class="twobar-val">' + fmt(emvDecision.disputeEV) + '</div>' +
+      '<div class="twobar-bar ' + (!settleWins ? "win" : "lose") + '" id="twoBarDispute" tabindex="0" title="Dispute EV: ' + fmt(emvDecision.disputeEV) + '"></div>' +
+      '<div class="twobar-label">Dispute EV' + (!settleWins ? " ✓" : "") + '</div></div></div>';
+    runOnFrame(function(){
+      var s = document.getElementById("twoBarSettle"); if (s) s.style.height = settlePct + "%";
+      var d = document.getElementById("twoBarDispute"); if (d) d.style.height = disputePct + "%";
+    });
+    return { settlePct: settlePct, disputePct: disputePct, settleWins: settleWins };
+  }
+  var emvTwoBarResult = renderEmvTwoBar();
+
   /* ================= GOVERNANCE TAB: consultant scorecard ================= */
   var consultants = [
     { name:"Consultant A (mechanical)", preBid:1240000, actual:1310000 },
@@ -1967,6 +2231,41 @@
     el.innerHTML = "<thead><tr><th scope='col'>Consultant</th><th scope='col'>Pre-bid estimate</th><th scope='col'>Actual bid</th><th scope='col'>Variance</th></tr></thead><tbody>" + rows + "</tbody>";
   }
   renderConsultantTable();
+
+  // ---- Phase 2, #16: Consultant pre-bid-vs-actual scatter plot (Governance tab) -- same
+  // `consultants` rows and the same ±5% tolerance threshold the table's own ✓/⚠ flag already uses,
+  // plotted instead of read column by column. ----
+  function renderConsultantScatter(){
+    var el = document.getElementById("consultantScatter");
+    if (!el) return null;
+    var w = 280, h = 180, pad = 20;
+    var maxVal = Math.max.apply(null, consultants.map(function(c){ return Math.max(c.preBid, c.actual); })) * 1.1;
+    function sx(v){ return pad + (v / maxVal) * (w - pad * 1.4); }
+    function sy(v){ return h - pad - (v / maxVal) * (h - pad * 1.4); }
+    var diag = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal) + '" stroke="rgb(var(--c-text-secondary)/0.4)" stroke-width="1"/>';
+    var bandUpper = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 1.05) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
+    var bandLower = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 0.95) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
+    var dots = consultants.map(function(c, i){
+      var pct = ((c.actual - c.preBid) / c.preBid) * 100;
+      var withinTolerance = Math.abs(pct) <= 5;
+      return '<circle cx="' + sx(c.preBid).toFixed(1) + '" cy="' + sy(c.actual).toFixed(1) + '" r="0" ' +
+        'class="scatter-dot ' + (withinTolerance ? "ok" : "warn") + '" id="scatterDot' + i + '" tabindex="0" ' +
+        'title="' + c.name + ': pre-bid ' + fmt(c.preBid) + ', actual ' + fmt(c.actual) + " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)"/>';
+    }).join("");
+    el.innerHTML = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Consultant pre-bid vs actual bid scatter plot">' +
+      diag + bandUpper + bandLower + dots + '</svg>';
+    runOnFrame(function(){
+      consultants.forEach(function(c, i){
+        var dot = document.getElementById("scatterDot" + i);
+        if (dot) dot.setAttribute("r", "5");
+      });
+    });
+    return consultants.map(function(c){
+      var pct = ((c.actual - c.preBid) / c.preBid) * 100;
+      return { name: c.name, preBid: c.preBid, actual: c.actual, pct: pct, withinTolerance: Math.abs(pct) <= 5 };
+    });
+  }
+  var consultantScatterResult = renderConsultantScatter();
 
   /* ================= GOVERNANCE TAB: data quality health ================= */
   // Pure function, same reasoning as drawdownAlertContent above -- testable with arbitrary inputs,
@@ -2000,6 +2299,20 @@
   }
   renderDQHealth();
 
+  // ---- Phase 2, #17: DQ sync-lag trend (Governance tab) -- illustrative prior weeks, ending at
+  // the real dqDemoState.syncLagDays the status tiles above already show, with a dashed reference
+  // line at the same threshold used by dqAlertContent(). ----
+  var dqLagHistoryPast = [4, 6, 5, 7];
+  function renderDqLagTrend(){
+    var series = dqLagHistoryPast.concat([dqDemoState.syncLagDays]);
+    return renderLineChart("dqLagTrend", series, {
+      width: 240, height: 55, min: 0, refValue: dqDemoState.thresholdDays,
+      ariaLabel: "Sync-lag trend, dashed reference line at the " + dqDemoState.thresholdDays + "-day threshold",
+      pointLabels: series.map(function(v, i){ return (i === series.length - 1 ? "Current: " : "Week " + (i + 1) + ": ") + v + " days"; })
+    });
+  }
+  var dqLagTrendResult = renderDqLagTrend();
+
   /* ================= GOVERNANCE TAB: crew productivity (Labor Productivity Factor) ================= */
   var productivityData = [
     { trade:"Electrical", earnedHours:1240, actualHours:1180 },
@@ -2021,6 +2334,34 @@
     return productivityData.map(function(p){ return { trade: p.trade, lpf: computeLPF(p.earnedHours, p.actualHours) }; });
   }
   var productivityResult = renderProductivity();
+
+  // ---- Phase 2, #18: LPF diverging bar by trade (Governance tab) -- LPF ratios cluster tightly
+  // around 1.0, so a 0-based ranked bar would render every trade at nearly the same length; a
+  // diverging bar keyed to the deviation FROM the 1.0 benchmark (the same pattern already used for
+  // the CV tornado) actually differentiates them. Same computeLPF() result as the table below,
+  // ranked worst-to-best instead of read row by row. ----
+  function renderLpfDivergingBar(){
+    var el = document.getElementById("lpfRankedBar");
+    if (!el) return null;
+    var ranked = productivityResult.slice().sort(function(a, b){ return a.lpf - b.lpf; });
+    var maxAbs = Math.max.apply(null, ranked.map(function(p){ return Math.abs(p.lpf - 1); })) || 1;
+    el.innerHTML = '<div class="tornado">' + ranked.map(function(p, i){
+      var deviation = p.lpf - 1;
+      var lossOfProductivity = deviation < 0;
+      return '<div class="tornado-row"><div class="tname">' + p.trade + '</div>' +
+        '<div class="thalf"><div class="tbar ' + (lossOfProductivity ? "neg" : "pos") + '" id="lpfBar' + i + '" tabindex="0" ' +
+        'title="' + p.trade + ': LPF ' + p.lpf.toFixed(2) + ' (' + (deviation >= 0 ? "+" : "") + deviation.toFixed(2) + ' vs. 1.0 benchmark)"></div></div>' +
+        '<div class="tval">' + p.lpf.toFixed(2) + '</div></div>';
+    }).join("") + '</div>';
+    runOnFrame(function(){
+      ranked.forEach(function(p, i){
+        var bar = document.getElementById("lpfBar" + i);
+        if (bar) bar.style.width = (Math.abs(p.lpf - 1) / maxAbs * 100) + "%";
+      });
+    });
+    return ranked;
+  }
+  var lpfDivergingBarResult = renderLpfDivergingBar();
 
   /* ================= PORTFOLIO TAB: multi-region rollup ================= */
   var regions = [
@@ -2053,6 +2394,18 @@
       '</div>';
   }
   renderRegionTabs(); renderRegionDetail();
+
+  // ---- Phase 2, #19: all 4 regions ranked at once (Portfolio tab) -- the one-at-a-time region
+  // tabs above stay (switching regions is its own useful interaction), but ranking all 4 by
+  // variance% together is what actually answers "which region is the real outlier" without
+  // clicking through each one and comparing by memory. ----
+  function computeRegionVariancePct(r){ return ((r.forecast - r.baseline) / r.baseline) * 100; }
+  function renderRegionRankedBar(){
+    var ranked = regions.slice().sort(function(a, b){ return computeRegionVariancePct(b) - computeRegionVariancePct(a); });
+    var items = ranked.map(function(r){ return { label: r.name, value: computeRegionVariancePct(r), cls: "pos" }; });
+    return renderRankedBar("regionRankedBar", items, { fmt: function(v){ return (v >= 0 ? "+" : "") + v.toFixed(1) + "%"; } });
+  }
+  var regionRankedBarResult = renderRegionRankedBar();
 
   /* ================= PORTFOLIO TAB: stage-gate progress ================= */
   var gates = [
@@ -2119,6 +2472,16 @@
     return status;
   }
   var gateStatus = renderGateFramework();
+
+  // ---- Phase 2, #20: Gate 4 coverage radial gauge (Operating Framework tab) -- reuses the same
+  // renderLinearGauge() primitive built for the drawdown ratio, with inverted bands: below 1.00
+  // coverage is the blocked/red zone here, not above. ----
+  var GATE4_GAUGE_BANDS = [ { max: 1.0, cls: "danger" }, { max: Infinity, cls: "success" } ];
+  function renderGate4Gauge(){
+    var displayMax = Math.max(2.0, gateStatus.ratio * 1.2);
+    return renderLinearGauge("gate4Gauge", gateStatus.ratio, 0, displayMax, GATE4_GAUGE_BANDS, "x");
+  }
+  var gate4GaugeResult = renderGate4Gauge();
 
   /* ================= EXECUTIVE COMMAND TAB: the 90-second brief (reads other tabs' real state) ================= */
   function renderExecBrief(){
@@ -2322,7 +2685,11 @@
     expHeatmap: "Places each priced risk into a probability × impact cell (AACE RP 40R-08's own risk-driver framework), bubble size scaled to expected value. A risk doesn't have to be the biggest dollar figure to deserve the most attention — high-probability/high-impact risks in the top-right are the ones a mitigation plan should reach first.",
     expStoplight: "One tile per control account, colored by the same CPI formula as the ledger table below (EV/AC, ANSI/EIA-748) — an account run over multiple periods should be escalated well before its cumulative CV becomes unrecoverable, and a stoplight reads faster than a table column at a glance.",
     expCvTornado: "Ranks control accounts by |CV| (Earned Value − Actual Cost), worst first — the same accounts and the same formula as the ledger table, just re-sorted so the account actually driving the program's overall variance doesn't have to be found by scanning every row.",
-    expMaturity: "AACE RP 17R-97 defines 5 estimate classes from Class 5 (conceptual, least-defined) to Class 1 (as-built, most-defined) — each with a wider or narrower expected accuracy range as design and procurement mature. Knowing which class an estimate sits at is what tells leadership how much variance is actually normal versus a real red flag."
+    expMaturity: "AACE RP 17R-97 defines 5 estimate classes from Class 5 (conceptual, least-defined) to Class 1 (as-built, most-defined) — each with a wider or narrower expected accuracy range as design and procurement mature. Knowing which class an estimate sits at is what tells leadership how much variance is actually normal versus a real red flag.",
+    expVarianceTrend: "The same Net Variance figure from the KPI tile above (Current Forecast − Baseline), shown as a trend instead of a single point. A variance that's growing period over period is a materially different signal than one that spiked once and has been flat since — the point-in-time number alone can't tell those two stories apart.",
+    expScurve: "Cumulative % = running total of simulated draws in each histogram bin ÷ 2,000 total draws — the same 2,000-draw Monte Carlo run already producing the histogram and the P50/P80/P90 readouts, just re-expressed as a cumulative curve. Reading the curve at the dashed 80% line is the same P80 value shown numerically above; the curve just makes 'how much of the distribution sits below any given cost' immediately visual.",
+    expTreemap: "Block width = each control account's BAC ÷ total program BAC — the same real dollar amounts as the Control Account Ledger table below, not a second invented split. A block visibly wider than the others is where a 1% productivity or scope swing does the most damage in absolute dollars, even if its % share hasn't changed.",
+    expFloatBurndown: "Plots the same 4 float readings driving the KPI tiles and the alert above, then extends a dashed projection to the same 'weeks to zero' figure computeFloatErosionRate() already calculates — seeing the trajectory, not just the current reading, is what makes an erosion pattern legible before it's a crisis."
   };
   Object.keys(kpiExplainers).forEach(function(id){
     var el = document.getElementById(id);
@@ -2498,6 +2865,10 @@
     renderRiskHeatmap();
     renderCvTornado();
     sensitivityResult = renderSensitivityTornado();
+    netVarianceTrendResult = renderNetVarianceTrend();
+    treemapResult = renderCostDriverTreemap();
+    emvTwoBarResult = renderEmvTwoBar();
+    consultantScatterResult = renderConsultantScatter();
   });
 
   /* ================= LIVE INTEGRITY GATE (GUARDS) -- runs in the browser, not just in verify.cjs =================
@@ -2635,7 +3006,23 @@
     stoplightResult: stoplightResult,
     cvTornadoResult: cvTornadoResult,
     computeSensitivityScenarios: computeSensitivityScenarios,
-    sensitivityResult: sensitivityResult
+    sensitivityResult: sensitivityResult,
+    // Phase 2 director-grade visuals
+    netVarianceTrendResult: netVarianceTrendResult,
+    treemapResult: treemapResult,
+    marketBenchmarkResult: marketBenchmarkResult,
+    computeCumulativeCurve: computeCumulativeCurve,
+    lastMCHistogram: lastMCHistogram,
+    floatBurndownResult: floatBurndownResult,
+    emvTwoBarResult: emvTwoBarResult,
+    consultantScatterResult: consultantScatterResult,
+    dqLagTrendResult: dqLagTrendResult,
+    lpfDivergingBarResult: lpfDivergingBarResult,
+    computeRegionVariancePct: computeRegionVariancePct,
+    regionRankedBarResult: regionRankedBarResult,
+    gate4GaugeResult: gate4GaugeResult,
+    renderLineChart: renderLineChart,
+    renderRankedBar: renderRankedBar
   };
 })();
 </script>
