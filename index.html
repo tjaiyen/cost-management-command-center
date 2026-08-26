@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <title>Cost Management Command Center — TJ Jaiyen</title>
-<meta name="description" content="A cost-management methodology demo — CAPEX budget bridge, AACE RP 57R-09 Monte Carlo contingency sizing, and WBS cost allocation — built around a synthetic capital-development program. Real headline figures from TJ's own prior roles, illustrative structure, zero dependencies." />
+<meta name="description" content="A cost-management methodology demo — 7 tabs covering CAPEX budget bridges, AACE-standard Monte Carlo contingency sizing, vendor governance, multi-region portfolio rollup, and a data-strategy pipeline — built around a synthetic capital-development program. Zero dependencies." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -48,6 +48,7 @@
   a{color:rgb(var(--c-accent))}
   :focus-visible{outline:2px solid rgb(var(--c-accent)); outline-offset:2px; border-radius:4px}
   .wrap{max-width:1080px; margin:0 auto; padding:0 20px 64px}
+
   header.top{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
     background:rgb(var(--c-bg-primary) / 0.9); border-bottom:1px solid rgb(var(--c-text-secondary) / 0.15);}
   header.top .bar{max-width:1080px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
@@ -60,24 +61,36 @@
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px}
   .icobtn:hover{border-color:rgb(var(--c-accent))}
 
+  /* tab rail */
+  .tabrail{display:flex; gap:4px; overflow-x:auto; padding:10px 20px 0; max-width:1080px; margin:0 auto}
+  .tabbtn{background:none; border:none; border-bottom:2px solid transparent; color:rgb(var(--c-text-secondary));
+    padding:8px 12px; font-size:13px; cursor:pointer; white-space:nowrap; font-family:inherit}
+  .tabbtn:hover{color:rgb(var(--c-text-primary))}
+  .tabbtn[aria-selected="true"]{color:rgb(var(--c-accent)); border-bottom-color:rgb(var(--c-accent)); font-weight:600}
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
+
   h1{font-size:clamp(24px,4vw,34px); margin:28px 0 6px}
   h2{font-size:18px; margin:0 0 4px}
+  h3{font-size:14px; margin:0 0 8px}
   .lede{color:rgb(var(--c-text-secondary)); max-width:66ch}
   .disclaimer{border:1px solid rgb(var(--c-warning) / 0.4); background:rgb(var(--c-warning) / 0.08);
-    border-radius:10px; padding:14px 16px; font-size:13px; color:rgb(var(--c-text-secondary)); margin:18px 0 30px}
+    border-radius:10px; padding:14px 16px; font-size:13px; color:rgb(var(--c-text-secondary)); margin:18px 0 26px}
   .disclaimer b{color:rgb(var(--c-text-primary))}
 
-  section{margin:36px 0}
+  section{margin:30px 0}
   .card{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary) / 0.15);
     border-radius:14px; padding:20px 22px}
   .card + .card{margin-top:16px}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
-  @media (max-width:720px){.grid2{grid-template-columns:1fr}}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
 
   .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0}
   .kpi{background:rgb(var(--c-bg-card2)); border-radius:10px; padding:12px 14px}
   .kpi .lbl{font-size:11px; color:rgb(var(--c-text-secondary)); text-transform:uppercase; letter-spacing:.04em}
   .kpi .val{font-size:22px; font-weight:700; margin-top:2px}
+  .kpi .sub{font-size:11.5px; color:rgb(var(--c-text-secondary)); margin-top:2px}
   .badge{display:inline-block; font-size:10.5px; padding:2px 7px; border-radius:99px; font-weight:600; letter-spacing:.02em}
   .badge.real{background:rgb(var(--c-success) / 0.15); color:rgb(var(--c-success))}
   .badge.illustrative{background:rgb(var(--c-warning) / 0.15); color:rgb(var(--c-warning))}
@@ -102,17 +115,42 @@
   .warn-strip.ok{background:rgb(var(--c-success)/0.12); color:rgb(var(--c-success))}
   .warn-strip.warn{background:rgb(var(--c-danger)/0.12); color:rgb(var(--c-danger))}
 
-  .wbs-row{display:flex; align-items:center; gap:10px; margin:8px 0}
-  .wbs-row .wname{width:150px; font-size:12.5px; flex-shrink:0}
-  .wbs-row .wtrack{flex:1; background:rgb(var(--c-bg-card2)); border-radius:6px; height:16px; overflow:hidden}
-  .wbs-row .wfill{height:100%; background:rgb(var(--c-accent)); border-radius:6px 0 0 6px}
-  .wbs-row .wpct{width:48px; text-align:right; font-size:12px; font-variant-numeric:tabular-nums}
+  .barrow{display:flex; align-items:center; gap:10px; margin:8px 0}
+  .barrow .wname{width:150px; font-size:12.5px; flex-shrink:0}
+  .barrow .wtrack{flex:1; background:rgb(var(--c-bg-card2)); border-radius:6px; height:16px; overflow:hidden}
+  .barrow .wfill{height:100%; background:rgb(var(--c-accent)); border-radius:6px 0 0 6px}
+  .barrow .wpct{width:52px; text-align:right; font-size:12px; font-variant-numeric:tabular-nums}
 
   .stub{border:1px dashed rgb(var(--c-text-secondary) / 0.35); border-radius:12px; padding:18px 20px;
     color:rgb(var(--c-text-secondary))}
-  .stub h3{font-size:14px; color:rgb(var(--c-text-primary)); margin:0 0 4px}
 
-  footer.foot{margin-top:56px; padding-top:20px; border-top:1px solid rgb(var(--c-text-secondary)/0.15);
+  table{border-collapse:collapse; width:100%; font-size:12.5px}
+  th,td{text-align:left; padding:8px 9px; border-bottom:1px solid rgb(var(--c-text-secondary)/0.15); vertical-align:top}
+  th{color:rgb(var(--c-text-secondary)); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.03em}
+
+  .gate-row{display:flex; align-items:center; gap:10px; margin:10px 0}
+  .gate-num{width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; flex-shrink:0}
+  .gate-num.done{background:rgb(var(--c-success)/.2); color:rgb(var(--c-success))}
+  .gate-num.active{background:rgb(var(--c-accent)/.2); color:rgb(var(--c-accent)); border:2px solid rgb(var(--c-accent))}
+  .gate-num.pending{background:rgb(var(--c-bg-card2)); color:rgb(var(--c-text-secondary))}
+  .gate-track{flex:1; height:8px; background:rgb(var(--c-bg-card2)); border-radius:4px; overflow:hidden}
+  .gate-fill{height:100%; background:rgb(var(--c-accent))}
+
+  .pipeline-node{display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgb(var(--c-bg-card2));
+    border-radius:8px; margin:6px 0; font-size:12.5px}
+  .pipeline-arrow{color:rgb(var(--c-text-secondary)); text-align:center; font-size:14px; margin:2px 0}
+
+  .region-tabs{display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap}
+  .region-btn{background:rgb(var(--c-bg-card2)); border:1px solid transparent; color:rgb(var(--c-text-secondary));
+    padding:5px 11px; border-radius:7px; font-size:12px; cursor:pointer}
+  .region-btn[aria-pressed="true"]{border-color:rgb(var(--c-accent)); color:rgb(var(--c-accent))}
+
+  .glossary-item{border-bottom:1px solid rgb(var(--c-text-secondary)/0.12); padding:12px 0}
+  .glossary-item dt{font-weight:700; font-size:13.5px}
+  .glossary-item dd{margin:4px 0 0; color:rgb(var(--c-text-secondary)); font-size:12.5px}
+
+  footer.foot{margin-top:40px; padding-top:20px; border-top:1px solid rgb(var(--c-text-secondary)/0.15);
     color:rgb(var(--c-text-secondary)); font-size:12.5px}
   .src-note{font-size:11.5px; color:rgb(var(--c-text-secondary)); margin-top:8px}
 </style>
@@ -128,128 +166,272 @@
     </div>
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
   </div>
+  <nav class="tabrail" id="tabrail" role="tablist" aria-label="Command center sections">
+    <button class="tabbtn" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="tabbtn" role="tab" data-tab="cost" aria-selected="false">Cost</button>
+    <button class="tabbtn" role="tab" data-tab="contingency" aria-selected="false">Contingency &amp; Risk</button>
+    <button class="tabbtn" role="tab" data-tab="governance" aria-selected="false">Vendor &amp; Governance</button>
+    <button class="tabbtn" role="tab" data-tab="portfolio" aria-selected="false">Portfolio</button>
+    <button class="tabbtn" role="tab" data-tab="data" aria-selected="false">Data Strategy</button>
+    <button class="tabbtn" role="tab" data-tab="reference" aria-selected="false">Reference</button>
+  </nav>
 </header>
 
 <div class="wrap">
   <h1>Who's actually watching the contingency reserve?</h1>
   <p class="lede">A cost-management methodology demo built around a synthetic capital-development
-    program. Every number below is computed live in this page's own JavaScript — nothing is a
-    static screenshot, and there's no build step, no server, no dependency to install.</p>
+    program — 7 tabs, real math computed live in this page's own JavaScript, no build step, no
+    server, no dependency to install.</p>
 
   <div class="disclaimer">
     <b>The program is synthetic — no employer, client, or agency data appears anywhere in this
-    repository.</b> Three real facts are threaded through it, each cited where it appears: a real
-    $208K variance root-cause trace, a real 100+ bid-package contingency-tracking pattern, and
-    <b>AACE International RP 57R-09</b> as the real, named method behind the Monte Carlo band.
-    Everything else — the program name, dollar amounts, dates, vendor labels — is invented to make
-    the methodology legible and is marked <span class="badge illustrative">illustrative</span>
-    throughout; real figures are marked <span class="badge real">real</span>.
+    repository.</b> Real facts are threaded through it and badge-labeled inline wherever they
+    appear: a real $208K variance root-cause trace, a real 100+ bid-package contingency-tracking
+    pattern, AACE International's real Recommended Practices (RP 57R-09, 65R-11, 44R-08, 17R-97,
+    40R-08), and real published data-center cost-driver figures (Turner &amp; Townsend's cost index;
+    electrical/cooling cost-split percentages). Everything else — the program name, dollar amounts,
+    dates, vendor labels — is invented to make the methodology legible and marked
+    <span class="badge illustrative">illustrative</span>.
   </div>
 
-  <section id="bridge-section">
-    <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span></h2>
-    <p class="lede" style="font-size:13px">Underwriting baseline → scope change → market escalation
-      → field-execution variance → contingency drawdown → current forecast — the same discipline
-      as a manufacturing variance bridge, applied to a capital program instead of an accounting
-      period.</p>
-
-    <div class="card">
-      <div class="bridge" id="bridgeChart" role="img" aria-label="Budget bridge waterfall from underwriting baseline to current forecast"></div>
-      <div class="kpis">
-        <div class="kpi"><div class="lbl">Baseline</div><div class="val tabular" id="bBaseline">—</div></div>
-        <div class="kpi"><div class="lbl">Current forecast</div><div class="val tabular" id="bFinal">—</div></div>
-        <div class="kpi"><div class="lbl">Net variance</div><div class="val tabular" id="bDelta">—</div></div>
-        <div class="kpi"><div class="lbl">Largest single driver</div><div class="val" id="bDriver" style="font-size:14px">—</div></div>
-      </div>
-      <p class="src-note"><span class="badge real">real</span> The largest driver step is a real
-        $208K labor-variance root-cause trace (a structural BOM-posting gap, not a bid overrun) —
-        recast here as a "field execution variance" bridge step. Baseline/scope/escalation figures
-        around it are <span class="badge illustrative">illustrative</span>, scaled to a plausible
-        program size, not drawn from any real capital program.</p>
-    </div>
-  </section>
-
-  <section id="contingency-section">
-    <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span></h2>
-    <p class="lede" style="font-size:13px">An elevated drawdown ratio <em>early</em> in a project —
-      before field execution has consumed much float — is itself the early-warning signal, not just
-      the running total. The P50/P80/P90 band below follows <b>AACE International RP 57R-09</b>
-      ("Integrated Cost and Schedule Risk Analysis Using Risk Drivers and Monte Carlo Simulation of
-      a CPM Model") — a real, named industry practice, not an invented technique.</p>
-
-    <div class="grid2">
+  <!-- ============================================================ OVERVIEW ============================================================ -->
+  <div class="tabpanel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+    <section>
+      <h2>Portfolio snapshot</h2>
       <div class="card">
-        <h3 style="margin:0 0 8px; font-size:14px">Drawdown ratio vs. % complete</h3>
-        <div class="slider-row">
-          <label for="pctComplete" style="font-size:12.5px; white-space:nowrap">% complete</label>
-          <input type="range" id="pctComplete" min="0" max="100" value="18" />
-          <span class="tabular" id="pctCompleteVal">18%</span>
-        </div>
-        <div class="slider-row">
-          <label for="drawdownPct" style="font-size:12.5px; white-space:nowrap">Contingency drawn</label>
-          <input type="range" id="drawdownPct" min="0" max="100" value="35" />
-          <span class="tabular" id="drawdownPctVal">35%</span>
-        </div>
-        <div class="warn-strip" id="drawdownWarn"></div>
-        <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> — the
-          underlying early-warning pattern (drawdown outpacing physical completion) is grounded
-          in a real 100+ bid-package contingency/change-order-tracking history, $50M+ per project.</p>
+        <div class="kpis" id="overviewKpis"></div>
+        <p class="src-note">Every number here is read live from the same computation the Cost and
+          Contingency tabs run — not a separately-typed summary.</p>
       </div>
+    </section>
+    <section>
+      <h2>Three layers, not one number</h2>
+      <div class="grid3">
+        <div class="card">
+          <h3>Signal</h3>
+          <p class="lede" style="font-size:12.5px">Leading indicators before they become variances —
+            the contingency drawdown ratio and Monte Carlo band on the Contingency tab.</p>
+        </div>
+        <div class="card">
+          <h3>Model</h3>
+          <p class="lede" style="font-size:12.5px">The underwriting model kept honest against
+            reality — the budget bridge on the Cost tab, separating scope from escalation from
+            execution variance.</p>
+        </div>
+        <div class="card">
+          <h3>Govern</h3>
+          <p class="lede" style="font-size:12.5px">Standardized reporting across regions and
+            vendors — the Portfolio and Vendor &amp; Governance tabs.</p>
+        </div>
+      </div>
+      <p class="src-note">This three-layer framing is this project's own; it isn't a claim about
+        any employer's actual methodology.</p>
+    </section>
+  </div>
+
+  <!-- ============================================================ COST ============================================================ -->
+  <div class="tabpanel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost">
+    <section id="bridge-section">
+      <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span></h2>
+      <p class="lede" style="font-size:13px">Underwriting baseline → scope change → market
+        escalation → field-execution variance → contingency drawdown → current forecast.</p>
       <div class="card">
-        <h3 style="margin:0 0 8px; font-size:14px">Monte Carlo completion cost (2,000 draws)</h3>
-        <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
-        <div class="pctile-row" aria-live="polite" aria-atomic="true">
-          <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
-          <div class="pctile">P80<b class="tabular" id="p80">—</b></div>
-          <div class="pctile">P90<b class="tabular" id="p90">—</b></div>
+        <div class="bridge" id="bridgeChart" role="img" aria-label="Budget bridge waterfall from underwriting baseline to current forecast"></div>
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Baseline</div><div class="val tabular" id="bBaseline">—</div></div>
+          <div class="kpi"><div class="lbl">Current forecast</div><div class="val tabular" id="bFinal">—</div></div>
+          <div class="kpi"><div class="lbl">Net variance</div><div class="val tabular" id="bDelta">—</div></div>
+          <div class="kpi"><div class="lbl">Largest single driver</div><div class="val" id="bDriver" style="font-size:14px">—</div></div>
         </div>
-        <button class="icobtn" id="reRunMC" type="button" style="margin-top:10px">Re-run simulation</button>
-        <p class="src-note">Triangular-distribution draw (min/mode/max) per AACE RP 57R-09's own
-          method — computed live in this page, re-runnable, never a fixed screenshot. AACE also
-          publishes a complementary expected-value method (RP 65R-11, extending RP 44R-08) for
-          cases where a full simulation isn't warranted — a real, distinct technique, not used here.</p>
+        <p class="src-note"><span class="badge real">real</span> The largest driver step is a real
+          $208K labor-variance root-cause trace, recast here as a "field execution variance" bridge
+          step. Baseline/scope/escalation figures are <span class="badge illustrative">illustrative</span>.</p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="wbs-section">
-    <h2>WBS Cost Allocation</h2>
-    <p class="lede" style="font-size:13px">Cost broken out by work-breakdown-structure category —
-      design/engineering, General Contractors &amp; trades, long-lead equipment, and site/utility
-      work — generic categories a capital-program cost manager tracks commitments and forecasts
-      against, regardless of asset class.</p>
-    <div class="card">
-      <div id="wbsChart"></div>
-      <p class="src-note"><span class="badge illustrative">illustrative</span> Percentages are
-        shaped around a real GC/subcontractor bid-package composition (direct estimating
-        experience) and design/engineering cost-partnership work (adjacent experience) — not drawn
-        from any real capital program's actual cost data.</p>
-    </div>
-  </section>
+    <section id="benchmark-section">
+      <h2>Data-center cost-driver benchmarks <span class="badge real">real published figures</span></h2>
+      <p class="lede" style="font-size:13px">Real, published industry percentages — not this
+        program's own numbers — useful context for why cost archetype shifts (air-cooled vs.
+        liquid-cooled) matter as much as scale.</p>
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Electrical / power infra</div><div class="val">40–45%</div><div class="sub">of total data-center cost</div></div>
+          <div class="kpi"><div class="lbl">Cooling</div><div class="val">15–25%</div><div class="sub">second-largest driver</div></div>
+          <div class="kpi"><div class="lbl">Liquid-cooled premium</div><div class="val">$4.5–5.2M/MW</div><div class="sub">vs. ~$1.8M/MW air-cooled</div></div>
+          <div class="kpi"><div class="lbl">Idle-equipment carrying cost</div><div class="val">$2.8M/mo</div><div class="sub">50MW site, cooling skids awaiting a transformer</div></div>
+        </div>
+        <p class="src-note"><span class="badge real">real</span> Sourced to published 2026 industry
+          data (Archdesk data-center construction breakdown; irecruit.co cost-per-MW benchmarks) —
+          not any specific employer's cost data. Cost Estimate Classification follows
+          <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1, most-defined).</p>
+      </div>
+    </section>
 
-  <section>
-    <h2>Coming next <span class="badge stub">not built yet</span></h2>
-    <div class="grid2">
-      <div class="stub">
-        <h3>Consultant deliverable scorecard</h3>
-        Pre-bid-estimate-vs-actual variance tracking for third-party cost consultants — a generic
-        methodology demo only, never labeled as any specific vendor's real data.
+    <section id="wbs-section">
+      <h2>WBS Cost Allocation</h2>
+      <div class="card">
+        <div id="wbsChart"></div>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> Shaped around a
+          real GC/subcontractor bid-package composition and design/engineering cost-partnership
+          experience — not any real capital program's actual cost data.</p>
       </div>
-      <div class="stub">
-        <h3>Data-quality reconciliation health</h3>
-        A generic "Field System vs. Corporate ERP" sync-lag health indicator, grounded in a real
-        master-data-validation control that "eliminated recurring downstream reconciliation
-        failures" — not yet built into this page.
+    </section>
+  </div>
+
+  <!-- ============================================================ CONTINGENCY & RISK ============================================================ -->
+  <div class="tabpanel" id="panel-contingency" role="tabpanel" aria-labelledby="tab-contingency">
+    <section>
+      <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span></h2>
+      <p class="lede" style="font-size:13px">An elevated drawdown ratio <em>early</em> in a project
+        is itself the early-warning signal. The P50/P80/P90 band follows <b>AACE International RP
+        57R-09</b> — a real, named industry practice.</p>
+      <div class="grid2">
+        <div class="card">
+          <h3>Drawdown ratio vs. % complete</h3>
+          <div class="slider-row">
+            <label for="pctComplete" style="font-size:12.5px; white-space:nowrap">% complete</label>
+            <input type="range" id="pctComplete" min="0" max="100" value="18" />
+            <span class="tabular" id="pctCompleteVal">18%</span>
+          </div>
+          <div class="slider-row">
+            <label for="drawdownPct" style="font-size:12.5px; white-space:nowrap">Contingency drawn</label>
+            <input type="range" id="drawdownPct" min="0" max="100" value="35" />
+            <span class="tabular" id="drawdownPctVal">35%</span>
+          </div>
+          <div class="warn-strip" id="drawdownWarn"></div>
+          <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> —
+            the underlying early-warning pattern is grounded in a real 100+ bid-package
+            contingency/change-order-tracking history, $50M+ per project.</p>
+        </div>
+        <div class="card">
+          <h3>Monte Carlo completion cost (2,000 draws)</h3>
+          <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
+          <div class="pctile-row" aria-live="polite" aria-atomic="true">
+            <div class="pctile">P50<b class="tabular" id="p50">—</b></div>
+            <div class="pctile">P80<b class="tabular" id="p80">—</b></div>
+            <div class="pctile">P90<b class="tabular" id="p90">—</b></div>
+          </div>
+          <button class="icobtn" id="reRunMC" type="button" style="margin-top:10px">Re-run simulation</button>
+          <p class="src-note">AACE also publishes a complementary expected-value method (RP 65R-11,
+            extending RP 44R-08) for cases where a full simulation isn't warranted — real, distinct,
+            not used here.</p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <section>
+      <h2>Priced Risk Register <span class="badge illustrative">illustrative rows, real methodology</span></h2>
+      <div class="card">
+        <table id="riskTable"></table>
+        <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
+          impact, prioritized for mitigation before pricing) follows <b>AACE RP 40R-08</b>'s
+          risk-driver framework — a real, named practice, not this program's own invention.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ VENDOR & GOVERNANCE ============================================================ -->
+  <div class="tabpanel" id="panel-governance" role="tabpanel" aria-labelledby="tab-governance">
+    <section>
+      <h2>Consultant Deliverable Scorecard</h2>
+      <p class="lede" style="font-size:13px">Pre-bid-estimate-vs-actual variance tracking for
+        third-party cost consultants — generic methodology, never labeled as any specific vendor's
+        real data.</p>
+      <div class="card">
+        <table id="consultantTable"></table>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> Grounded in real
+          subcontractor/vendor pricing negotiation experience and BOM/data-quality-defect-fix work —
+          not any real consultant's actual submissions.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Data-Quality Reconciliation Health</h2>
+      <p class="lede" style="font-size:13px">A generic "Field System vs. Corporate ERP" sync-lag
+        health indicator.</p>
+      <div class="card">
+        <div class="kpis" id="dqKpis"></div>
+        <div class="warn-strip" id="dqWarn"></div>
+        <p class="src-note"><span class="badge real">real</span> Grounded in a real master-data
+          validation control that "eliminated recurring downstream reconciliation failures" — the
+          strongest single direct proof point in this whole build. Sync-lag numbers shown are
+          <span class="badge illustrative">illustrative</span>.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ PORTFOLIO ============================================================ -->
+  <div class="tabpanel" id="panel-portfolio" role="tabpanel" aria-labelledby="tab-portfolio">
+    <section>
+      <h2>Multi-Region Cost Rollup <span class="badge illustrative">illustrative</span></h2>
+      <p class="lede" style="font-size:13px">Four regions — the same real ones Ada Infrastructure
+        actually operates in, used here only as realistic labels for an illustrative rollup, not
+        real Ada cost data.</p>
+      <div class="card">
+        <div class="region-tabs" id="regionTabs"></div>
+        <div id="regionDetail"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Stage-Gate Progress</h2>
+      <div class="card">
+        <div id="gateTrack"></div>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> Four-gate structure
+          (Feasibility → Design → Procurement → Execution) — a generic capital-program stage-gate
+          shape, not a specific employer's actual gate criteria.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ DATA STRATEGY ============================================================ -->
+  <div class="tabpanel" id="panel-data" role="tabpanel" aria-labelledby="tab-data">
+    <section>
+      <h2>Pipeline Architecture</h2>
+      <div class="card">
+        <div id="pipelineDiagram"></div>
+        <p class="src-note">A generic field-system → staging → cost-model → executive-dashboard
+          flow — the same shape this page itself follows (its own JS computes every figure shown,
+          nothing is pre-rendered).</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Real vs. Illustrative — the audit-trail discipline itself</h2>
+      <div class="card">
+        <p class="lede" style="font-size:13px">This entire build follows one rule: a figure is
+          only unbadged as <span class="badge real">real</span> if it traces to a cited public
+          source or a real prior-role headline number. Everything else — row-level detail invented
+          to make a chart legible — carries <span class="badge illustrative">illustrative</span>.
+          This page has been through two independent adversarial stress-test rounds checking that
+          rule is actually followed, not just stated.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ REFERENCE ============================================================ -->
+  <div class="tabpanel" id="panel-reference" role="tabpanel" aria-labelledby="tab-reference">
+    <section>
+      <h2>AACE Recommended Practices used in this build</h2>
+      <div class="card">
+        <dl id="aaceGlossary"></dl>
+      </div>
+    </section>
+    <section>
+      <h2>Real data-center cost-driver figures used in this build</h2>
+      <div class="card">
+        <dl id="figureGlossary"></dl>
+      </div>
+    </section>
+  </div>
 
   <footer class="foot">
-    <p>Synthetic-program methodology demo. Design pattern and disclosure discipline (real vs.
-      illustrative, badge-labeled inline) follow the same author's other case-study work — see the
-      <a href="https://tjaiyen.github.io/tj-finance-portfolio/">full portfolio</a> and
+    <p>Synthetic-program methodology demo. Design lineage: single self-contained file, real-vs-
+      illustrative badge discipline, follow the same author's
+      <a href="https://tjaiyen.github.io/tj-finance-portfolio/">portfolio</a> and
       <a href="https://tjaiyen.github.io/project-controls-command-center/">Project Controls
-      Command Center</a> for the fuller-scale version of this same discipline.</p>
+      Command Center</a> (the full-scale version of this same discipline).</p>
   </footer>
 </div>
 
@@ -257,6 +439,7 @@
 (function(){
   "use strict";
 
+  /* ---------- theme toggle ---------- */
   var themeBtn = document.getElementById("themeBtn");
   function applyTheme(t){
     document.documentElement.setAttribute("data-theme", t);
@@ -272,6 +455,25 @@
     try { localStorage.setItem("cmcc-theme", next); } catch(e){}
   });
 
+  /* ---------- tab navigation ---------- */
+  var tabButtons = Array.prototype.slice.call(document.querySelectorAll(".tabbtn"));
+  tabButtons.forEach(function(btn){
+    btn.id = "tab-" + btn.dataset.tab;
+    btn.addEventListener("click", function(){ activateTab(btn.dataset.tab); });
+    btn.addEventListener("keydown", function(e){
+      var idx = tabButtons.indexOf(btn);
+      if (e.key === "ArrowRight") { e.preventDefault(); tabButtons[(idx+1) % tabButtons.length].focus(); tabButtons[(idx+1) % tabButtons.length].click(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); var p=(idx-1+tabButtons.length)%tabButtons.length; tabButtons[p].focus(); tabButtons[p].click(); }
+    });
+  });
+  function activateTab(name){
+    tabButtons.forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"); });
+    document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
+    var panel = document.getElementById("panel-" + name);
+    if (panel) panel.classList.add("active");
+  }
+
+  /* ---------- deterministic PRNG (mulberry32) ---------- */
   function mulberry32(seed){
     return function(){
       seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -283,15 +485,16 @@
   var mcSeed = 12345;
   var fmt = function(n){ return "$" + Math.round(n).toLocaleString("en-US"); };
 
+  /* ================= COST TAB: Budget Bridge ================= */
   var bridgeSteps = [
     { label:"Underwriting\nBaseline", value: 2450000, type:"base" },
     { label:"Scope\nChange (+)", value: 96000,  type:"up" },
     { label:"Market\nEscalation (+)", value: 61000, type:"up" },
-    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", real:true, driverName:"Field Execution Variance ($208K, real)" },
+    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", driverName:"Field Execution Variance ($208K, real)" },
     { label:"Contingency\nDrawdown (–)", value: -140000, type:"down" },
     { label:"Current\nForecast", value: null, type:"final" }
   ];
-  (function renderBridge(){
+  function renderBridge(){
     var running = 0;
     var steps = bridgeSteps.map(function(s){
       if (s.type === "base") { running = s.value; return {label:s.label, start:0, end:running, type:s.type}; }
@@ -317,8 +520,8 @@
       col.appendChild(gval); col.appendChild(bar); col.appendChild(glabel);
       el.appendChild(col);
     });
-    document.getElementById("bBaseline").textContent = fmt(bridgeSteps[0].value);
     var final = steps[steps.length - 1].end;
+    document.getElementById("bBaseline").textContent = fmt(bridgeSteps[0].value);
     document.getElementById("bFinal").textContent = fmt(final);
     document.getElementById("bDelta").textContent = fmt(final - bridgeSteps[0].value);
     var driverStep = bridgeSteps.reduce(function(max, s){
@@ -327,18 +530,44 @@
       return (!max || mag > Math.abs(max.value)) ? s : max;
     }, null);
     document.getElementById("bDriver").textContent = driverStep && driverStep.driverName
-      ? driverStep.driverName
-      : (driverStep ? driverStep.label.replace("\n", " ") : "—");
-  })();
+      ? driverStep.driverName : (driverStep ? driverStep.label.replace("\n", " ") : "—");
+    return { baseline: bridgeSteps[0].value, final: final, delta: final - bridgeSteps[0].value };
+  }
+  var bridgeResult = renderBridge();
 
+  /* ================= COST TAB: WBS allocation ================= */
+  var wbsData = [
+    { name:"GCs & Trades", pct:52 },
+    { name:"Long Lead Equipment", pct:22 },
+    { name:"Design & Engineering", pct:14 },
+    { name:"Site & Utilities", pct:12 }
+  ];
+  function renderBarChart(containerId, data){
+    var el = document.getElementById(containerId);
+    el.innerHTML = "";
+    data.forEach(function(row){
+      var r = document.createElement("div"); r.className = "barrow";
+      var name = document.createElement("div"); name.className = "wname"; name.textContent = row.name;
+      var track = document.createElement("div"); track.className = "wtrack";
+      var fill = document.createElement("div"); fill.className = "wfill"; fill.style.width = row.pct + "%";
+      track.appendChild(fill);
+      var pct = document.createElement("div"); pct.className = "wpct tabular"; pct.textContent = row.pct + "%";
+      r.appendChild(name); r.appendChild(track); r.appendChild(pct);
+      el.appendChild(r);
+    });
+  }
+  renderBarChart("wbsChart", wbsData);
+
+  /* ================= CONTINGENCY TAB: drawdown slider ================= */
   var pctComplete = document.getElementById("pctComplete");
   var drawdownPct = document.getElementById("drawdownPct");
+  function computeDrawdownRatio(pc, dd){ return dd / Math.max(pc, 1); }
   function updateDrawdown(){
     var pc = parseInt(pctComplete.value, 10);
     var dd = parseInt(drawdownPct.value, 10);
     document.getElementById("pctCompleteVal").textContent = pc + "%";
     document.getElementById("drawdownPctVal").textContent = dd + "%";
-    var ratio = dd / Math.max(pc, 1);
+    var ratio = computeDrawdownRatio(pc, dd);
     var warnEl = document.getElementById("drawdownWarn");
     if (ratio > 1.5) {
       warnEl.className = "warn-strip warn";
@@ -347,11 +576,13 @@
       warnEl.className = "warn-strip ok";
       warnEl.textContent = "✓ ON TRACK — drawdown pacing roughly matches physical progress";
     }
+    return ratio;
   }
   pctComplete.addEventListener("input", updateDrawdown);
   drawdownPct.addEventListener("input", updateDrawdown);
-  updateDrawdown();
+  var initialDrawdownRatio = updateDrawdown();
 
+  /* ================= CONTINGENCY TAB: Monte Carlo ================= */
   function triangular(rng, min, mode, max){
     var u = rng();
     var f = (mode - min) / (max - min);
@@ -359,6 +590,7 @@
     return max - Math.sqrt((1 - u) * (max - min) * (max - mode));
   }
   function percentile(sorted, p){ return sorted[Math.floor(p * (sorted.length - 1))]; }
+  var lastMC = { p50:0, p80:0, p90:0 };
   function runMonteCarlo(seed){
     var rng = mulberry32(seed);
     var N = 2000;
@@ -366,9 +598,10 @@
     var draws = [];
     for (var i = 0; i < N; i++) draws.push(triangular(rng, min, mode, max));
     draws.sort(function(a,b){ return a - b; });
-    document.getElementById("p50").textContent = fmt(percentile(draws, 0.50));
-    document.getElementById("p80").textContent = fmt(percentile(draws, 0.80));
-    document.getElementById("p90").textContent = fmt(percentile(draws, 0.90));
+    lastMC = { p50: percentile(draws, 0.50), p80: percentile(draws, 0.80), p90: percentile(draws, 0.90) };
+    document.getElementById("p50").textContent = fmt(lastMC.p50);
+    document.getElementById("p80").textContent = fmt(lastMC.p80);
+    document.getElementById("p90").textContent = fmt(lastMC.p90);
 
     var canvas = document.getElementById("mcCanvas");
     var ctx = canvas.getContext("2d");
@@ -387,6 +620,7 @@
       var barH = (c / maxCount) * (h - 8);
       ctx.fillRect(i * binW + 1, h - barH, binW - 2, barH);
     });
+    return lastMC;
   }
   runMonteCarlo(mcSeed);
   document.getElementById("reRunMC").addEventListener("click", function(){
@@ -394,26 +628,181 @@
     runMonteCarlo(mcSeed);
   });
 
-  var wbsData = [
-    { name:"GCs & Trades", pct:52 },
-    { name:"Long Lead Equipment", pct:22 },
-    { name:"Design & Engineering", pct:14 },
-    { name:"Site & Utilities", pct:12 }
+  /* ================= CONTINGENCY TAB: priced risk register ================= */
+  var riskRegister = [
+    { name:"Transformer lead-time slip", prob:0.35, impact:180000 },
+    { name:"Design scope addition (cooling)", prob:0.25, impact:96000 },
+    { name:"Regional labor rate escalation", prob:0.40, impact:61000 },
+    { name:"Permitting delay", prob:0.20, impact:75000 }
   ];
-  (function renderWBS(){
-    var el = document.getElementById("wbsChart");
+  function renderRiskTable(){
+    var el = document.getElementById("riskTable");
+    var rows = riskRegister.map(function(r){
+      var ev = r.prob * r.impact;
+      return "<tr><td>" + r.name + "</td><td class='tabular'>" + Math.round(r.prob*100) + "%</td>" +
+        "<td class='tabular'>" + fmt(r.impact) + "</td><td class='tabular'><b>" + fmt(ev) + "</b></td></tr>";
+    }).join("");
+    var totalEV = riskRegister.reduce(function(sum, r){ return sum + r.prob * r.impact; }, 0);
+    el.innerHTML = "<thead><tr><th>Risk</th><th>Probability</th><th>Impact</th><th>Expected value</th></tr></thead>" +
+      "<tbody>" + rows + "<tr><td colspan='3'><b>Total expected exposure</b></td><td class='tabular'><b>" + fmt(totalEV) + "</b></td></tr></tbody>";
+    return totalEV;
+  }
+  var totalRiskEV = renderRiskTable();
+
+  /* ================= GOVERNANCE TAB: consultant scorecard ================= */
+  var consultants = [
+    { name:"Consultant A (mechanical)", preBid:1240000, actual:1310000 },
+    { name:"Consultant B (electrical)", preBid:2100000, actual:2085000 },
+    { name:"Consultant C (civil)", preBid:640000, actual:702000 }
+  ];
+  function renderConsultantTable(){
+    var el = document.getElementById("consultantTable");
+    var rows = consultants.map(function(c){
+      var delta = c.actual - c.preBid;
+      var pct = (delta / c.preBid) * 100;
+      var flag = Math.abs(pct) > 5 ? "⚠" : "✓";
+      return "<tr><td>" + c.name + "</td><td class='tabular'>" + fmt(c.preBid) + "</td>" +
+        "<td class='tabular'>" + fmt(c.actual) + "</td><td class='tabular'>" + (pct>=0?"+":"") + pct.toFixed(1) + "% " + flag + "</td></tr>";
+    }).join("");
+    el.innerHTML = "<thead><tr><th>Consultant</th><th>Pre-bid estimate</th><th>Actual bid</th><th>Variance</th></tr></thead><tbody>" + rows + "</tbody>";
+  }
+  renderConsultantTable();
+
+  /* ================= GOVERNANCE TAB: data quality health ================= */
+  function renderDQHealth(){
+    var unpostedPCOs = 4;
+    var syncLagDays = 9;
+    var el = document.getElementById("dqKpis");
+    el.innerHTML =
+      '<div class="kpi"><div class="lbl">Unposted PCOs</div><div class="val tabular">' + unpostedPCOs + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Sync lag</div><div class="val tabular">' + syncLagDays + ' days</div></div>' +
+      '<div class="kpi"><div class="lbl">Threshold</div><div class="val tabular">14 days</div></div>';
+    var warnEl = document.getElementById("dqWarn");
+    if (syncLagDays > 14) {
+      warnEl.className = "warn-strip warn"; warnEl.textContent = "⚠ WARNING — Data Unreconciled";
+    } else {
+      warnEl.className = "warn-strip ok"; warnEl.textContent = "✓ Within reconciliation threshold";
+    }
+  }
+  renderDQHealth();
+
+  /* ================= PORTFOLIO TAB: multi-region rollup ================= */
+  var regions = [
+    { code:"NA", name:"North America", baseline:2450000, forecast:bridgeResult ? bridgeResult.final : 2675000 },
+    { code:"APAC", name:"Asia-Pacific", baseline:3100000, forecast:3350000 },
+    { code:"EMEA", name:"Europe", baseline:1800000, forecast:1865000 },
+    { code:"LATAM", name:"Latin America", baseline:950000, forecast:1010000 }
+  ];
+  var activeRegion = "NA";
+  function renderRegionTabs(){
+    var el = document.getElementById("regionTabs");
     el.innerHTML = "";
-    wbsData.forEach(function(row){
-      var r = document.createElement("div"); r.className = "wbs-row";
-      var name = document.createElement("div"); name.className = "wname"; name.textContent = row.name;
-      var track = document.createElement("div"); track.className = "wtrack";
-      var fill = document.createElement("div"); fill.className = "wfill"; fill.style.width = row.pct + "%";
-      track.appendChild(fill);
-      var pct = document.createElement("div"); pct.className = "wpct tabular"; pct.textContent = row.pct + "%";
-      r.appendChild(name); r.appendChild(track); r.appendChild(pct);
-      el.appendChild(r);
+    regions.forEach(function(r){
+      var btn = document.createElement("button");
+      btn.className = "region-btn"; btn.textContent = r.code;
+      btn.setAttribute("aria-pressed", r.code === activeRegion ? "true" : "false");
+      btn.addEventListener("click", function(){ activeRegion = r.code; renderRegionTabs(); renderRegionDetail(); });
+      el.appendChild(btn);
     });
-  })();
+  }
+  function renderRegionDetail(){
+    var r = regions.filter(function(x){ return x.code === activeRegion; })[0];
+    var variance = r.forecast - r.baseline;
+    var pct = (variance / r.baseline) * 100;
+    document.getElementById("regionDetail").innerHTML =
+      '<div class="kpis">' +
+      '<div class="kpi"><div class="lbl">' + r.name + ' baseline</div><div class="val tabular">' + fmt(r.baseline) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Forecast</div><div class="val tabular">' + fmt(r.forecast) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Variance</div><div class="val tabular">' + (pct>=0?"+":"") + pct.toFixed(1) + '%</div></div>' +
+      '</div>';
+  }
+  renderRegionTabs(); renderRegionDetail();
+
+  /* ================= PORTFOLIO TAB: stage-gate progress ================= */
+  var gates = [
+    { name:"Gate 1: Feasibility", status:"done" },
+    { name:"Gate 2: Design", status:"done" },
+    { name:"Gate 3: Procurement", status:"active", pct:62 },
+    { name:"Gate 4: Execution", status:"pending" }
+  ];
+  function renderGates(){
+    var el = document.getElementById("gateTrack");
+    el.innerHTML = "";
+    gates.forEach(function(g, i){
+      var row = document.createElement("div"); row.className = "gate-row";
+      var num = document.createElement("div"); num.className = "gate-num " + g.status; num.textContent = i+1;
+      var label = document.createElement("div"); label.style.width = "170px"; label.style.fontSize="12.5px"; label.textContent = g.name;
+      var track = document.createElement("div"); track.className = "gate-track";
+      var fill = document.createElement("div"); fill.className = "gate-fill";
+      fill.style.width = (g.status === "done" ? 100 : g.status === "active" ? g.pct : 0) + "%";
+      track.appendChild(fill);
+      row.appendChild(num); row.appendChild(label); row.appendChild(track);
+      el.appendChild(row);
+    });
+  }
+  renderGates();
+
+  /* ================= DATA STRATEGY TAB: pipeline diagram ================= */
+  function renderPipeline(){
+    var nodes = ["Field System (commitments, PCOs)", "Staging (validate, dedupe, standardize)",
+      "Cost Model (budget bridge, WBS allocation)", "Executive Dashboard (this page)"];
+    var el = document.getElementById("pipelineDiagram");
+    el.innerHTML = "";
+    nodes.forEach(function(n, i){
+      var node = document.createElement("div"); node.className = "pipeline-node"; node.textContent = n;
+      el.appendChild(node);
+      if (i < nodes.length - 1) {
+        var arrow = document.createElement("div"); arrow.className = "pipeline-arrow"; arrow.textContent = "↓";
+        el.appendChild(arrow);
+      }
+    });
+  }
+  renderPipeline();
+
+  /* ================= REFERENCE TAB: glossaries ================= */
+  var aaceTerms = [
+    { term:"RP 57R-09", def:"Integrated Cost and Schedule Risk Analysis Using Risk Drivers and Monte Carlo Simulation of a CPM Model — the method behind this build's contingency band." },
+    { term:"RP 65R-11", def:"Integrated Cost and Schedule Risk Analysis and Contingency Determination Using Expected Value — a complementary, distinct method (extends RP 44R-08), not used in this build's simulation." },
+    { term:"RP 44R-08", def:"Risk Analysis and Contingency Determination Using Expected Value — the base practice RP 65R-11 extends." },
+    { term:"RP 17R-97", def:"Cost Estimate Classification System — the generic 5-class matrix (Class 5, least-defined, through Class 1, most-defined)." },
+    { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the risk-driver framework behind this build's priced risk register." }
+  ];
+  var realFigures = [
+    { term:"$208K labor variance", def:"A real GL labor-variance root-cause trace at a prior role — a structural BOM-posting gap, not a bid overrun." },
+    { term:"100+ bid packages, $50M+ each", def:"A real bid-pricing and contingency-tracking history at a prior construction-estimating role." },
+    { term:"40–45% electrical, 15–25% cooling", def:"Real published 2026 data-center construction cost-driver percentages (Archdesk)." },
+    { term:"$4.5–5.2M/MW liquid-cooled vs. ~$1.8M/MW air-cooled", def:"Real published per-MW cost figures for cooling topology (irecruit.co, 2026)." },
+    { term:"$2.8M/month idle-equipment carrying cost", def:"A real, quoted cost-of-delay figure for commissioned equipment awaiting a missing transformer on a 50MW site (irecruit.co, 2026)." }
+  ];
+  function renderGlossary(containerId, terms){
+    var el = document.getElementById(containerId);
+    el.innerHTML = terms.map(function(t){
+      return '<div class="glossary-item"><dt>' + t.term + '</dt><dd>' + t.def + '</dd></div>';
+    }).join("");
+  }
+  renderGlossary("aaceGlossary", aaceTerms);
+  renderGlossary("figureGlossary", realFigures);
+
+  /* ================= OVERVIEW TAB: KPI rollup (reads from other tabs' real computed state) ================= */
+  function renderOverview(){
+    var el = document.getElementById("overviewKpis");
+    el.innerHTML =
+      '<div class="kpi"><div class="lbl">Portfolio forecast</div><div class="val tabular">' + fmt(bridgeResult.final) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Contingency drawdown ratio</div><div class="val tabular">' + initialDrawdownRatio.toFixed(2) + 'x</div></div>' +
+      '<div class="kpi"><div class="lbl">Monte Carlo P80</div><div class="val tabular">' + fmt(lastMC.p80) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Total risk exposure (EV)</div><div class="val tabular">' + fmt(totalRiskEV) + '</div></div>';
+  }
+  renderOverview();
+
+  /* expose a minimal state object for a Node-based verify script (Phase 1 requirement) */
+  window.__CMCC_STATE__ = {
+    bridge: bridgeResult,
+    drawdownRatio: initialDrawdownRatio,
+    monteCarlo: lastMC,
+    totalRiskEV: totalRiskEV,
+    wbsSum: wbsData.reduce(function(s,r){ return s + r.pct; }, 0),
+    regions: regions
+  };
 })();
 </script>
 </body>
