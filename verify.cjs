@@ -41,6 +41,7 @@ function assertStrEqual(actual, expected, label) {
 function makeElementStub() {
   const classes = new Set();
   const attrs = {};
+  const listeners = {};
   const el = {
     _text: "", _html: "",
     style: {},
@@ -56,7 +57,14 @@ function makeElementStub() {
     },
     dataset: {},
     children: [],
-    addEventListener(){},
+    // Real per-element listener capture (a prior version stubbed this as a no-op, which meant
+    // the currency-toggle re-render cascade, tab-click/keydown navigation, and every slider's
+    // "input" handler were never actually FIRED by this test suite -- only their initial-load
+    // computation was. That gap is exactly how a real bug (renderReliabilityNote hardcoding
+    // "$208K" instead of calling fmt(208000), so it never converts on a currency switch) slipped
+    // through two verify.cjs runs. Fixed: fire(type) below lets tests actually trigger these.
+    addEventListener(type, handler){ (listeners[type] = listeners[type] || []).push(handler); },
+    fire(type, evt){ (listeners[type] || []).forEach((h) => h(evt || {})); },
     setAttribute(name, value){ attrs[name] = String(value); },
     getAttribute(name){ return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null; },
     appendChild(child){ el.children.push(child); },
@@ -98,18 +106,26 @@ function getOrCreate(id) {
 // the page registers for the explainer-toggle feature. Captured here so verify.cjs can fire it.
 const documentClickHandlers = [];
 
+// Captured so verify.cjs can fire a real click on one of these AFTER the page script has already
+// wired its click/keydown listeners onto them (the page only calls querySelectorAll(".tabbtn")
+// once, at load, so this reference stays valid for the whole test run).
+let lastTabButtonStubs = [];
 const documentStub = {
   getElementById: (id) => getOrCreate(id),
   querySelectorAll: (sel) => {
     if (sel === ".tabbtn") {
-      // return 7 fake tab buttons with the real dataset.tab values the page defines
-      return ["overview","cost","contingency","governance","portfolio","data","reference"].map((name) => {
+      // All 11 real dataset.tab values the page defines (this list went stale at 7 during the
+      // Phase 2/3 tab additions -- a real gap: it meant activateTab()/keyboard nav for exec,
+      // framework, actions, and triage were never test-covered even by name. Fixed.)
+      lastTabButtonStubs = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"].map((name) => {
         const b = withProperties(makeElementStub());
         b.dataset = { tab: name };
+        elementsById["panel-" + name] = elementsById["panel-" + name] || withProperties(makeElementStub());
         return b;
       });
+      return lastTabButtonStubs;
     }
-    if (sel === ".tabpanel") return [];
+    if (sel === ".tabpanel") return Object.keys(elementsById).filter((k) => k.startsWith("panel-")).map((k) => elementsById[k]);
     return [];
   },
   documentElement: { setAttribute(){}, getAttribute(){ return null; } },
@@ -487,6 +503,48 @@ assertEqual(aaceOnly.length, state.allGlossaryItems.filter((r) => r.category ===
 // A query that matches nothing must return an empty array, not throw or return everything.
 const noMatch = state.filterGlossaryItems(state.allGlossaryItems, "zzz-no-such-term-zzz", "all");
 assertEqual(noMatch.length, 0, "a nonsense query correctly returns zero results, not a fallback to everything");
+
+console.log("--- Stress-test fix: actually FIRE the currency-toggle change event (not just unit-test formatInCurrency) ---");
+// Pre-registered expectation (B35): switching to GBP must convert EVERY dollar figure the page
+// displays, including the Contingency tab's reliability note -- the same $208K figure that's
+// already proven (Phase 1 test above) to convert correctly in the Cost tab's budget bridge.
+// A prior version of this suite never fired this handler at all (addEventListener was a no-op
+// for every element except document), so this exact currency-inconsistency bug shipped
+// undetected. Firing it for real is the fix to the test suite, not just to the page.
+const currencySelectEl = elementsById["currencySelect"];
+if (!currencySelectEl) {
+  failures++; console.error("FAIL: no #currencySelect element was ever registered -- the page never called getElementById('currencySelect')?");
+} else {
+  currencySelectEl.value = "GBP";
+  currencySelectEl.fire("change");
+  const reliabilityHtml = elementsById["reliabilityNote"].innerHTML;
+  if (reliabilityHtml.indexOf("£") !== -1 && reliabilityHtml.indexOf("$208K") === -1) {
+    console.log("pass: switching to GBP converts the reliability note's $208K figure too, not just the Cost tab's copy of it");
+  } else {
+    failures++; console.error("FAIL: reliability note did not convert to GBP after firing the currency change event:", reliabilityHtml);
+  }
+  // Reset back to USD so every assertion below this point still sees the page's default currency.
+  currencySelectEl.value = "USD";
+  currencySelectEl.fire("change");
+}
+
+console.log("--- Stress-test fix: actually FIRE a click on one of the 4 tabs added in Phases 2-3 ---");
+// A prior version of this suite's own .tabbtn stub list was stale at 7 tabs (missing exec,
+// framework, actions, triage), and per-element addEventListener was a no-op -- so activateTab()
+// was never actually exercised for any tab, let alone the newer ones. Both fixed above; prove it.
+const execBtn = lastTabButtonStubs.find((b) => b.dataset.tab === "exec");
+const overviewBtn = lastTabButtonStubs.find((b) => b.dataset.tab === "overview");
+if (!execBtn || !overviewBtn) {
+  failures++; console.error("FAIL: could not find the exec/overview tab button stubs to click-test");
+} else {
+  execBtn.fire("click");
+  assertStrEqual(execBtn.getAttribute("aria-selected"), "true", "clicking the Executive Command tab sets its own aria-selected=true");
+  assertStrEqual(overviewBtn.getAttribute("aria-selected"), "false", "...and correctly clears aria-selected on the previously-active Overview tab");
+  assertStrEqual(elementsById["panel-exec"].classList.contains("active"), true, "clicking the tab activates the real panel-exec element");
+  assertStrEqual(elementsById["panel-overview"].classList.contains("active"), false, "...and deactivates the previously-active panel-overview");
+  // Return focus to Overview so this test doesn't change which tab later assertions implicitly assume is active.
+  overviewBtn.fire("click");
+}
 
 console.log("");
 if (failures > 0) {

@@ -105,8 +105,12 @@ legible, marked `illustrative` throughout.
    Carlo tri-point bounds, contingency drawdown, Gate 4 coverage ratio, schedule float erosion,
    EMV settlement decision, crew LPF, glossary search/filter, currency conversion — and exercises
    **both branches of every alert/verdict function**, including the branches this build's own
-   hardcoded demo state never naturally triggers. **85 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 85) as of the last run. Exists because this repo was
+   hardcoded demo state never naturally triggers — including, after a `/stress-test` round,
+   actually *firing* the currency-toggle `change` event and a tab-button `click` rather than only
+   unit-testing the pure functions underneath them (that gap in the test harness itself is exactly
+   how one real bug — a hardcoded `"$208K"` string that never converted with the currency
+   toggle — shipped undetected for a full phase). **90 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 90) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -116,7 +120,8 @@ legible, marked `illustrative` throughout.
    fixed to scope by `<section>` instead), illustrative sections never carry a bare "real" badge,
    structural tag/tab-count balance, a coverage-of-coverage check that every verdict function has
    both branches tested in verify.cjs, and that README's own stated tab count matches the live
-   markup. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
+   markup. **25 checks, all passing** (`node stress.cjs | grep -c "^pass:"` → 25) as of the last
+   run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
 3. **`python3 pipeline/run_pipeline.py`** — a free, local, DuckDB-based second proof layer,
