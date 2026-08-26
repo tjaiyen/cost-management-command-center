@@ -172,6 +172,11 @@
   .currency-select{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary)/0.25);
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:5px 8px; font-size:12.5px; font-family:inherit}
 
+  /* skip-to-content link (WCAG 2.4.1 Bypass Blocks) -- offscreen until focused via keyboard */
+  .skip-link{position:absolute; left:-9999px; top:0; z-index:100; background:rgb(var(--c-accent));
+    color:#fff; padding:10px 16px; border-radius:0 0 8px 0; font-size:13px; font-weight:600; text-decoration:none}
+  .skip-link:focus{left:0}
+
   /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
      which tab is active on screen when Print is invoked. #id beats .class specificity so this
      wins over the .tabpanel{display:none} rule right above it. */
@@ -184,6 +189,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 
 <header class="top">
   <div class="bar">
@@ -215,7 +221,7 @@
   </nav>
 </header>
 
-<div class="wrap">
+<div class="wrap" id="main-content">
   <h1>Who's actually watching the contingency reserve?</h1>
   <p class="lede">A cost-management methodology demo built around a synthetic capital-development
     program — 11 tabs, real math computed live in this page's own JavaScript, no build step, no
@@ -226,7 +232,7 @@
     repository.</b> Real facts are threaded through it and badge-labeled inline wherever they
     appear: a real $208K variance root-cause trace, a real 100+ bid-package contingency-tracking
     pattern, AACE International's real Recommended Practices (RP 57R-09, 65R-11, 44R-08, 17R-97,
-    40R-08, 58R-10, 68R-11, 86R-14), Turner &amp; Townsend's real <i>Data Centre Construction Cost
+    40R-08, 58R-10, 68R-11, 86R-14, 22R-01, 49R-06), Turner &amp; Townsend's real <i>Data Centre Construction Cost
     Index 2025-2026</i> (market benchmarks in the Cost tab, cited again in the Reference glossary —
     not a floating claim), and RICS/ICMS &amp; Uptime Institute's real industry standards (see the
     Reference tab). Everything else — the program name, dollar amounts,
@@ -487,7 +493,10 @@
         <p class="src-note"><span class="badge illustrative">illustrative</span> 4 weekly float
           readings, invented; the erosion-rate math and the "reassess within N weeks" framing are
           real and reused as-is from how a leading indicator works elsewhere on this build (the
-          contingency drawdown ratio).</p>
+          contingency drawdown ratio). Critical-path identification (what float is measured against)
+          follows <b>AACE RP 49R-06</b> — a real named practice. A real, independently published
+          finding backs the framing itself: float declining at an increasing rate is a leading
+          indicator of program trouble roughly 2–3 months before it shows up in SPI.</p>
       </div>
     </section>
 
@@ -540,7 +549,8 @@
       <div class="card">
         <table id="productivityTable"></table>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Hours are invented;
-          the LPF = earned/actual ratio itself is the real, standard formulation.</p>
+          the LPF = earned/actual ratio itself follows <b>AACE RP 22R-01</b>'s direct labor
+          productivity measurement method — a real, named practice, not this build's own invention.</p>
       </div>
     </section>
   </div>
@@ -873,7 +883,7 @@
         "<td class='tabular'>" + fmt(a.ev) + "</td><td class='tabular'>" + fmt(a.ac) + "</td>" +
         "<td class='tabular'>" + fmt(a.cv) + "</td><td class='tabular'>" + a.cpi.toFixed(2) + " " + cpiFlag + "</td></tr>";
     }).join("");
-    el.innerHTML = "<thead><tr><th>Control account</th><th>BAC</th><th>% complete</th><th>EV</th><th>AC</th><th>CV</th><th>CPI</th></tr></thead><tbody>" + rows + "</tbody>";
+    el.innerHTML = "<thead><tr><th scope='col'>Control account</th><th scope='col'>BAC</th><th scope='col'>% complete</th><th scope='col'>EV</th><th scope='col'>AC</th><th scope='col'>CV</th><th scope='col'>CPI</th></tr></thead><tbody>" + rows + "</tbody>";
     return accounts;
   }
   var controlAccounts = renderControlAccounts();
@@ -1076,7 +1086,7 @@
         "<td class='tabular'>" + fmt(r.impact) + "</td><td class='tabular'><b>" + fmt(ev) + "</b></td></tr>";
     }).join("");
     var totalEV = riskRegister.reduce(function(sum, r){ return sum + r.prob * r.impact; }, 0);
-    el.innerHTML = "<thead><tr><th>Risk</th><th>Probability</th><th>Impact</th><th>Expected value</th></tr></thead>" +
+    el.innerHTML = "<thead><tr><th scope='col'>Risk</th><th scope='col'>Probability</th><th scope='col'>Impact</th><th scope='col'>Expected value</th></tr></thead>" +
       "<tbody>" + rows + "<tr><td colspan='3'><b>Total expected exposure</b></td><td class='tabular'><b>" + fmt(totalEV) + "</b></td></tr></tbody>";
     return totalEV;
   }
@@ -1144,7 +1154,7 @@
       return "<tr><td>" + o.label + "</td><td class='tabular'>" + Math.round(o.prob * 100) + "%</td><td class='tabular'>" + fmt(o.cost) + "</td></tr>";
     }).join("");
     document.getElementById("emvTable").innerHTML =
-      "<thead><tr><th>Dispute outcome</th><th>Probability</th><th>Cost</th></tr></thead><tbody>" + rows +
+      "<thead><tr><th scope='col'>Dispute outcome</th><th scope='col'>Probability</th><th scope='col'>Cost</th></tr></thead><tbody>" + rows +
       "<tr><td colspan='2'><b>Dispute EV (incl. " + fmt(changeOrderDispute.disputeProcessCost) + " process cost)</b></td><td class='tabular'><b>" + fmt(decision.disputeEV) + "</b></td></tr>" +
       "<tr><td colspan='2'><b>Settle-now cost</b></td><td class='tabular'><b>" + fmt(decision.settleNowCost) + "</b></td></tr></tbody>";
     // Note: this uses a plain bold label + flag symbol, not the page's .badge.real/.illustrative
@@ -1175,7 +1185,7 @@
       return "<tr><td>" + c.name + "</td><td class='tabular'>" + fmt(c.preBid) + "</td>" +
         "<td class='tabular'>" + fmt(c.actual) + "</td><td class='tabular'>" + (pct>=0?"+":"") + pct.toFixed(1) + "% " + flag + "</td></tr>";
     }).join("");
-    el.innerHTML = "<thead><tr><th>Consultant</th><th>Pre-bid estimate</th><th>Actual bid</th><th>Variance</th></tr></thead><tbody>" + rows + "</tbody>";
+    el.innerHTML = "<thead><tr><th scope='col'>Consultant</th><th scope='col'>Pre-bid estimate</th><th scope='col'>Actual bid</th><th scope='col'>Variance</th></tr></thead><tbody>" + rows + "</tbody>";
   }
   renderConsultantTable();
 
@@ -1228,7 +1238,7 @@
         "<td class='tabular'>" + p.actualHours + "</td><td class='tabular'>" + lpf.toFixed(2) + " " + flag + "</td></tr>";
     }).join("");
     document.getElementById("productivityTable").innerHTML =
-      "<thead><tr><th>Trade</th><th>Earned hrs</th><th>Actual hrs</th><th>LPF</th></tr></thead><tbody>" + rows + "</tbody>";
+      "<thead><tr><th scope='col'>Trade</th><th scope='col'>Earned hrs</th><th scope='col'>Actual hrs</th><th scope='col'>LPF</th></tr></thead><tbody>" + rows + "</tbody>";
     return productivityData.map(function(p){ return { trade: p.trade, lpf: computeLPF(p.earnedHours, p.actualHours) }; });
   }
   var productivityResult = renderProductivity();
@@ -1332,7 +1342,7 @@
     }, null);
     el.innerHTML =
       '<h3 style="margin-top:0">Board status — as of this run</h3>' +
-      '<table><tr><th>Metric</th><th>Value</th></tr>' +
+      '<table><tr><th scope="col">Metric</th><th scope="col">Value</th></tr>' +
       '<tr><td>Current forecast</td><td class="tabular">' + fmt(bridgeResult.final) + '</td></tr>' +
       '<tr><td>Net variance vs. baseline</td><td class="tabular">' + fmt(bridgeResult.delta) + '</td></tr>' +
       '<tr><td>Contingency drawdown ratio</td><td class="tabular">' + liveDrawdownRatio.toFixed(2) + 'x</td></tr>' +
@@ -1376,7 +1386,7 @@
         return "<tr><td>" + a.id + "</td><td>" + a.desc + "</td><td>" + a.owner + "</td>" +
           "<td class='tabular'>" + a.ageDays + "d " + (stale ? "⚠" : "") + "</td><td>" + a.status + "</td></tr>";
       }).join("");
-      el.innerHTML = "<thead><tr><th>ID</th><th>Description</th><th>Owner</th><th>Age</th><th>Status</th></tr></thead><tbody>" + rows + "</tbody>";
+      el.innerHTML = "<thead><tr><th scope='col'>ID</th><th scope='col'>Description</th><th scope='col'>Owner</th><th scope='col'>Age</th><th scope='col'>Status</th></tr></thead><tbody>" + rows + "</tbody>";
     }
     return summary;
   }
@@ -1449,7 +1459,9 @@
     { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the risk-driver framework behind this build's priced risk register." },
     { term:"RP 58R-10", def:"Escalation Estimating Principles and Methods Using Indices — the foundational index-based escalation practice grounding this build's Market Escalation bridge step." },
     { term:"RP 68R-11", def:"Escalation Estimating Using Indices and Monte Carlo Simulation — extends RP 58R-10 with simulation for escalation uncertainty specifically; real, distinct, not the same simulation as this build's completion-cost Monte Carlo above." },
-    { term:"RP 86R-14", def:"Variance Analysis and Reporting — aligned to ANSI/EIA-748 Earned Value Management Systems; the real named practice behind this build's budget-bridge variance narrative." }
+    { term:"RP 86R-14", def:"Variance Analysis and Reporting — aligned to ANSI/EIA-748 Earned Value Management Systems; the real named practice behind this build's budget-bridge variance narrative." },
+    { term:"RP 22R-01", def:"Direct Labor Productivity Measurement — the real named practice behind this build's Crew Labor Productivity Factor (earned/actual hours)." },
+    { term:"RP 49R-06", def:"Identifying the Critical Path — the real named practice grounding what schedule float is measured against, behind this build's float-erosion cost-risk signal." }
   ];
   var realFigures = [
     { term:"$208K labor variance", def:"A real GL labor-variance root-cause trace at a prior role — a structural BOM-posting gap, not a bid overrun." },
