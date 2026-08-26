@@ -392,6 +392,21 @@ assertEqual(state.clampMode(2450000, 2620000, 3050000), 2620000, "clampMode: a m
 assertEqual(state.clampMode(2450000, 2000000, 3050000), 2450000, "clampMode: a mode below min clamps up to min (never naturally triggered by a well-behaved drag)");
 assertEqual(state.clampMode(2450000, 3200000, 3050000), 3050000, "clampMode: a mode above max clamps down to max (never naturally triggered by a well-behaved drag)");
 
+console.log("--- Phase 2: Operating Framework Gate 4 (independent re-derivation) ---");
+// Independent re-derivation of the exact gate math: reserve 200,000 - drawn 140,000 = 60,000
+// remaining; 60,000 / totalRiskEV must be < 1.00, i.e. genuinely BLOCKED, not a static "pending" bar.
+const expectedRemaining = 200000 - 140000;
+assertEqual(state.gateStatus.remaining, expectedRemaining, "Gate 4 remaining contingency = reserve - drawn");
+assertEqual(state.gateStatus.ratio, expectedRemaining / state.totalRiskEV, "Gate 4 coverage ratio matches independent re-derivation", 0.0001);
+assertStrEqual(state.gateStatus.blocked, true, "Gate 4 is genuinely computed BLOCKED with this build's real numbers, not just styled that way");
+// Direct test of the pure function across both branches, not just the one the demo data produces.
+const clearedGate = state.computeGateStatus(500000, 50000, 100000); // remaining 450k >> 100k EV
+assertStrEqual(clearedGate.blocked, false, "computeGateStatus: a healthy reserve/risk ratio produces the CLEARED branch (never exercised by the hardcoded demo state)");
+const zeroRiskGate = state.computeGateStatus(200000, 140000, 0); // no priced risk at all
+// assertEqual's Math.abs(actual-expected) breaks on Infinity (Infinity-Infinity = NaN) -- check directly.
+if (zeroRiskGate.ratio === Infinity) { console.log("pass: computeGateStatus: zero risk exposure divides to Infinity coverage, not a crash =", zeroRiskGate.ratio); }
+else { failures++; console.error("FAIL: computeGateStatus with zero risk exposure expected Infinity, got", zeroRiskGate.ratio); }
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " assertion(s) FAILED");

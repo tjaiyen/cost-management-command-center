@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <title>Cost Management Command Center — TJ Jaiyen</title>
-<meta name="description" content="A cost-management methodology demo — 7 tabs covering CAPEX budget bridges, AACE-standard Monte Carlo contingency sizing, vendor governance, multi-region portfolio rollup, and a data-strategy pipeline — built around a synthetic capital-development program. Zero dependencies." />
+<meta name="description" content="A cost-management methodology demo — 9 tabs covering an executive brief, CAPEX budget bridges with a live tri-point Monte Carlo, a live-computed stage gate, vendor governance, multi-region portfolio rollup, and a data-strategy pipeline — built around a synthetic capital-development program. Zero dependencies." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -175,6 +175,16 @@
   /* currency selector */
   .currency-select{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary)/0.25);
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:5px 8px; font-size:12.5px; font-family:inherit}
+
+  /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
+     which tab is active on screen when Print is invoked. #id beats .class specificity so this
+     wins over the .tabpanel{display:none} rule right above it. */
+  @media print{
+    header.top, .tabrail, .disclaimer, footer.foot, .tabpanel{display:none !important}
+    #panel-exec{display:block !important}
+    #panel-exec section, #panel-exec .card{background:none !important; border:none !important; padding:0 !important}
+    #panel-exec *{color:#000 !important}
+  }
 </style>
 </head>
 <body>
@@ -196,10 +206,12 @@
   </div>
   <nav class="tabrail" id="tabrail" role="tablist" aria-label="Command center sections">
     <button class="tabbtn" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="tabbtn" role="tab" data-tab="exec" aria-selected="false">Executive Command</button>
     <button class="tabbtn" role="tab" data-tab="cost" aria-selected="false">Cost</button>
     <button class="tabbtn" role="tab" data-tab="contingency" aria-selected="false">Contingency &amp; Risk</button>
     <button class="tabbtn" role="tab" data-tab="governance" aria-selected="false">Vendor &amp; Governance</button>
     <button class="tabbtn" role="tab" data-tab="portfolio" aria-selected="false">Portfolio</button>
+    <button class="tabbtn" role="tab" data-tab="framework" aria-selected="false">Operating Framework</button>
     <button class="tabbtn" role="tab" data-tab="data" aria-selected="false">Data Strategy</button>
     <button class="tabbtn" role="tab" data-tab="reference" aria-selected="false">Reference</button>
   </nav>
@@ -208,7 +220,7 @@
 <div class="wrap">
   <h1>Who's actually watching the contingency reserve?</h1>
   <p class="lede">A cost-management methodology demo built around a synthetic capital-development
-    program — 7 tabs, real math computed live in this page's own JavaScript, no build step, no
+    program — 9 tabs, real math computed live in this page's own JavaScript, no build step, no
     server, no dependency to install.</p>
 
   <div class="disclaimer">
@@ -260,6 +272,20 @@
       </div>
       <p class="src-note">This three-layer framing is this project's own; it isn't a claim about
         any employer's actual methodology.</p>
+    </section>
+  </div>
+
+  <!-- ============================================================ EXECUTIVE COMMAND ============================================================ -->
+  <div class="tabpanel" id="panel-exec" role="tabpanel" aria-labelledby="tab-exec">
+    <section>
+      <h2>For someone who has 90 seconds <span class="badge illustrative">illustrative synthesis, real inputs</span></h2>
+      <p class="lede" style="font-size:13px">Every row below is read live off the same computed
+        state as Overview, Cost, and Contingency — a different shape for the same numbers, not a
+        separately-typed summary. Directly serves the JD's "translate cost data into
+        executive-ready insights" line.</p>
+      <div class="card" id="execBrief"></div>
+      <p class="src-note">A print stylesheet (browser Print, ⌘/Ctrl+P) keeps only this brief on the
+        printed page — everything else on this dashboard is deliberately screen-only.</p>
     </section>
   </div>
 
@@ -494,14 +520,30 @@
         <div id="regionDetail"></div>
       </div>
     </section>
+  </div>
 
+  <!-- ============================================================ OPERATING FRAMEWORK ============================================================ -->
+  <div class="tabpanel" id="panel-framework" role="tabpanel" aria-labelledby="tab-framework">
+    <section>
+      <h2>Gate 4 readiness — genuinely computed, not a static bar <span class="badge real">real inputs, illustrative reserve</span></h2>
+      <p class="lede" style="font-size:13px">Contingency Coverage Ratio = remaining contingency
+        reserve ÷ total priced risk exposure (the same expected-value total from the Contingency
+        &amp; Risk tab). A ratio below 1.00 means the priced risks currently exceed what's left in
+        reserve to pay for them — this gate is blocked by real math, not a stage simply marked
+        "pending."</p>
+      <div class="card">
+        <div class="kpis" id="gateFwKpis"></div>
+        <div id="gateFwStatus"></div>
+      </div>
+    </section>
     <section>
       <h2>Stage-Gate Progress</h2>
       <div class="card">
         <div id="gateTrack"></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Four-gate structure
           (Feasibility → Design → Procurement → Execution) — a generic capital-program stage-gate
-          shape, not a specific employer's actual gate criteria.</p>
+          shape, not a specific employer's actual gate criteria. Gate 4's status above is the one
+          gate that's actually computed live; the track here stays a static illustrative shape.</p>
       </div>
     </section>
   </div>
@@ -1049,6 +1091,65 @@
   }
   renderGates();
 
+  /* ================= OPERATING FRAMEWORK TAB: live-computed Gate 4 (not a static bar) ================= */
+  var illustrativeContingencyReserve = 200000; // the original reserve this synthetic program set aside
+  // Pure function: reserve/drawn/riskEV in, a real ratio + blocked verdict out -- same pattern as
+  // drawdownAlertContent/dqAlertContent above, testable directly with arbitrary inputs.
+  function computeGateStatus(reserve, drawn, riskEV){
+    var remaining = reserve - drawn;
+    var ratio = riskEV > 0 ? remaining / riskEV : Infinity;
+    return { remaining: remaining, ratio: ratio, blocked: ratio < 1.0 };
+  }
+  function renderGateFramework(){
+    var drawnAmount = Math.abs(bridgeSteps[4].value); // the real Contingency Drawdown (–) step
+    var status = computeGateStatus(illustrativeContingencyReserve, drawnAmount, totalRiskEV);
+    var kpiEl = document.getElementById("gateFwKpis");
+    if (kpiEl) kpiEl.innerHTML =
+      '<div class="kpi"><div class="lbl">Original reserve</div><div class="val tabular">' + fmt(illustrativeContingencyReserve) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Remaining reserve</div><div class="val tabular">' + fmt(status.remaining) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Priced risk exposure</div><div class="val tabular">' + fmt(totalRiskEV) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Coverage ratio</div><div class="val tabular">' + status.ratio.toFixed(2) + '</div></div>';
+    var el = document.getElementById("gateFwStatus");
+    if (el) {
+      el.className = status.blocked ? "alert-card warn" : "alert-card ok";
+      el.innerHTML = status.blocked
+        ? '<div class="alert-head"><span class="alert-shape">▲</span> GATE 4 (EXECUTION) — BLOCKED</div>' +
+          '<div class="alert-row"><b>Detected:</b> remaining contingency (' + fmt(status.remaining) + ') covers only ' + Math.round(status.ratio * 100) + '% of priced risk exposure (' + fmt(totalRiskEV) + ')</div>' +
+          '<div class="alert-row"><b>Probable cause:</b> contingency drawn faster than priced risks have actually closed out</div>' +
+          '<div class="alert-row"><b>Suggested action:</b> replenish reserve via change-order recovery, or re-price/retire risks before the gate opens</div>'
+        : '<div class="alert-head"><span class="alert-shape">●</span> GATE 4 (EXECUTION) — CLEARED</div>' +
+          '<div class="alert-row">Remaining reserve fully covers priced risk exposure.</div>';
+    }
+    return status;
+  }
+  var gateStatus = renderGateFramework();
+
+  /* ================= EXECUTIVE COMMAND TAB: the 90-second brief (reads other tabs' real state) ================= */
+  function renderExecBrief(){
+    var el = document.getElementById("execBrief");
+    if (!el) return;
+    var topRisk = riskRegister.reduce(function(max, r){
+      var ev = r.prob * r.impact;
+      return (!max || ev > max.ev) ? { name: r.name, ev: ev } : max;
+    }, null);
+    el.innerHTML =
+      '<h3 style="margin-top:0">Board status — as of this run</h3>' +
+      '<table><tr><th>Metric</th><th>Value</th></tr>' +
+      '<tr><td>Current forecast</td><td class="tabular">' + fmt(bridgeResult.final) + '</td></tr>' +
+      '<tr><td>Net variance vs. baseline</td><td class="tabular">' + fmt(bridgeResult.delta) + '</td></tr>' +
+      '<tr><td>Contingency drawdown ratio</td><td class="tabular">' + liveDrawdownRatio.toFixed(2) + 'x</td></tr>' +
+      '<tr><td>Monte Carlo P80 completion cost</td><td class="tabular">' + fmt(lastMC.p80) + '</td></tr>' +
+      '<tr><td>Top priced risk</td><td>' + (topRisk ? topRisk.name + ' (' + fmt(topRisk.ev) + ' EV)' : '—') + '</td></tr>' +
+      '<tr><td>Operating Framework — Gate 4</td><td>' + (gateStatus.blocked ? 'BLOCKED (' + gateStatus.ratio.toFixed(2) + ' coverage)' : 'CLEARED') + '</td></tr>' +
+      '</table>' +
+      '<p style="margin-top:14px"><b>Recommended action:</b> ' + (gateStatus.blocked
+        ? 'Replenish contingency or retire priced risk before Gate 4 opens — coverage is ' + gateStatus.ratio.toFixed(2) + 'x, below the 1.00x threshold.'
+        : (liveDrawdownRatio > 1.5
+          ? 'Open a value-engineering review before further contingency drawdown — pacing is already ' + liveDrawdownRatio.toFixed(1) + 'x physical progress.'
+          : 'No immediate escalation required this period.')) + '</p>';
+  }
+  renderExecBrief();
+
   /* ================= DATA STRATEGY TAB: pipeline diagram ================= */
   function renderPipeline(){
     var nodes = ["Field System (commitments, PCOs)", "Staging (validate, dedupe, standardize)",
@@ -1128,6 +1229,8 @@
     renderConsultantTable();
     renderRegionDetail();
     renderOverview();
+    gateStatus = renderGateFramework();
+    renderExecBrief();
   });
 
   /* expose a minimal state object for a Node-based verify script (Phase 1 requirement) */
@@ -1147,7 +1250,9 @@
     computeWhatIf: computeWhatIf,               // Phase 1: what-if sandbox pure function
     lastWhatIf: lastWhatIf,
     mcBounds: lastMCBounds,                     // Phase 1: current tri-point slider bounds
-    clampMode: clampMode                        // Phase 1: tri-point ordering-enforcement pure function
+    clampMode: clampMode,                       // Phase 1: tri-point ordering-enforcement pure function
+    gateStatus: gateStatus,                     // Phase 2: live-computed Gate 4 status
+    computeGateStatus: computeGateStatus         // Phase 2: pure function behind Gate 4
   };
 })();
 </script>
