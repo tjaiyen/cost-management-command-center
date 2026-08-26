@@ -180,6 +180,20 @@
     margin-top:8px; font-size:12px; color:rgb(var(--c-text-secondary))}
   .explainer.open{display:block}
 
+  /* full-width disclaimer toggle bar -- same .info-toggle click delegation as every other (i)
+     button on this page, just restyled from a small circle to a full-width bar via this override */
+  .info-toggle.disclaimer-toggle{
+    width:100%; height:auto; border-radius:9px; display:flex; align-items:center; gap:10px;
+    padding:9px 14px; margin:12px 0 4px; font-size:12.5px; text-align:left; font-family:inherit;
+    color:rgb(var(--c-text-secondary)); border:1px solid rgb(var(--c-warning)/0.4);
+    background:rgb(var(--c-warning)/0.07);
+  }
+  .info-toggle.disclaimer-toggle:hover{border-color:rgb(var(--c-accent))}
+  .info-toggle.disclaimer-toggle span:nth-child(2){flex:1}
+  .disclaimer-toggle .chev{transition:transform .15s; flex:none}
+  .disclaimer-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  #fullDisclaimer{margin-bottom:20px}
+
   /* currency selector */
   .currency-select{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary)/0.25);
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:5px 8px; font-size:12.5px; font-family:inherit}
@@ -302,7 +316,12 @@
     program — 11 tabs, real math computed live in this page's own JavaScript, no build step, no
     server, no dependency to install.</p>
 
-  <div class="disclaimer">
+  <button class="info-toggle disclaimer-toggle" type="button" data-explainer="fullDisclaimer" aria-expanded="false">
+    <span class="badge illustrative">Synthetic demo</span>
+    <span>Real facts are badge-labeled inline throughout this page — read the full disclaimer</span>
+    <span class="chev" aria-hidden="true">▾</span>
+  </button>
+  <div class="explainer disclaimer" id="fullDisclaimer">
     <b>The program is synthetic — no employer, client, or agency data appears anywhere in this
     repository.</b> Real facts are threaded through it and badge-labeled inline wherever they
     appear: a real $208K variance root-cause trace, a real 100+ bid-package contingency-tracking

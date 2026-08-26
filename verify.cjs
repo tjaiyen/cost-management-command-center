@@ -378,6 +378,21 @@ if (documentClickHandlers.length === 0) {
   try { clickHandler(unrelatedEvent); } catch (e) { threw = true; }
   if (threw) { failures++; console.error("FAIL: clicking an unrelated element threw instead of being ignored"); }
   else { console.log("pass: clicking an unrelated element is a safe no-op"); }
+
+  // The top disclaimer was collapsed into the same toggle mechanism this round (it used to be an
+  // always-visible block repeating on every tab -- TJ's own report). Same generic delegation, a
+  // third distinct button this time (aace5709exp, exp20, and now this) -- proves it's genuinely
+  // reusable, not coincidentally working for two cases.
+  const disclaimerToggleBtnStub = withProperties(makeElementStub());
+  disclaimerToggleBtnStub.classList.add("info-toggle");
+  disclaimerToggleBtnStub.dataset = { explainer: "fullDisclaimer" };
+  const fullDisclaimerEl = documentStub.getElementById("fullDisclaimer"); // force-create if the click delegation hasn't touched it yet
+  const disclaimerFakeEvent = { target: disclaimerToggleBtnStub };
+  assertStrEqual(fullDisclaimerEl.classList.contains("open"), false, "the full disclaimer starts collapsed, matching its real HTML default (no 'open' class)");
+  clickHandler(disclaimerFakeEvent);
+  assertStrEqual(fullDisclaimerEl.classList.contains("open"), true, "clicking the disclaimer toggle expands the full disclaimer");
+  clickHandler(disclaimerFakeEvent);
+  assertStrEqual(fullDisclaimerEl.classList.contains("open"), false, "clicking it again collapses it");
 }
 
 console.log("--- Content Consistency (every disclaimer 'real' claim must resolve elsewhere in the page) ---");
@@ -386,7 +401,10 @@ console.log("--- Content Consistency (every disclaimer 'real' claim must resolve
 // untraceable "real" claim. Every RP code and every named source the disclaimer claims as real
 // must appear again outside the disclaimer itself (in the Cost tab card or the Reference glossary),
 // not just floating in the intro paragraph.
-const disclaimerMatch = html.match(/<div class="disclaimer">([\s\S]*?)<\/div>/);
+// Matches by id, not an exact class-string (the disclaimer became a collapsible toggle+explainer
+// -- id="fullDisclaimer" -- so its class attribute is now "explainer disclaimer", not just
+// "disclaimer"; matching by id is also just more robust regardless of future class reordering).
+const disclaimerMatch = html.match(/<div class="explainer disclaimer" id="fullDisclaimer">([\s\S]*?)<\/div>/);
 if (!disclaimerMatch) {
   failures++; console.error("FAIL: could not find the top disclaimer block");
 } else {
