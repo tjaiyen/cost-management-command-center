@@ -433,6 +433,38 @@ if (typeof state.computeTriageItems === "function") {
   failures++; console.error("FAIL: computeTriageItems was not exposed on window.__CMCC_STATE__");
 }
 
+console.log("--- Phase 4: Schedule float as a cost-risk input signal (independent re-derivation) ---");
+// Independent re-derivation: history [22,19,14,13] over 4 weeks -> (22-13)/3 = 3.0 days/week.
+assertEqual(state.computeFloatErosionRate([{floatDays:22},{floatDays:19},{floatDays:14},{floatDays:13}]), 3.0, "float erosion rate re-derivation");
+assertEqual(state.floatSignal.remaining, 13, "float remaining matches the last real history entry");
+assertEqual(state.floatSignal.weeksToZero, 13 / 3.0, "weeks-to-zero re-derivation", 0.0001);
+assertStrEqual(state.floatSignal.elevated, true, "this build's real float history correctly trips ELEVATED (weeksToZero 4.3 < 8)");
+// Direct test of the OK branch, which the hardcoded demo history never naturally triggers.
+const healthyFloat = state.floatRiskSignal([{floatDays:40},{floatDays:38},{floatDays:37}]); // slow erosion
+assertStrEqual(healthyFloat.elevated, false, "floatRiskSignal: slow erosion produces the non-elevated branch (never exercised by the hardcoded demo history)");
+// A single-reading history (no erosion computable) must not crash on divide-by-zero-length.
+const singleReading = state.computeFloatErosionRate([{floatDays:20}]);
+assertEqual(singleReading, 0, "computeFloatErosionRate: a single reading returns 0, not NaN or a crash");
+
+console.log("--- Phase 4: Change-order settlement EMV decision (independent re-derivation) ---");
+// Independent re-derivation: 0.45*40000 + 0.35*85000 + 0.20*150000 + 18000 = 95750; settle-now is
+// 92000, which is lower, so the real recommendation must be "settle" (a close, realistic call).
+const expectedDisputeEV = 0.45 * 40000 + 0.35 * 85000 + 0.20 * 150000 + 18000;
+assertEqual(state.emvDecision.disputeEV, expectedDisputeEV, "dispute EV re-derivation");
+assertStrEqual(state.emvDecision.recommend, "settle", "this build's real numbers correctly recommend SETTLE (92,000 < 95,750 dispute EV)");
+// Direct test of the DISPUTE branch, which the hardcoded demo numbers don't naturally produce.
+const disputeWins = state.computeEMVDecision(200000, [{prob:1, cost:50000}], 0);
+assertStrEqual(disputeWins.recommend, "dispute", "computeEMVDecision: a clearly cheaper dispute path produces the DISPUTE branch (never exercised by the hardcoded demo numbers)");
+
+console.log("--- Phase 4: Crew Labor Productivity Factor (independent re-derivation) ---");
+assertEqual(state.computeLPF(1240, 1180), 1240 / 1180, "LPF re-derivation (Electrical row)");
+const lpfByTrade = {}; state.productivityResult.forEach((p) => { lpfByTrade[p.trade] = p.lpf; });
+if (lpfByTrade["Electrical"] >= 1 && lpfByTrade["Mechanical / Piping"] < 1 && lpfByTrade["Civil / Structural"] >= 1) {
+  console.log("pass: LPF correctly flags Mechanical/Piping as the one productivity-loss trade (>=1 good, <1 loss), matching this build's real demo rows");
+} else {
+  failures++; console.error("FAIL: expected exactly Mechanical/Piping to be the sub-1.0 LPF row, got", lpfByTrade);
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " assertion(s) FAILED");

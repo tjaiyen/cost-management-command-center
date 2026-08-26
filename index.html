@@ -478,6 +478,33 @@
           risk-driver framework — a real, named practice, not this program's own invention.</p>
       </div>
     </section>
+
+    <section id="float-section">
+      <h2>Schedule Float — a cost-risk input signal, not schedule ownership <span class="badge illustrative">illustrative trend</span></h2>
+      <p class="lede" style="font-size:13px">Float erosion feeds contingency and escalation risk
+        the same way a leading indicator should — this dashboard <em>reads</em> float trend as one
+        more input, it doesn't own the CPM schedule that produces it (that stays project-controls/
+        scheduling territory, out of scope here).</p>
+      <div class="card">
+        <div class="kpis" id="floatKpis"></div>
+        <div id="floatWarn"></div>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> 4 weekly float
+          readings, invented; the erosion-rate math and the "reassess within N weeks" framing are
+          real and reused as-is from how a leading indicator works elsewhere on this build (the
+          contingency drawdown ratio).</p>
+      </div>
+    </section>
+
+    <section id="emv-section">
+      <h2>Change Order Settlement Decision — Expected Monetary Value <span class="badge illustrative">illustrative dispute, real EMV method</span></h2>
+      <p class="lede" style="font-size:13px">Settle now vs. contest through dispute resolution —
+        priced the same probability × impact way as the risk register above, compared against a
+        known settle-now cost.</p>
+      <div class="card">
+        <table id="emvTable"></table>
+        <div id="emvVerdict" style="margin-top:12px"></div>
+      </div>
+    </section>
   </div>
 
   <!-- ============================================================ VENDOR & GOVERNANCE ============================================================ -->
@@ -506,6 +533,18 @@
           validation control that "eliminated recurring downstream reconciliation failures" — the
           strongest single direct proof point in this whole build. Sync-lag numbers shown are
           <span class="badge illustrative">illustrative</span>.</p>
+      </div>
+    </section>
+
+    <section id="productivity-section">
+      <h2>Crew Productivity — Labor Productivity Factor <span class="badge illustrative">illustrative rows, real ratio</span></h2>
+      <p class="lede" style="font-size:13px">Earned direct-labor hours ÷ actual hours expended, by
+        trade — a cost-management-owned productivity signal (it needs only earned/actual hours,
+        not a schedule baseline), scoped here to three trades rather than full crew-level tracking.</p>
+      <div class="card">
+        <table id="productivityTable"></table>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> Hours are invented;
+          the LPF = earned/actual ratio itself is the real, standard formulation.</p>
       </div>
     </section>
   </div>
@@ -1017,6 +1056,80 @@
   }
   var totalRiskEV = renderRiskTable();
 
+  /* ================= CONTINGENCY TAB: schedule float as a cost-risk input signal ================= */
+  var floatHistory = [ { week:1, floatDays:22 }, { week:2, floatDays:19 }, { week:3, floatDays:14 }, { week:4, floatDays:13 } ];
+  // Pure function: a float-reading history in, the average weekly erosion rate out.
+  function computeFloatErosionRate(history){
+    if (history.length < 2) return 0;
+    var first = history[0].floatDays, last = history[history.length - 1].floatDays;
+    return (first - last) / (history.length - 1);
+  }
+  // Pure function: erosion rate + current float in, a cost-risk verdict out -- same testable
+  // pattern as every other alert function on this build.
+  function floatRiskSignal(history){
+    var rate = computeFloatErosionRate(history);
+    var remaining = history[history.length - 1].floatDays;
+    var weeksToZero = rate > 0 ? remaining / rate : Infinity;
+    return { rate: rate, remaining: remaining, weeksToZero: weeksToZero, elevated: weeksToZero < 8 };
+  }
+  function renderFloatSignal(){
+    var signal = floatRiskSignal(floatHistory);
+    var kpiEl = document.getElementById("floatKpis");
+    if (kpiEl) kpiEl.innerHTML =
+      '<div class="kpi"><div class="lbl">Float remaining</div><div class="val tabular">' + signal.remaining + ' days</div></div>' +
+      '<div class="kpi"><div class="lbl">Avg. weekly erosion</div><div class="val tabular">' + signal.rate.toFixed(1) + ' days/wk</div></div>' +
+      '<div class="kpi"><div class="lbl">Weeks to zero float</div><div class="val tabular">' + (signal.weeksToZero === Infinity ? "—" : signal.weeksToZero.toFixed(1)) + '</div></div>';
+    var el = document.getElementById("floatWarn");
+    if (el) {
+      el.className = signal.elevated ? "alert-card warn" : "alert-card ok";
+      el.innerHTML = signal.elevated
+        ? '<div class="alert-head"><span class="alert-shape">▲</span> ELEVATED — Float Erosion as a Cost-Risk Input</div>' +
+          '<div class="alert-row"><b>Detected:</b> at ' + signal.rate.toFixed(1) + ' days/week, float reaches zero in ~' + signal.weeksToZero.toFixed(1) + ' weeks</div>' +
+          '<div class="alert-row"><b>Probable cause:</b> near-critical activities are absorbing float without a corresponding cost-risk reassessment</div>' +
+          '<div class="alert-row"><b>Suggested action:</b> reassess contingency/escalation exposure now, before float actually hits zero — a cost-risk recommendation, not a scheduling one</div>'
+        : '<div class="alert-head"><span class="alert-shape">●</span> Float erosion within a manageable range</div>' +
+          '<div class="alert-row">More than 8 weeks of runway at the current erosion rate.</div>';
+    }
+    return signal;
+  }
+  var floatSignal = renderFloatSignal();
+
+  /* ================= CONTINGENCY TAB: change-order settlement decision (EMV) ================= */
+  var changeOrderDispute = {
+    desc: "Disputed cooling-loop retrofit change order",
+    settleNowCost: 92000,
+    disputeProcessCost: 18000,
+    disputeOutcomes: [
+      { label:"Favorable ruling", prob:0.45, cost:40000 },
+      { label:"Split ruling", prob:0.35, cost:85000 },
+      { label:"Unfavorable ruling", prob:0.20, cost:150000 }
+    ]
+  };
+  // Pure function: settle-now cost + probability-weighted dispute outcomes in, an EMV-based
+  // recommendation out -- the same probability x impact methodology as the risk register above,
+  // applied to a settle-vs-dispute decision instead of a mitigation-priority ranking.
+  function computeEMVDecision(settleNowCost, disputeOutcomes, disputeProcessCost){
+    var disputeEV = disputeOutcomes.reduce(function(s, o){ return s + o.prob * o.cost; }, 0) + disputeProcessCost;
+    return { settleNowCost: settleNowCost, disputeEV: disputeEV, recommend: settleNowCost <= disputeEV ? "settle" : "dispute" };
+  }
+  function renderEmv(){
+    var decision = computeEMVDecision(changeOrderDispute.settleNowCost, changeOrderDispute.disputeOutcomes, changeOrderDispute.disputeProcessCost);
+    var rows = changeOrderDispute.disputeOutcomes.map(function(o){
+      return "<tr><td>" + o.label + "</td><td class='tabular'>" + Math.round(o.prob * 100) + "%</td><td class='tabular'>" + fmt(o.cost) + "</td></tr>";
+    }).join("");
+    document.getElementById("emvTable").innerHTML =
+      "<thead><tr><th>Dispute outcome</th><th>Probability</th><th>Cost</th></tr></thead><tbody>" + rows +
+      "<tr><td colspan='2'><b>Dispute EV (incl. " + fmt(changeOrderDispute.disputeProcessCost) + " process cost)</b></td><td class='tabular'><b>" + fmt(decision.disputeEV) + "</b></td></tr>" +
+      "<tr><td colspan='2'><b>Settle-now cost</b></td><td class='tabular'><b>" + fmt(decision.settleNowCost) + "</b></td></tr></tbody>";
+    document.getElementById("emvVerdict").innerHTML =
+      '<span class="badge ' + (decision.recommend === "settle" ? "real" : "illustrative") + '">recommend: ' + decision.recommend.toUpperCase() + '</span> ' +
+      (decision.recommend === "settle"
+        ? "Settling now costs less than the probability-weighted dispute path."
+        : "The dispute path's expected value is lower than settling now, even after process costs.");
+    return decision;
+  }
+  var emvDecision = renderEmv();
+
   /* ================= GOVERNANCE TAB: consultant scorecard ================= */
   var consultants = [
     { name:"Consultant A (mechanical)", preBid:1240000, actual:1310000 },
@@ -1066,6 +1179,28 @@
     warnEl.innerHTML = content.html;
   }
   renderDQHealth();
+
+  /* ================= GOVERNANCE TAB: crew productivity (Labor Productivity Factor) ================= */
+  var productivityData = [
+    { trade:"Electrical", earnedHours:1240, actualHours:1180 },
+    { trade:"Mechanical / Piping", earnedHours:980, actualHours:1050 },
+    { trade:"Civil / Structural", earnedHours:2100, actualHours:1990 }
+  ];
+  // Pure function: the standard LPF formulation (earned / actual); >= 1 means the crew earned at
+  // least as many hours of work as it actually spent.
+  function computeLPF(earnedHours, actualHours){ return actualHours !== 0 ? earnedHours / actualHours : 0; }
+  function renderProductivity(){
+    var rows = productivityData.map(function(p){
+      var lpf = computeLPF(p.earnedHours, p.actualHours);
+      var flag = lpf >= 1 ? "✓" : "⚠";
+      return "<tr><td>" + p.trade + "</td><td class='tabular'>" + p.earnedHours + "</td>" +
+        "<td class='tabular'>" + p.actualHours + "</td><td class='tabular'>" + lpf.toFixed(2) + " " + flag + "</td></tr>";
+    }).join("");
+    document.getElementById("productivityTable").innerHTML =
+      "<thead><tr><th>Trade</th><th>Earned hrs</th><th>Actual hrs</th><th>LPF</th></tr></thead><tbody>" + rows + "</tbody>";
+    return productivityData.map(function(p){ return { trade: p.trade, lpf: computeLPF(p.earnedHours, p.actualHours) }; });
+  }
+  var productivityResult = renderProductivity();
 
   /* ================= PORTFOLIO TAB: multi-region rollup ================= */
   var regions = [
@@ -1333,6 +1468,7 @@
     runMonteCarlo(mcSeed, mcVals.min, mcVals.mode, mcVals.max);
     renderWhatIf();
     renderRiskTable();
+    emvDecision = renderEmv();
     renderConsultantTable();
     renderRegionDetail();
     renderOverview();
@@ -1365,7 +1501,14 @@
     actionAgingSummary: actionAgingSummary,      // Phase 3: pure aging-summary function
     actionsSummary: actionsSummary,
     computeTriageItems: computeTriageItems,      // Phase 3: cross-tab triage digest
-    triageItems: triageItems
+    triageItems: triageItems,
+    floatSignal: floatSignal,                   // Phase 4: schedule float as a cost-risk signal
+    computeFloatErosionRate: computeFloatErosionRate,
+    floatRiskSignal: floatRiskSignal,
+    emvDecision: emvDecision,                   // Phase 4: change-order settlement EMV decision
+    computeEMVDecision: computeEMVDecision,
+    productivityResult: productivityResult,     // Phase 4: crew Labor Productivity Factor
+    computeLPF: computeLPF
   };
 })();
 </script>
