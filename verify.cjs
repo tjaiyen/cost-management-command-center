@@ -330,11 +330,19 @@ if (!transformerRow) {
   assertEqual(transformerRow.leadWeeks, 160, "transformer lead time is the real cited 160-week figure");
   assertEqual(transformerRow.buffer, transformerRow.availableWeeks - transformerRow.leadWeeks, "transformer buffer independently re-derives as available minus lead time");
   assertStrEqual(transformerRow.atRisk, transformerRow.buffer < 0, "transformer atRisk flag matches buffer < 0, not a hardcoded true/false");
-  assertStrEqual(transformerRow.real, true, "the transformer row is the one badged 'real' (the only lead-time figure that's actually cited)");
+  assertStrEqual(transformerRow.real, true, "the transformer row is badged 'real' (a cited lead-time figure)");
 }
-// Every other row should NOT be badged real (only the cited transformer figure earns that badge).
-const nonTransformerRealCount = state.lleItems.filter((it) => it.name.indexOf("transformer") === -1 && it.real).length;
-assertEqual(nonTransformerRealCount, 0, "no illustrative LLE row is mis-badged as real");
+const generatorRow = state.lleResult.find((r) => r.name.indexOf("generator") !== -1);
+if (!generatorRow) {
+  failures++; console.error("FAIL: could not find the generator row in lleResult");
+} else {
+  assertEqual(generatorRow.leadWeeks, 78, "generator lead time is the real cited 78-week figure (within the 50-110wk real range)");
+  assertStrEqual(generatorRow.real, true, "the generator row is badged 'real' (a second, independently-cited lead-time figure, added 2026-08-26)");
+}
+// Exactly the 2 cited rows (transformer, generator) should be badged real -- the other 3 stay
+// illustrative since their lead-time figures aren't independently sourced.
+const realCount = state.lleItems.filter((it) => it.real).length;
+assertEqual(realCount, 2, "exactly 2 LLE rows are badged real (transformer + generator, both independently cited)");
 // computeLLERisk() re-run directly on a synthetic fixture proves the buffer/atRisk math itself,
 // not just this build's own current numbers (both branches: at-risk and clear).
 const lleFixture = state.computeLLERisk([
@@ -512,6 +520,20 @@ assertStrEqual(regionSorted, true, "regions are ranked descending by variance%, 
 console.log("--- Phase 2 director-grade visuals: Gate 4 radial gauge ---");
 assertEqual(state.gate4GaugeResult.value, state.gateStatus.ratio, "Gate 4 gauge value matches the real live gateStatus.ratio");
 assertStrEqual(state.gate4GaugeResult.cls, state.gateStatus.ratio < 1.0 ? "danger" : "success", "Gate 4 gauge band classification matches the real blocked/cleared threshold");
+
+console.log("--- Interconnection Cost & Schedule Exposure (20-item deep-research pass, 2026-08-26) ---");
+const expectedInterconnection = state.computeInterconnectionExposure(state.bridge.baseline, state.interconnectionAssumptions);
+assertEqual(state.interconnectionResult.dollarLow, expectedInterconnection.dollarLow, "interconnection $ exposure (low end) independently re-derives from the real baseline and cited 30% floor", 0.01);
+assertEqual(state.interconnectionResult.dollarHigh, expectedInterconnection.dollarHigh, "interconnection $ exposure (high end) independently re-derives from the real baseline and cited 37% ceiling", 0.01);
+assertEqual(state.interconnectionResult.dollarLow, state.bridge.baseline * 0.30, "interconnection $ exposure low end matches baseline x 30% exactly", 0.01);
+assertEqual(state.interconnectionResult.dollarHigh, state.bridge.baseline * 0.37, "interconnection $ exposure high end matches baseline x 37% exactly", 0.01);
+// This build's own live default (12yr typical wait vs. a 3yr assumed schedule) is genuinely
+// AT RISK -- pre-registered, not assumed. Then prove the OK branch too, since a well-behaved
+// program with a longer assumed schedule window would clear it -- a branch the live default
+// never exercises on its own.
+assertStrEqual(state.interconnectionResult.atRisk, true, "this build's own live assumptions (12yr wait vs. 3yr assumed schedule) are correctly flagged at risk");
+const clearedFixture = state.computeInterconnectionExposure(2450000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 12, assumedDevelopmentScheduleYears: 15 });
+assertStrEqual(clearedFixture.atRisk, false, "computeInterconnectionExposure() correctly clears a program whose assumed schedule exceeds the typical wait (never-exercised-by-default branch)");
 
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
@@ -945,14 +967,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 12, "exactly 12 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 12, "renderGuards() actually ran all 12 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 13, "exactly 13 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 13, "renderGuards() actually ran all 13 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 12 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log("pass: all 13 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 12 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, "of 13 live integrity checks are failing:", JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and

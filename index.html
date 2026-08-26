@@ -512,6 +512,7 @@
         <a href="#benchmark-section">Benchmarks</a>
         <a href="#wbs-section">WBS Allocation</a>
         <a href="#lle-section">Long-Lead Equipment</a>
+        <a href="#interconnection-section">Interconnection</a>
         <a href="#cal-section">Control Accounts</a>
       </nav>
     </details>
@@ -672,12 +673,40 @@
       <div class="card">
         <div style="overflow-x:auto"><table id="lleTable"></table></div>
         <p class="src-note"><span class="badge real">real</span> Substation transformer lead times
-          have stretched from roughly 140 weeks in 2023 to 160+ weeks in 2026, with the largest
-          high-voltage units running up to ~200+ weeks (nearly 4 years) — corroborated across
-          Turner &amp; Townsend's 2025-2026 index and independent 2026 industry reporting
-          (Build.inc, PowerMag, Terrapin Consulting Group). The other packages' lead times and
-          this program's available schedule windows are illustrative, sized to make the buffer
-          math legible.</p>
+          have stretched from roughly 140 weeks in 2023 to 160+ weeks in 2026 (power transformers
+          averaging 128 weeks, generator step-up units 144 weeks per Wood Mackenzie's Q2 2025
+          survey), with the largest high-voltage units running up to ~200+ weeks (nearly 4 years) —
+          corroborated across Turner &amp; Townsend's 2025-2026 index and independent 2026 industry
+          reporting (Build.inc, PowerMag, Terrapin Consulting Group). Standby generators are a
+          second, independently real-cited figure: 50–78 weeks for 1,500–3,000 kW units, stretching
+          to 90–110 weeks for larger units — with at least one major manufacturer (Cummins) sold
+          out of high-horsepower units through 2028. The other packages' lead times and this
+          program's available schedule windows are illustrative, sized to make the buffer math
+          legible.</p>
+      </div>
+    </section>
+
+    <section id="interconnection-section">
+      <h2>Interconnection Cost &amp; Schedule Exposure <span class="badge real">real 2026 industry data</span>
+        <button class="info-toggle" type="button" data-explainer="expInterconnection" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expInterconnection"></div>
+      <p class="lede" style="font-size:13px">Grid interconnection has become its own line-item risk
+        — in dollars and in schedule — independent of how well construction itself is run. A
+        20-item deep-research pass (2026-08-26) surfaced this as the single biggest real gap not
+        yet tracked on this dashboard.</p>
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Interconnection cost, % of total budget</div><div class="val">30–37%</div></div>
+          <div class="kpi"><div class="lbl">Estimated $ exposure (this program)</div><div class="val tabular" id="interconnectionDollar">—</div></div>
+          <div class="kpi"><div class="lbl">Typical data-center-scale wait</div><div class="val">up to 12 yrs</div></div>
+        </div>
+        <div id="interconnectionWarn" aria-live="polite"></div>
+        <p class="src-note"><span class="badge real">real</span> A 2,600 GW US interconnection
+          queue backlog with a median wait near 5 years overall — stretching up to 12 years for
+          data-center-scale loads specifically — and interconnection costs running 30–37% of total
+          project budget, corroborated across RMI, Eckert Seamans, and independent 2026 industry
+          reporting (Data Center Knowledge, EnkiAI). <span class="badge illustrative">illustrative</span>
+          this program's own baseline dollar figure and assumed development schedule.</p>
       </div>
     </section>
 
@@ -1421,7 +1450,7 @@
   var lleItems = [
     { name:"Substation transformer (utility-scale HV)", leadWeeks:160, availableWeeks:130, real:true },
     { name:"Medium-voltage switchgear", leadWeeks:60, availableWeeks:85, real:false },
-    { name:"Standby generators", leadWeeks:70, availableWeeks:90, real:false },
+    { name:"Standby generators", leadWeeks:78, availableWeeks:90, real:true },
     { name:"Chiller / CRAH units", leadWeeks:45, availableWeeks:80, real:false },
     { name:"Structural steel package", leadWeeks:30, availableWeeks:65, real:false }
   ];
@@ -1448,6 +1477,42 @@
     return rows;
   }
   var lleResult = renderLLETable();
+
+  /* ================= COST TAB: interconnection cost & schedule exposure (real 2026 industry data,
+     20-item deep-research pass 2026-08-26) ================= */
+  var interconnectionAssumptions = {
+    pctOfBudgetLow: 30, pctOfBudgetHigh: 37,      // real, cited: RMI / Eckert Seamans / Data Center Knowledge, 2026
+    typicalWaitYearsDataCenter: 12,               // real, cited: 2,600 GW US interconnection queue backlog, 2026
+    assumedDevelopmentScheduleYears: 3            // illustrative: this program's own assumed design-to-energization window
+  };
+  // Pure function: baseline + the real cited % range + the real cited wait vs. an assumed
+  // development schedule in, a $ exposure range + a schedule-risk verdict out.
+  function computeInterconnectionExposure(baseline, a){
+    return {
+      dollarLow: baseline * (a.pctOfBudgetLow / 100),
+      dollarHigh: baseline * (a.pctOfBudgetHigh / 100),
+      scheduleBufferYears: a.assumedDevelopmentScheduleYears - a.typicalWaitYearsDataCenter,
+      atRisk: a.typicalWaitYearsDataCenter > a.assumedDevelopmentScheduleYears
+    };
+  }
+  function renderInterconnectionExposure(){
+    var result = computeInterconnectionExposure(bridgeResult.baseline, interconnectionAssumptions);
+    var dollarEl = document.getElementById("interconnectionDollar");
+    if (dollarEl) dollarEl.textContent = fmt(result.dollarLow) + " – " + fmt(result.dollarHigh);
+    var warnEl = document.getElementById("interconnectionWarn");
+    if (warnEl) {
+      warnEl.className = result.atRisk ? "alert-card warn" : "alert-card ok";
+      warnEl.innerHTML = result.atRisk
+        ? '<div class="alert-head"><span class="alert-shape">▲</span> SCHEDULE RISK — Interconnection Wait Exceeds Assumed Development Window</div>' +
+          '<div class="alert-row"><b>Detected:</b> a typical data-center-scale interconnection wait (' + interconnectionAssumptions.typicalWaitYearsDataCenter + ' years) exceeds this program\'s assumed ' + interconnectionAssumptions.assumedDevelopmentScheduleYears + '-year development schedule by ' + Math.abs(result.scheduleBufferYears) + ' years</div>' +
+          '<div class="alert-row"><b>Probable cause:</b> the interconnection application was timed after, rather than concurrent with, site selection and design</div>' +
+          '<div class="alert-row"><b>Suggested action:</b> file at the earliest legally permissible point in site control, in parallel with design development, not after it</div>'
+        : '<div class="alert-head"><span class="alert-shape">●</span> Interconnection wait within the assumed development window</div>' +
+          '<div class="alert-row">Typical data-center-scale interconnection wait (' + interconnectionAssumptions.typicalWaitYearsDataCenter + ' years) fits within a ' + interconnectionAssumptions.assumedDevelopmentScheduleYears + '-year schedule.</div>';
+    }
+    return result;
+  }
+  var interconnectionResult = renderInterconnectionExposure();
 
   /* ================= COST TAB: Control Account Ledger (drills down from WBS) ================= */
   var controlAccountPctComplete = [0.72, 0.55, 0.88, 0.40]; // illustrative physical % complete per WBS row
@@ -2717,7 +2782,8 @@
     expVarianceTrend: "The same Net Variance figure from the KPI tile above (Current Forecast − Baseline), shown as a trend instead of a single point. A variance that's growing period over period is a materially different signal than one that spiked once and has been flat since — the point-in-time number alone can't tell those two stories apart.",
     expScurve: "Cumulative % = running total of simulated draws in each histogram bin ÷ 2,000 total draws — the same 2,000-draw Monte Carlo run already producing the histogram and the P50/P80/P90 readouts, just re-expressed as a cumulative curve. Reading the curve at the dashed 80% line is the same P80 value shown numerically above; the curve just makes 'how much of the distribution sits below any given cost' immediately visual.",
     expTreemap: "Block width = each control account's BAC ÷ total program BAC — the same real dollar amounts as the Control Account Ledger table below, not a second invented split. A block visibly wider than the others is where a 1% productivity or scope swing does the most damage in absolute dollars, even if its % share hasn't changed.",
-    expFloatBurndown: "Plots the same 4 float readings driving the KPI tiles and the alert above, then extends a dashed projection to the same 'weeks to zero' figure computeFloatErosionRate() already calculates — seeing the trajectory, not just the current reading, is what makes an erosion pattern legible before it's a crisis."
+    expFloatBurndown: "Plots the same 4 float readings driving the KPI tiles and the alert above, then extends a dashed projection to the same 'weeks to zero' figure computeFloatErosionRate() already calculates — seeing the trajectory, not just the current reading, is what makes an erosion pattern legible before it's a crisis.",
+    expInterconnection: "$ Exposure = Baseline × a real, cited 30–37% share of total project budget (RMI / Eckert Seamans / Data Center Knowledge, 2026). Schedule risk = a real, cited up-to-12-year typical wait for a data-center-scale interconnection request compared against this program's own assumed development schedule. Interconnection is now frequently the true critical path — not the construction activities a schedule traditionally tracks — which is exactly why it gets its own line here instead of being absorbed into 'site work.'"
   };
   Object.keys(kpiExplainers).forEach(function(id){
     var el = document.getElementById(id);
@@ -2900,6 +2966,7 @@
     treemapResult = renderCostDriverTreemap();
     emvTwoBarResult = renderEmvTwoBar();
     consultantScatterResult = renderConsultantScatter();
+    interconnectionResult = renderInterconnectionExposure();
   });
 
   /* ================= LIVE INTEGRITY GATE (GUARDS) -- runs in the browser, not just in verify.cjs =================
@@ -2978,6 +3045,11 @@
         var expectedNames = regions.slice().sort(function(a, b){ return computeRegionVariancePct(b) - computeRegionVariancePct(a); }).map(function(r){ return r.name; });
         var ok = JSON.stringify(actualOrder) === JSON.stringify(expectedNames);
         return [ok, expectedOrder.join(" > ")];
+      }},
+    { n:"Interconnection $ exposure recomputes from the same real baseline and cited % range", run:function(){
+        var expected = computeInterconnectionExposure(bridgeResult.baseline, interconnectionAssumptions);
+        var ok = Math.abs(expected.dollarLow - interconnectionResult.dollarLow) < 1e-6 && Math.abs(expected.dollarHigh - interconnectionResult.dollarHigh) < 1e-6;
+        return [ok, fmt(expected.dollarLow) + " – " + fmt(expected.dollarHigh)];
       }}
   ];
   function renderGuards(){
@@ -3076,7 +3148,10 @@
     regionRankedBarResult: regionRankedBarResult,
     gate4GaugeResult: gate4GaugeResult,
     renderLineChart: renderLineChart,
-    renderRankedBar: renderRankedBar
+    renderRankedBar: renderRankedBar,
+    interconnectionResult: interconnectionResult,
+    interconnectionAssumptions: interconnectionAssumptions,
+    computeInterconnectionExposure: computeInterconnectionExposure
   };
 })();
 </script>
