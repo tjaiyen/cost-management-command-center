@@ -15,7 +15,8 @@ pipeline is the one piece with a real dependency — see Verification below.)
 ## What's on each tab
 
 - **Overview** — a rolled-up KPI board reading live off the other tabs' own computed state (not a
-  separately-typed summary), plus a "Signal / Model / Govern" framing.
+  separately-typed summary), plus a "Signal / Model / Govern" framing, a jump pill on every KPI
+  tile straight to its source tab, and the entry point for the guided 20-stop Tour.
 - **Executive Command** — a "90 seconds" board-status brief, reading live off Overview/Cost/
   Contingency/Operating Framework state. Has its own print stylesheet (⌘/Ctrl+P) that keeps only
   this brief on the printed page.
@@ -46,9 +47,11 @@ pipeline is the one piece with a real dependency — see Verification below.)
 - **Data Strategy** — a pipeline architecture diagram, the real-vs-illustrative badge-discipline
   writeup, and (see Verification) a free/local DuckDB SQL layer proving parity with the browser's
   own JS math.
-- **Reference** — a searchable, category-filterable glossary of every AACE Recommended Practice,
-  every real data-center cost figure, and every other real industry standard (RICS/ICMS, Uptime
-  Institute Tier I–IV) used anywhere in the build, each with its own citation.
+- **Reference** — the 20-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
+  badge → citation, one row per built visual across all 11 tabs), plus a searchable,
+  category-filterable glossary of every AACE Recommended Practice, every real data-center cost
+  figure, and every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV) used
+  anywhere in the build, each with its own citation.
 
 ## Real vs. illustrative
 
@@ -86,8 +89,11 @@ legible, marked `illustrative` throughout.
 
 - **Currency toggle** (USD/GBP/JPY/BRL, header) — converts this program's own illustrative dollar
   figures only; cited real industry benchmarks stay in their originally published currency.
-- **Contextual explainer toggles** — click the (i) next to a badge to see the method explained
-  inline, without leaving the tab.
+- **Contextual explainer toggles on all 20 KPIs** — click the (i) next to any KPI to see its real
+  formula, a plain-language meaning, and diagnostic guidance inline, without leaving the tab (17
+  buttons cover all 20 — 3 pairs share one heading/section).
+- **A guided, 20-stop Tour** — walks the KPI catalog's own 20 rows in sequence, switching tabs live
+  and showing each one's operational question (Start/Next/Prev/Exit, clamped at both ends).
 - **Structured, dual-encoded alert cards** — every warning (contingency drawdown, data quality,
   Gate 4, float erosion) shows Detected / Probable Cause / Suggested Action, with a shape (▲/●)
   alongside color, not color alone.
@@ -96,6 +102,8 @@ legible, marked `illustrative` throughout.
   computed and WCAG 2.1 AA contrast-checked (≥4.5:1) against this page's own actual background
   colors in both themes (an external doc's claim to use this palette turned out to cite the wrong
   hex values entirely — verified independently before adopting the real ones instead).
+- **Skip-to-content link + `scope="col"` on all 29 table headers** — real WCAG fixes (2.4.1 Bypass
+  Blocks; explicit column-header association), not aspirational ones.
 - **Live Beta-PERT tri-point sliders** driving the real Monte Carlo simulation, with a simplified
   progressive-reveal histogram animation (not a physical ball-drop — stated honestly, not oversold).
 - **A what-if forecast sandbox**, a searchable/filterable glossary, and a cross-tab triage digest
@@ -114,8 +122,10 @@ legible, marked `illustrative` throughout.
    actually *firing* the currency-toggle `change` event and a tab-button `click` rather than only
    unit-testing the pure functions underneath them (that gap in the test harness itself is exactly
    how one real bug — a hardcoded `"$208K"` string that never converted with the currency
-   toggle — shipped undetected for a full phase). **90 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 90) as of the last run. Exists because this repo was
+   toggle — shipped undetected for a full phase), and firing every Guided Tour control
+   (Start/Next/Prev/Exit) end to end, including its clamp-at-the-edges behavior.
+   **107 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 107) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -125,7 +135,9 @@ legible, marked `illustrative` throughout.
    fixed to scope by `<section>` instead), illustrative sections never carry a bare "real" badge,
    structural tag/tab-count balance, a coverage-of-coverage check that every verdict function has
    both branches tested in verify.cjs, and that README's own stated tab count matches the live
-   markup. **25 checks, all passing** (`node stress.cjs | grep -c "^pass:"` → 25) as of the last
+   markup, and (added with the 20-KPI catalog) that all 17 formula/methodology explainer divs
+   have matching content in both directions — no silently-empty tooltip, no orphaned content
+   nobody can see. **30 checks, all passing** (`node stress.cjs | grep -c "^pass:"` → 30) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).

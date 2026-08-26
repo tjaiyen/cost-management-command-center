@@ -562,6 +562,41 @@ if (!execBtn || !overviewBtn) {
   overviewBtn.fire("click");
 }
 
+console.log("--- Guided Tour (actually firing Start/Next/Prev/Exit, walking the real 20-KPI catalog) ---");
+const startTourBtnEl = elementsById["startTourBtn"];
+const tourNextBtnEl = elementsById["tourNextBtn"];
+const tourPrevBtnEl = elementsById["tourPrevBtn"];
+const tourExitBtnEl = elementsById["tourExitBtn"];
+if (!startTourBtnEl || !tourNextBtnEl || !tourPrevBtnEl || !tourExitBtnEl) {
+  failures++; console.error("FAIL: one or more tour control buttons were never registered by the page script");
+} else {
+  startTourBtnEl.fire("click");
+  assertStrEqual(state.isTourActive(), true, "Start Tour activates the tour");
+  assertEqual(state.getTourStep(), 0, "tour starts at step 0");
+  assertStrEqual(elementsById["panel-" + state.kpiCatalog[0].tab].classList.contains("active"), true, "step 0 actually activates KPI #1's real tab (" + state.kpiCatalog[0].tab + ")");
+
+  tourNextBtnEl.fire("click");
+  assertEqual(state.getTourStep(), 1, "Next advances to step 1");
+  assertStrEqual(elementsById["panel-" + state.kpiCatalog[1].tab].classList.contains("active"), true, "step 1 activates KPI #2's real tab (" + state.kpiCatalog[1].tab + ")");
+
+  tourPrevBtnEl.fire("click");
+  assertEqual(state.getTourStep(), 0, "Prev returns to step 0");
+
+  // Prev at step 0 must clamp, not go negative -- an off-by-one here would silently wrap or crash.
+  tourPrevBtnEl.fire("click");
+  assertEqual(state.getTourStep(), 0, "Prev at step 0 clamps at 0 rather than going negative");
+
+  // Next at the last step must clamp at length-1, not run past the real 20-item array.
+  for (let i = 0; i < 25; i++) tourNextBtnEl.fire("click");
+  assertEqual(state.getTourStep(), state.kpiCatalog.length - 1, "Next clamps at the last real KPI (index " + (state.kpiCatalog.length - 1) + "), never runs past the array");
+
+  tourExitBtnEl.fire("click");
+  assertStrEqual(state.isTourActive(), false, "Exit tour deactivates the tour");
+
+  // Reset to Overview so later assertions' implicit "Overview is active" assumption still holds.
+  overviewBtn.fire("click");
+}
+
 console.log("--- KPI Catalog: exactly 20 rows, every 'real' badge carries a real citation, every tab is real ---");
 assertEqual(state.kpiCatalog.length, 20, "KPI catalog has exactly 20 rows, not 19 or 21");
 const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"];

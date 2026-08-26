@@ -177,6 +177,16 @@
     color:#fff; padding:10px 16px; border-radius:0 0 8px 0; font-size:13px; font-weight:600; text-decoration:none}
   .skip-link:focus{left:0}
 
+  /* guided tour banner -- fixed, hidden until active */
+  .tour-banner{display:none; position:fixed; left:0; right:0; bottom:0; z-index:50;
+    background:rgb(var(--c-bg-card)); border-top:2px solid rgb(var(--c-accent)); box-shadow:0 -4px 20px rgb(0 0 0/0.2)}
+  .tour-banner.active{display:block}
+  .tour-inner{max-width:1080px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+  .tour-step{font-size:11px; font-weight:700; color:rgb(var(--c-accent)); white-space:nowrap}
+  .tour-body{flex:1; min-width:200px; font-size:12.5px}
+  .tour-body b{display:block; font-size:13.5px}
+  .tour-controls{display:flex; gap:8px; flex-wrap:wrap}
+
   /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
      which tab is active on screen when Print is invoked. #id beats .class specificity so this
      wins over the .tabpanel{display:none} rule right above it. */
@@ -247,6 +257,14 @@
   <!-- ============================================================ OVERVIEW ============================================================ -->
   <div class="tabpanel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
     <section>
+      <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px">
+        <div>
+          <h3 style="margin:0 0 2px">New here?</h3>
+          <p class="lede" style="font-size:12.5px; margin:0">A guided, 20-stop tour walks every KPI
+            on this dashboard in sequence — the question it answers, live, on its own tab.</p>
+        </div>
+        <button class="icobtn" id="startTourBtn" type="button">Take the tour →</button>
+      </div>
       <h2>Portfolio snapshot
         <button class="info-toggle" type="button" data-explainer="exp01" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp01"></div>
@@ -748,6 +766,21 @@
       <a href="https://tjaiyen.github.io/project-controls-command-center/">Project Controls
       Command Center</a> (the full-scale version of this same discipline).</p>
   </footer>
+</div>
+
+<div class="tour-banner" id="tourBanner" role="region" aria-label="Guided tour">
+  <div class="tour-inner">
+    <span class="tour-step" id="tourStepLabel"></span>
+    <div class="tour-body">
+      <b id="tourKpiName"></b>
+      <span id="tourQuestion"></span>
+    </div>
+    <div class="tour-controls">
+      <button class="icobtn" id="tourPrevBtn" type="button">← Prev</button>
+      <button class="icobtn" id="tourNextBtn" type="button">Next →</button>
+      <button class="icobtn" id="tourExitBtn" type="button">Exit tour</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1586,6 +1619,41 @@
   }
   renderKpiCatalog();
 
+  /* ---------- Guided Tour: walks kpiCatalog's own 20 stops, no separate data set ---------- */
+  var tourActive = false;
+  var tourStep = 0;
+  var tourBanner = document.getElementById("tourBanner");
+  var tourStepLabel = document.getElementById("tourStepLabel");
+  var tourKpiName = document.getElementById("tourKpiName");
+  var tourQuestion = document.getElementById("tourQuestion");
+  function renderTourStep(){
+    var k = kpiCatalog[tourStep];
+    tourStepLabel.textContent = "Step " + (tourStep + 1) + " of " + kpiCatalog.length;
+    tourKpiName.textContent = k.kpi;
+    tourQuestion.textContent = k.q;
+    activateTab(k.tab);
+  }
+  function startTour(){
+    tourActive = true;
+    tourStep = 0;
+    tourBanner.classList.add("active");
+    renderTourStep();
+  }
+  function endTour(){
+    tourActive = false;
+    tourBanner.classList.remove("active");
+  }
+  function tourNext(){ tourStep = Math.min(tourStep + 1, kpiCatalog.length - 1); renderTourStep(); }
+  function tourPrev(){ tourStep = Math.max(tourStep - 1, 0); renderTourStep(); }
+  var startTourBtn = document.getElementById("startTourBtn");
+  if (startTourBtn) startTourBtn.addEventListener("click", startTour);
+  var tourNextBtn = document.getElementById("tourNextBtn");
+  if (tourNextBtn) tourNextBtn.addEventListener("click", tourNext);
+  var tourPrevBtn = document.getElementById("tourPrevBtn");
+  if (tourPrevBtn) tourPrevBtn.addEventListener("click", tourPrev);
+  var tourExitBtn = document.getElementById("tourExitBtn");
+  if (tourExitBtn) tourExitBtn.addEventListener("click", endTour);
+
   /* ---------- Glossary: unified search + category filter across all 3 term lists ---------- */
   var allGlossaryItems = aaceTerms.map(function(t){ return { term:t.term, def:t.def, category:"aace" }; })
     .concat(realFigures.map(function(t){ return { term:t.term, def:t.def, category:"figures" }; }))
@@ -1644,13 +1712,18 @@
   var visibleGlossaryItems = applyGlossaryFilter();
 
   /* ================= OVERVIEW TAB: KPI rollup (reads from other tabs' real computed state) ================= */
+  // Small reusable pill: same .triage-jump class + data-jump the Attention & Triage tab and the
+  // KPI catalog already use -- one click-delegation mechanism, three places it fires.
+  function jumpPill(tab, label){
+    return '<button class="icobtn triage-jump" type="button" data-jump="' + tab + '" style="font-size:10.5px; padding:3px 8px; margin-top:6px">' + label + ' →</button>';
+  }
   function renderOverview(){
     var el = document.getElementById("overviewKpis");
     el.innerHTML =
-      '<div class="kpi"><div class="lbl">Portfolio forecast</div><div class="val tabular">' + fmt(bridgeResult.final) + '</div></div>' +
-      '<div class="kpi"><div class="lbl">Contingency drawdown ratio</div><div class="val tabular">' + liveDrawdownRatio.toFixed(2) + 'x</div></div>' +
-      '<div class="kpi"><div class="lbl">Monte Carlo P80</div><div class="val tabular">' + fmt(lastMC.p80) + '</div></div>' +
-      '<div class="kpi"><div class="lbl">Total risk exposure (EV)</div><div class="val tabular">' + fmt(totalRiskEV) + '</div></div>';
+      '<div class="kpi"><div class="lbl">Portfolio forecast</div><div class="val tabular">' + fmt(bridgeResult.final) + '</div>' + jumpPill("cost", "Cost") + '</div>' +
+      '<div class="kpi"><div class="lbl">Contingency drawdown ratio</div><div class="val tabular">' + liveDrawdownRatio.toFixed(2) + 'x</div>' + jumpPill("contingency", "Contingency & Risk") + '</div>' +
+      '<div class="kpi"><div class="lbl">Monte Carlo P80</div><div class="val tabular">' + fmt(lastMC.p80) + '</div>' + jumpPill("contingency", "Contingency & Risk") + '</div>' +
+      '<div class="kpi"><div class="lbl">Total risk exposure (EV)</div><div class="val tabular">' + fmt(totalRiskEV) + '</div>' + jumpPill("contingency", "Contingency & Risk") + '</div>';
   }
   renderOverview();
 
@@ -1711,7 +1784,9 @@
     allGlossaryItems: allGlossaryItems,         // Phase 5: unified searchable glossary
     filterGlossaryItems: filterGlossaryItems,
     visibleGlossaryItems: visibleGlossaryItems,
-    kpiCatalog: kpiCatalog                      // KPI-catalog build: the 20 Q->KPI->tab->citation rows
+    kpiCatalog: kpiCatalog,                     // KPI-catalog build: the 20 Q->KPI->tab->citation rows
+    getTourStep: function(){ return tourStep; }, // guided tour: exposed for direct test inspection
+    isTourActive: function(){ return tourActive; }
   };
 })();
 </script>
