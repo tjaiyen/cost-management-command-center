@@ -104,6 +104,12 @@ legible, marked `illustrative` throughout.
   hex values entirely — verified independently before adopting the real ones instead).
 - **Skip-to-content link + `scope="col"` on all 29 table headers** — real WCAG fixes (2.4.1 Bypass
   Blocks; explicit column-header association), not aspirational ones.
+- **An altitude-grouped nav rail, a global 1–9 tab-jump + "?" keyboard-shortcuts overlay, a
+  hover/focus-preview mini-drawer on every tab, a sticky in-tab section-anchor rail (Cost and
+  Contingency & Risk), and a "return to origin tab" breadcrumb after any cross-tab jump** — ported
+  from [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
+  own UI patterns (inspected its real HTML/CSS, not just its README), reimplemented at this
+  build's own scale rather than copied verbatim from a much larger, more evolved system.
 - **Live Beta-PERT tri-point sliders** driving the real Monte Carlo simulation, with a simplified
   progressive-reveal histogram animation (not a physical ball-drop — stated honestly, not oversold).
 - **A what-if forecast sandbox**, a searchable/filterable glossary, and a cross-tab triage digest
@@ -122,10 +128,12 @@ legible, marked `illustrative` throughout.
    actually *firing* the currency-toggle `change` event and a tab-button `click` rather than only
    unit-testing the pure functions underneath them (that gap in the test harness itself is exactly
    how one real bug — a hardcoded `"$208K"` string that never converted with the currency
-   toggle — shipped undetected for a full phase), and firing every Guided Tour control
-   (Start/Next/Prev/Exit) end to end, including its clamp-at-the-edges behavior.
-   **107 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 107) as of the last run. Exists because this repo was
+   toggle — shipped undetected for a full phase), firing every Guided Tour control
+   (Start/Next/Prev/Exit) end to end including its clamp-at-the-edges behavior, firing the global
+   1-9/"?" keyboard shortcuts and a real focus/blur cycle on the tab hover-preview drawer, and
+   firing a full cross-tab jump → return-breadcrumb → dismiss sequence.
+   **123 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 123) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -137,7 +145,9 @@ legible, marked `illustrative` throughout.
    both branches tested in verify.cjs, and that README's own stated tab count matches the live
    markup, and (added with the 20-KPI catalog) that all 17 formula/methodology explainer divs
    have matching content in both directions — no silently-empty tooltip, no orphaned content
-   nobody can see. **30 checks, all passing** (`node stress.cjs | grep -c "^pass:"` → 30) as of the last
+   nobody can see, that TAB_INFO's 11 entries exactly match the 11 real tabs, and that every
+   anchor-rail link resolves to a real section id. **34 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 34) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
