@@ -27,8 +27,9 @@ JavaScript. Open `index.html` directly in a browser and it works.
   as realistic labels) and a 4-gate stage-gate progress tracker.
 - **Data Strategy** — a pipeline architecture diagram, and a section documenting the real-vs-
   illustrative badge discipline this whole build follows.
-- **Reference** — a glossary of every AACE Recommended Practice and every real data-center cost
-  figure used anywhere in the build, each with its own citation.
+- **Reference** — a glossary of every AACE Recommended Practice, every real data-center cost
+  figure, and every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV) used
+  anywhere in the build, each with its own citation.
 
 ## Real vs. illustrative
 
@@ -39,11 +40,24 @@ repository. Real facts are threaded through it and badge-labeled inline wherever
 - A real 100+ bid-package contingency/change-order-tracking history, $50M+ per project.
 - **AACE International's real Recommended Practices**: RP 57R-09 (Monte Carlo contingency), RP
   65R-11 and RP 44R-08 (expected-value contingency, a distinct complementary method), RP 17R-97
-  (Cost Estimate Classification), RP 40R-08 (risk-driver methodology).
+  (Cost Estimate Classification), RP 40R-08 (risk-driver methodology), RP 58R-10 and RP 68R-11
+  (index-based escalation estimating, the latter adding Monte Carlo), RP 86R-14 (variance analysis
+  and reporting, aligned to ANSI/EIA-748 EVMS).
 - Real published 2026 data-center cost-driver figures: electrical/power infrastructure at 40–45%
   of total cost, cooling at 15–25% (second-largest driver), liquid-cooled at $4.5–5.2M/MW vs.
   ~$1.8M/MW air-cooled, and a real quoted carrying-cost figure ($2.8M/month for idle equipment
   awaiting a missing transformer on a 50MW site).
+- **Turner & Townsend's real *Data Centre Construction Cost Index 2025-2026*** (9th year, 52
+  markets, ~250 experts surveyed): 5 real market benchmarks in US$/W (Tokyo $15.2, Singapore
+  $14.5, Zurich $14.2, Silicon Valley $13.3, New Jersey $12.9), a real 5.5% YoY cost-per-watt
+  increase for air-cooled builds in 2025, a real 7–10% AI/liquid-cooled cost premium (an
+  independent second source corroborating the liquid-cooling figure above), and a real 2026
+  outlook survey (60% expect +5–15% cost growth, 21% expect >15%) — verified directly against
+  the report's own pages, not taken from a search summary.
+- **RICS/ICMS and Uptime Institute Tier I–IV** — real, named industry standards, cited honestly:
+  ICMS as the real framework tier-one cost consultancies report against (not evidence of having
+  overseen one), and Uptime Institute's tiers with an explicit note that no official per-tier cost
+  figures exist publicly (checked against the source directly, not assumed).
 
 Everything else — the program name, specific dollar amounts, dates, vendor labels, risk-register
 rows, consultant names — is invented to make the methodology legible, marked `illustrative`
@@ -74,8 +88,11 @@ including the branches the hardcoded demo state never naturally triggers), and *
 toggle by actually firing its click handler** (open → verify `aria-expanded`/open class → click
 again → verify it closes, plus an unrelated-click no-op check) — all exposed on
 `window.__CMCC_STATE__` specifically so the tests exercise production code, never a
-reimplementation. **29 assertions, all passing** (`node verify.cjs | grep -c "^pass:"` → 29) as of
-the last run. This exists because a
+reimplementation. Also independently checks that every "real" claim in the top disclaimer
+resolves elsewhere on the page (the exact bug a deeper-research pass found live: a citation named
+in the disclaimer with no home anywhere else in the file), and that the newly-added standards
+citations carry their honesty caveats rather than overclaiming. **46 assertions, all passing**
+(`node verify.cjs | grep -c "^pass:"` → 46) as of the last run. This exists because a
 sandboxed environment building this repo could not get a live
 browser render (a domain-allowlist guard blocks it, deliberately) — a Node-based tie-out doesn't
 need one.

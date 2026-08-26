@@ -300,6 +300,60 @@ if (documentClickHandlers.length === 0) {
   else { console.log("pass: clicking an unrelated element is a safe no-op"); }
 }
 
+console.log("--- Content Consistency (every disclaimer 'real' claim must resolve elsewhere in the page) ---");
+// Regression test for the exact bug a research pass found live: the disclaimer named Turner &
+// Townsend's cost index as a real fact, but nothing else in the page actually cited it -- an
+// untraceable "real" claim. Every RP code and every named source the disclaimer claims as real
+// must appear again outside the disclaimer itself (in the Cost tab card or the Reference glossary),
+// not just floating in the intro paragraph.
+const disclaimerMatch = html.match(/<div class="disclaimer">([\s\S]*?)<\/div>/);
+if (!disclaimerMatch) {
+  failures++; console.error("FAIL: could not find the top disclaimer block");
+} else {
+  const disclaimerText = disclaimerMatch[1];
+  const restOfPage = html.slice(disclaimerMatch.index + disclaimerMatch[0].length);
+  const claimedRPs = disclaimerText.match(/\d\dR-\d\d/g) || [];
+  if (claimedRPs.length === 0) {
+    failures++; console.error("FAIL: disclaimer claims no RP codes -- regex broke or content changed unexpectedly");
+  } else {
+    claimedRPs.forEach((rp) => {
+      if (restOfPage.indexOf(rp) === -1) {
+        failures++; console.error("FAIL: disclaimer claims " + rp + " as real, but it never appears again in the page (untraceable claim)");
+      } else {
+        console.log("pass: disclaimer's claimed " + rp + " resolves elsewhere in the page");
+      }
+    });
+  }
+  if (disclaimerText.indexOf("Turner") !== -1 && restOfPage.indexOf("Turner") === -1) {
+    failures++; console.error("FAIL: disclaimer claims Turner & Townsend as a real source but it's never cited again in the page");
+  } else if (disclaimerText.indexOf("Turner") !== -1) {
+    console.log("pass: Turner & Townsend citation in the disclaimer resolves elsewhere in the page");
+  }
+}
+
+console.log("--- New real market benchmarks actually present in the page ---");
+["15.2", "14.5", "14.2", "13.3", "12.9"].forEach((v) => {
+  if (html.indexOf(v) === -1) { failures++; console.error("FAIL: expected market benchmark $" + v + "/W not found in page"); }
+  else { console.log("pass: market benchmark $" + v + "/W present"); }
+});
+if (html.indexOf("60%") === -1 || html.indexOf("21%") === -1) {
+  failures++; console.error("FAIL: expected 2026 escalation outlook survey figures (60%/21%) not found");
+} else {
+  console.log("pass: 2026 escalation outlook survey figures (60%/21%) present");
+}
+
+console.log("--- New standards citations don't overclaim (no fabricated data, no oversight overclaim) ---");
+if (html.indexOf("does not publish official per-tier cost figures") === -1) {
+  failures++; console.error("FAIL: Uptime Institute glossary entry is missing its explicit no-official-cost-figures caveat");
+} else {
+  console.log("pass: Uptime Institute citation explicitly states no official per-tier cost data exists");
+}
+if (html.indexOf("not as evidence of having overseen one directly") === -1) {
+  failures++; console.error("FAIL: RICS/ICMS glossary entry is missing its explicit not-oversight-experience caveat");
+} else {
+  console.log("pass: RICS/ICMS citation explicitly disclaims oversight-experience overclaim");
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " assertion(s) FAILED");

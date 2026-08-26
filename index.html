@@ -216,8 +216,10 @@
     repository.</b> Real facts are threaded through it and badge-labeled inline wherever they
     appear: a real $208K variance root-cause trace, a real 100+ bid-package contingency-tracking
     pattern, AACE International's real Recommended Practices (RP 57R-09, 65R-11, 44R-08, 17R-97,
-    40R-08), and real published data-center cost-driver figures (Turner &amp; Townsend's cost index;
-    electrical/cooling cost-split percentages). Everything else — the program name, dollar amounts,
+    40R-08, 58R-10, 68R-11, 86R-14), Turner &amp; Townsend's real <i>Data Centre Construction Cost
+    Index 2025-2026</i> (market benchmarks in the Cost tab, cited again in the Reference glossary —
+    not a floating claim), and RICS/ICMS &amp; Uptime Institute's real industry standards (see the
+    Reference tab). Everything else — the program name, dollar amounts,
     dates, vendor labels — is invented to make the methodology legible and marked
     <span class="badge illustrative">illustrative</span>. <b>The currency selector converts this
     program's own illustrative dollar figures only</b> — cited real industry benchmarks (the
@@ -277,7 +279,15 @@
         </div>
         <p class="src-note"><span class="badge real">real</span> The largest driver step is a real
           $208K labor-variance root-cause trace, recast here as a "field execution variance" bridge
-          step. Baseline/scope/escalation figures are <span class="badge illustrative">illustrative</span>.</p>
+          step, structured per <b>AACE RP 86R-14</b>'s variance-analysis-and-reporting framework
+          (aligned to ANSI/EIA-748 EVMS) — a real named practice, not this program's own invention.
+          Baseline/scope figures are <span class="badge illustrative">illustrative</span>; the
+          Market Escalation step's dollar amount is illustrative too, but sits inside a real
+          range — the same Turner &amp; Townsend index reports 60% of surveyed firms expecting
+          5–15% cost growth in 2026 (21% expect &gt;15%) — priced using an index-based method per
+          <b>AACE RP 58R-10</b> (extended by <b>RP 68R-11</b> with Monte Carlo simulation for
+          escalation uncertainty specifically — distinct from this build's own completion-cost
+          simulation below).</p>
       </div>
     </section>
 
@@ -297,6 +307,23 @@
           data (Archdesk data-center construction breakdown; irecruit.co cost-per-MW benchmarks) —
           not any specific employer's cost data. Cost Estimate Classification follows
           <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1, most-defined).</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span></h3>
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Tokyo</div><div class="val">$15.2/W</div></div>
+          <div class="kpi"><div class="lbl">Singapore</div><div class="val">$14.5/W</div></div>
+          <div class="kpi"><div class="lbl">Zurich</div><div class="val">$14.2/W</div></div>
+          <div class="kpi"><div class="lbl">Silicon Valley</div><div class="val">$13.3/W</div></div>
+          <div class="kpi"><div class="lbl">New Jersey</div><div class="val">$12.9/W</div></div>
+        </div>
+        <p class="src-note"><span class="badge real">real</span> Turner &amp; Townsend's
+          <i>Data Centre Construction Cost Index 2025-2026</i> (9th year, 52 markets, ~250 experts
+          surveyed) — the 5 most expensive markets by US$/W. The same report also finds a 5.5%
+          year-over-year cost-per-watt increase for traditional air-cooled builds in 2025 (down
+          from 9.0% in 2024) and a 7–10% construction-cost premium for liquid-cooled AI data centers
+          vs. air-cooled equivalents — an independent second real source corroborating the
+          liquid-cooling premium figure above.</p>
       </div>
     </section>
 
@@ -460,6 +487,12 @@
       <h2>Real data-center cost-driver figures used in this build</h2>
       <div class="card">
         <dl id="figureGlossary"></dl>
+      </div>
+    </section>
+    <section>
+      <h2>Other real industry standards referenced</h2>
+      <div class="card">
+        <dl id="standardsGlossary"></dl>
       </div>
     </section>
   </div>
@@ -861,14 +894,24 @@
     { term:"RP 65R-11", def:"Integrated Cost and Schedule Risk Analysis and Contingency Determination Using Expected Value — a complementary, distinct method (extends RP 44R-08), not used in this build's simulation." },
     { term:"RP 44R-08", def:"Risk Analysis and Contingency Determination Using Expected Value — the base practice RP 65R-11 extends." },
     { term:"RP 17R-97", def:"Cost Estimate Classification System — the generic 5-class matrix (Class 5, least-defined, through Class 1, most-defined)." },
-    { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the risk-driver framework behind this build's priced risk register." }
+    { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the risk-driver framework behind this build's priced risk register." },
+    { term:"RP 58R-10", def:"Escalation Estimating Principles and Methods Using Indices — the foundational index-based escalation practice grounding this build's Market Escalation bridge step." },
+    { term:"RP 68R-11", def:"Escalation Estimating Using Indices and Monte Carlo Simulation — extends RP 58R-10 with simulation for escalation uncertainty specifically; real, distinct, not the same simulation as this build's completion-cost Monte Carlo above." },
+    { term:"RP 86R-14", def:"Variance Analysis and Reporting — aligned to ANSI/EIA-748 Earned Value Management Systems; the real named practice behind this build's budget-bridge variance narrative." }
   ];
   var realFigures = [
     { term:"$208K labor variance", def:"A real GL labor-variance root-cause trace at a prior role — a structural BOM-posting gap, not a bid overrun." },
     { term:"100+ bid packages, $50M+ each", def:"A real bid-pricing and contingency-tracking history at a prior construction-estimating role." },
     { term:"40–45% electrical, 15–25% cooling", def:"Real published 2026 data-center construction cost-driver percentages (Archdesk)." },
     { term:"$4.5–5.2M/MW liquid-cooled vs. ~$1.8M/MW air-cooled", def:"Real published per-MW cost figures for cooling topology (irecruit.co, 2026)." },
-    { term:"$2.8M/month idle-equipment carrying cost", def:"A real, quoted cost-of-delay figure for commissioned equipment awaiting a missing transformer on a 50MW site (irecruit.co, 2026)." }
+    { term:"$2.8M/month idle-equipment carrying cost", def:"A real, quoted cost-of-delay figure for commissioned equipment awaiting a missing transformer on a 50MW site (irecruit.co, 2026)." },
+    { term:"$12.9–$15.2/W across 5 real markets (Tokyo, Singapore, Zurich, Silicon Valley, New Jersey)", def:"Real 2025 market cost-per-watt benchmarks from Turner & Townsend's Data Centre Construction Cost Index 2025-2026 (9th year, 52 markets, ~250 experts surveyed)." },
+    { term:"5.5% YoY cost-per-watt increase (2025), 7–10% AI/liquid-cooled premium", def:"Real published trend figures from the same Turner & Townsend index — independently corroborates this build's own liquid-cooling premium figure above from a second, separate source." },
+    { term:"60% expect +5–15% cost growth in 2026 (21% expect >15%)", def:"A real 2026 cost-outlook survey result from the same Turner & Townsend index — the escalation-assumption range this build's Market Escalation bridge step is grounded in." }
+  ];
+  var otherStandards = [
+    { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
+    { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
   ];
   function renderGlossary(containerId, terms){
     var el = document.getElementById(containerId);
@@ -878,6 +921,7 @@
   }
   renderGlossary("aaceGlossary", aaceTerms);
   renderGlossary("figureGlossary", realFigures);
+  renderGlossary("standardsGlossary", otherStandards);
 
   /* ================= OVERVIEW TAB: KPI rollup (reads from other tabs' real computed state) ================= */
   function renderOverview(){
