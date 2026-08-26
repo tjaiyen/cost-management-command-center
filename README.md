@@ -49,15 +49,30 @@ Everything else — the program name, specific dollar amounts, dates, vendor lab
 rows, consultant names — is invented to make the methodology legible, marked `illustrative`
 throughout.
 
+## Interaction features
+
+Beyond the 7 tabs and the marts they display:
+
+- **Currency toggle** (USD/GBP/JPY/BRL, header) — converts this program's own illustrative dollar
+  figures only; cited real industry benchmarks stay in their originally published currency (stated
+  explicitly in the on-page disclaimer, not a silent inconsistency).
+- **Contextual explainer toggles** — click the (i) next to a badge (e.g. AACE RP 57R-09) to see the
+  method explained inline, without leaving the tab.
+- **Structured, dual-encoded alert cards** — the contingency-drawdown and data-quality warnings show
+  Detected / Probable Cause / Suggested Action, with a shape (▲/●) alongside color, not color alone.
+
 ## Verification
 
 `node verify.cjs` — an independent Node-based tie-out. Stubs just enough DOM to run the page's own
 `<script>` headlessly (no browser required), then independently re-derives the budget-bridge total,
 the contingency-drawdown ratio, the Monte Carlo percentile ordering and bounds, the WBS percentage
-sum, the risk register's total expected value, and the region rollup — asserting each against the
-page's own computed state. **11 assertions, all passing** as of the last run. This exists because a
-sandboxed environment building this repo could not get a live browser render (a domain-allowlist
-guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
+sum, the risk register's total expected value, the region rollup, **and the currency-conversion
+logic itself** (calling the page's real `formatInCurrency` function, exposed on
+`window.__CMCC_STATE__` specifically so the test exercises production code, not a reimplementation)
+— asserting each against the page's own computed state. **17 assertions, all passing** as of the
+last run. This exists because a sandboxed environment building this repo could not get a live
+browser render (a domain-allowlist guard blocks it, deliberately) — a Node-based tie-out doesn't
+need one.
 
 ## Fit brief
 

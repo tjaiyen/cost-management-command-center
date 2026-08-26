@@ -111,9 +111,7 @@
   .pctile b{display:block; font-size:16px; margin-top:2px}
   .slider-row{display:flex; align-items:center; gap:10px; margin:10px 0}
   input[type=range]{flex:1; accent-color:rgb(var(--c-accent))}
-  .warn-strip{margin-top:12px; padding:10px 12px; border-radius:8px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px}
-  .warn-strip.ok{background:rgb(var(--c-success)/0.12); color:rgb(var(--c-success))}
-  .warn-strip.warn{background:rgb(var(--c-danger)/0.12); color:rgb(var(--c-danger))}
+  /* .warn-strip was superseded by .alert-card (dual-encoded, structured) — removed as dead CSS */
 
   .barrow{display:flex; align-items:center; gap:10px; margin:8px 0}
   .barrow .wname{width:150px; font-size:12.5px; flex-shrink:0}
@@ -221,7 +219,11 @@
     40R-08), and real published data-center cost-driver figures (Turner &amp; Townsend's cost index;
     electrical/cooling cost-split percentages). Everything else — the program name, dollar amounts,
     dates, vendor labels — is invented to make the methodology legible and marked
-    <span class="badge illustrative">illustrative</span>.
+    <span class="badge illustrative">illustrative</span>. <b>The currency selector converts this
+    program's own illustrative dollar figures only</b> — cited real industry benchmarks (the
+    Cost tab's cost-driver percentages, the Reference tab's glossary) stay in their originally
+    published currency, since converting a cited external figure at an invented exchange rate
+    would misrepresent the source.
   </div>
 
   <!-- ============================================================ OVERVIEW ============================================================ -->
@@ -539,19 +541,21 @@
     BRL: { symbol:"R$", rate:5.4,    locale:"pt-BR" }
   };
   var currentCurrency = "USD";
-  var fmt = function(n){
-    var c = CURRENCIES[currentCurrency];
+  function formatInCurrency(n, code){
+    var c = CURRENCIES[code];
     var converted = n * c.rate;
-    var decimals = currentCurrency === "JPY" ? 0 : 0; // whole-currency display in all cases
-    return c.symbol + Math.round(converted).toLocaleString(c.locale);
-  };
+    // sign goes before the symbol ("-$140,000"), not between symbol and digits ("$-140,000")
+    var sign = converted < 0 ? "-" : "";
+    return sign + c.symbol + Math.round(Math.abs(converted)).toLocaleString(c.locale);
+  }
+  var fmt = function(n){ return formatInCurrency(n, currentCurrency); };
 
   /* ================= COST TAB: Budget Bridge ================= */
   var bridgeSteps = [
     { label:"Underwriting\nBaseline", value: 2450000, type:"base" },
     { label:"Scope\nChange (+)", value: 96000,  type:"up" },
     { label:"Market\nEscalation (+)", value: 61000, type:"up" },
-    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", driverName:"Field Execution Variance ($208K, real)" },
+    { label:"Field Execution\nVariance* (+)", value: 208000, type:"up", driverNamePrefix:"Field Execution Variance", driverReal:true },
     { label:"Contingency\nDrawdown (–)", value: -140000, type:"down" },
     { label:"Current\nForecast", value: null, type:"final" }
   ];
@@ -590,8 +594,9 @@
       var mag = Math.abs(s.value);
       return (!max || mag > Math.abs(max.value)) ? s : max;
     }, null);
-    document.getElementById("bDriver").textContent = driverStep && driverStep.driverName
-      ? driverStep.driverName : (driverStep ? driverStep.label.replace("\n", " ") : "—");
+    document.getElementById("bDriver").textContent = driverStep && driverStep.driverNamePrefix
+      ? driverStep.driverNamePrefix + " (" + fmt(Math.abs(driverStep.value)) + (driverStep.driverReal ? ", real" : "") + ")"
+      : (driverStep ? driverStep.label.replace("\n", " ") : "—");
     return { baseline: bridgeSteps[0].value, final: final, delta: final - bridgeSteps[0].value };
   }
   var bridgeResult = renderBridge();
@@ -644,9 +649,14 @@
     }
     return ratio;
   }
-  pctComplete.addEventListener("input", updateDrawdown);
-  drawdownPct.addEventListener("input", updateDrawdown);
-  var initialDrawdownRatio = updateDrawdown();
+  var liveDrawdownRatio;
+  function updateDrawdownAndOverview(){
+    liveDrawdownRatio = updateDrawdown();
+    if (typeof renderOverview === "function") renderOverview();
+  }
+  pctComplete.addEventListener("input", updateDrawdownAndOverview);
+  drawdownPct.addEventListener("input", updateDrawdownAndOverview);
+  liveDrawdownRatio = updateDrawdown();
 
   /* ================= CONTINGENCY TAB: Monte Carlo ================= */
   function triangular(rng, min, mode, max){
@@ -692,6 +702,7 @@
   document.getElementById("reRunMC").addEventListener("click", function(){
     mcSeed += 7919;
     runMonteCarlo(mcSeed);
+    if (typeof renderOverview === "function") renderOverview();
   });
 
   /* ================= CONTINGENCY TAB: priced risk register ================= */
@@ -761,7 +772,7 @@
 
   /* ================= PORTFOLIO TAB: multi-region rollup ================= */
   var regions = [
-    { code:"NA", name:"North America", baseline:2450000, forecast:bridgeResult ? bridgeResult.final : 2675000 },
+    { code:"NA", name:"North America", baseline:2450000, forecast:bridgeResult.final },
     { code:"APAC", name:"Asia-Pacific", baseline:3100000, forecast:3350000 },
     { code:"EMEA", name:"Europe", baseline:1800000, forecast:1865000 },
     { code:"LATAM", name:"Latin America", baseline:950000, forecast:1010000 }
@@ -861,7 +872,7 @@
     var el = document.getElementById("overviewKpis");
     el.innerHTML =
       '<div class="kpi"><div class="lbl">Portfolio forecast</div><div class="val tabular">' + fmt(bridgeResult.final) + '</div></div>' +
-      '<div class="kpi"><div class="lbl">Contingency drawdown ratio</div><div class="val tabular">' + initialDrawdownRatio.toFixed(2) + 'x</div></div>' +
+      '<div class="kpi"><div class="lbl">Contingency drawdown ratio</div><div class="val tabular">' + liveDrawdownRatio.toFixed(2) + 'x</div></div>' +
       '<div class="kpi"><div class="lbl">Monte Carlo P80</div><div class="val tabular">' + fmt(lastMC.p80) + '</div></div>' +
       '<div class="kpi"><div class="lbl">Total risk exposure (EV)</div><div class="val tabular">' + fmt(totalRiskEV) + '</div></div>';
   }
@@ -885,11 +896,13 @@
   /* expose a minimal state object for a Node-based verify script (Phase 1 requirement) */
   window.__CMCC_STATE__ = {
     bridge: bridgeResult,
-    drawdownRatio: initialDrawdownRatio,
+    drawdownRatio: liveDrawdownRatio,
     monteCarlo: lastMC,
     totalRiskEV: totalRiskEV,
     wbsSum: wbsData.reduce(function(s,r){ return s + r.pct; }, 0),
-    regions: regions
+    regions: regions,
+    formatInCurrency: formatInCurrency, // exposed for verify.cjs to test the real currency logic
+    CURRENCIES: CURRENCIES
   };
 })();
 </script>

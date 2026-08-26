@@ -177,7 +177,29 @@ assertEqual(state.totalRiskEV, expectedRiskEV, "total risk expected value", 0.01
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
 const regionCodes = state.regions.map((r) => r.code).sort().join(",");
-assertStrEqual(regionCodes, "APAC,EMEA,LATAM,NA", "region codes match Ada's real 4 operating regions");
+assertStrEqual(regionCodes, "APAC,EMEA,LATAM,NA", "region codes match the declared 4-region rollup");
+
+console.log("--- Currency Toggle (testing the real production formatInCurrency function) ---");
+// Regression test for the exact bug a stress test found live: negative amounts must show the
+// sign BEFORE the currency symbol ("-$140,000"), never between symbol and digits ("$-140,000").
+assertStrEqual(state.formatInCurrency(-140000, "USD"), "-$140,000", "negative USD sign placement");
+assertStrEqual(state.formatInCurrency(140000, "USD"), "$140,000", "positive USD formatting unaffected by the sign fix");
+// Independent re-derivation of the GBP conversion using the same declared rate, not a copy of
+// the production code's internal math.
+const gbpRate = state.CURRENCIES.GBP.rate;
+const expectedGbp = "£" + Math.round(2450000 * gbpRate).toLocaleString("en-GB");
+assertStrEqual(state.formatInCurrency(2450000, "GBP"), expectedGbp, "GBP conversion matches independent re-derivation");
+// All 4 declared currencies must actually format without throwing and must contain their symbol.
+["USD", "GBP", "JPY", "BRL"].forEach((code) => {
+  const out = state.formatInCurrency(1000000, code);
+  const sym = state.CURRENCIES[code].symbol;
+  if (out.indexOf(sym) !== 0) {
+    failures++;
+    console.error("FAIL: " + code + " output does not start with its own symbol:", out);
+  } else {
+    console.log("pass: " + code + " formats with its own symbol =", out);
+  }
+});
 
 console.log("");
 if (failures > 0) {
