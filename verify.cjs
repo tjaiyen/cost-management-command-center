@@ -407,6 +407,32 @@ const zeroRiskGate = state.computeGateStatus(200000, 140000, 0); // no priced ri
 if (zeroRiskGate.ratio === Infinity) { console.log("pass: computeGateStatus: zero risk exposure divides to Infinity coverage, not a crash =", zeroRiskGate.ratio); }
 else { failures++; console.error("FAIL: computeGateStatus with zero risk exposure expected Infinity, got", zeroRiskGate.ratio); }
 
+console.log("--- Phase 3: Actions register (aging summary, independent re-derivation) ---");
+// Independent re-derivation: 3 open rows (A-01/A-02/A-03), 1 closed (A-04); only A-02 (21d) exceeds
+// the 14-day threshold among the open ones.
+assertEqual(state.actionsSummary.openCount, 3, "3 open action items");
+assertEqual(state.actionsSummary.staleCount, 1, "exactly 1 open action item exceeds the 14-day threshold");
+assertStrEqual(state.actionsSummary.staleItems[0].id, "A-02", "the stale item is the real 21-day-old one, not a different row");
+// Direct test of the pure function with arbitrary inputs, not just the page's own hardcoded rows.
+const noStale = state.actionAgingSummary([{ status:"open", ageDays:2 }, { status:"closed", ageDays:99 }], 14);
+assertEqual(noStale.staleCount, 0, "actionAgingSummary: a closed item's age never counts toward staleness regardless of how old it is");
+
+console.log("--- Phase 3: Attention & Triage (cross-tab digest, independent re-derivation) ---");
+// With this build's real default state -- drawdown WARN (1.94x), Gate 4 BLOCKED (0.47x coverage),
+// 1 stale action -- and DQ health OK (9-day lag < 14-day threshold) -- triage must surface exactly
+// 3 items, not 4, and DQ must NOT be one of them.
+assertEqual(state.triageItems.length, 3, "triage surfaces exactly 3 items with this build's real default state");
+const triageTabs = state.triageItems.map((t) => t.tab).sort().join(",");
+assertStrEqual(triageTabs, "actions,contingency,framework", "triage items are exactly contingency+framework+actions -- governance (DQ) correctly absent since DQ is OK by default");
+// computeTriageItems reads live DOM/module state rather than taking parameters (it deliberately
+// re-checks the same alert functions already tested above, not a second implementation) -- confirm
+// it's genuinely exposed for direct inspection rather than only reachable through renderTriage().
+if (typeof state.computeTriageItems === "function") {
+  console.log("pass: computeTriageItems is exposed as a callable function for direct inspection");
+} else {
+  failures++; console.error("FAIL: computeTriageItems was not exposed on window.__CMCC_STATE__");
+}
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " assertion(s) FAILED");
