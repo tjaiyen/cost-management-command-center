@@ -57,7 +57,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   projected to the real "weeks to zero" figure; and an EMV-based change-order settlement decision
   (settle vs. dispute), now with a **two-bar comparison** highlighting the recommended path.
 - **Vendor & Governance** — a consultant deliverable scorecard with a **pre-bid-vs-actual scatter
-  plot** (±5% tolerance band shaded), a data-quality reconciliation health indicator with a
+  plot** (AACE RP 18R-97's real, asymmetric Class 1 bid/tender tolerance band, -10%/+15%, shaded), a data-quality reconciliation health indicator with a
   **sync-lag trend sparkline**, and a crew Labor Productivity Factor table by trade with a
   **diverging bar** ranked against the 1.0 benchmark.
 - **Portfolio** — a multi-region cost rollup (North America / Asia-Pacific / Europe / Latin
@@ -67,13 +67,16 @@ pipeline is the one piece with a real dependency — see Verification below.)
   escalation-swing what-if slider** scoped to whichever region is active.
 - **Commercial Ramp** — post-construction revenue-side tracking the uploaded-document review
   surfaced as genuinely net-new (construction cost tracking says nothing about whether the revenue
-  actually shows up on schedule once the build is done): a **tenant power-ramp lag** section (real
-  12–30 month lease-to-full-draw lag, non-destructive delay slider against the contingency reserve
-  burn rate), a **leased-vs-metered revenue mix** card (real ~70–80% leased / ~15–20% metered
-  industry split vs. this program's own mix), an **SLA penalty exposure** calculator (real Uptime
-  Institute Tier IV 99.995% committed uptime vs. actual, priced against contracted MW and
-  revenue/MW), and a **revenue yield** card (revenue per MW, gross margin — sized to land inside the
-  real cited 50–55% range, not invented). Harvested from the uploaded 30-KPI document after
+  actually shows up on schedule once the build is done): a **tenant power-ramp lag** section (an
+  illustrative 12–30 month envelope synthesized from 2 real, narrower sources — Adventures in CRE's
+  case study and Build Inc.'s 2026 lease-terms brief — non-destructive delay slider against the
+  contingency reserve burn rate), a **leased-vs-metered revenue mix** card (illustrative ~70–80%
+  leased / ~15–20% metered assumption — Cushman & Wakefield's real report doesn't report this split
+  — vs. this program's own mix), an **SLA penalty exposure** calculator (real Uptime Institute
+  Tier IV 99.995% committed uptime vs. actual, priced against contracted MW and revenue/MW, formula
+  grounded in Equinix's real published SLA credit structure), and a **revenue yield** card (revenue
+  per MW, adjusted EBITDA margin — sized to land inside Equinix's real cited 50–57% range, not
+  invented). Harvested from the uploaded 30-KPI document after
   independently fact-checking all 30 KPIs and all 4 UX proposals — roughly half the document's
   claims didn't survive verification (see Provenance below); this tab is what did.
 - **Operating Framework** — a genuinely *computed* Gate 4 (Contingency Coverage Ratio = remaining
@@ -108,13 +111,21 @@ repository. Real facts are threaded through it and badge-labeled inline wherever
 - A real 100+ bid-package contingency/change-order-tracking history, $50M+ per project.
 - **AACE International's real Recommended Practices**: RP 57R-09 (Monte Carlo contingency), RP
   65R-11 and RP 44R-08 (expected-value contingency, a distinct complementary method), RP 17R-97
-  (Cost Estimate Classification), RP 40R-08 (risk-driver methodology), RP 58R-10 and RP 68R-11
-  (index-based escalation estimating, the latter adding Monte Carlo), RP 86R-14 (variance analysis
-  and reporting, aligned to ANSI/EIA-748 EVMS).
-- Real published 2026 data-center cost-driver figures: electrical/power infrastructure at 40–45%
-  of total cost, cooling at 15–25% (second-largest driver), liquid-cooled at $4.5–5.2M/MW vs.
-  ~$1.8M/MW air-cooled, and a real quoted carrying-cost figure ($2.8M/month for idle equipment
-  awaiting a missing transformer on a 50MW site).
+  (Cost Estimate Classification), RP 18R-97 (Class 1 bid/tender asymmetric accuracy range), RP
+  40R-08 (contingency-estimating general principles, grounding Gate 4), RP 62R-11 (risk assessment/
+  qualitative analysis, grounding the priced risk register — corrected 2026-08-26 from an earlier
+  RP 40R-08 misattribution), RP 80R-13 (performance-based Estimate at Completion), RP 58R-10 and RP
+  68R-11 (index-based escalation estimating, the latter adding Monte Carlo), RP 86R-14 (variance
+  analysis and reporting, aligned to SAE/ANSI EIA-748-E EVMS, the 2026 edition), RP 108R-19
+  (accounting-alignment methodology). Plus the DCMA 14-Point Assessment and DoD IPMDAR's real
+  federal schedule/EVMS standards.
+- Real published 2026 data-center cost-driver figures: electrical/power infrastructure at
+  ~48–54% of total cost (air-cooled baseline), mechanical/cooling at 22% air-cooled vs. 33%
+  liquid-cooled (Turner & Townsend's own Data Centre Construction Cost Index 2025-2026 — corrected
+  2026-08-26 from an earlier, misattributed "Archdesk" citation whose actual 2026 post didn't
+  support the figures once fetched directly), liquid-cooled at $4.5–5.2M/MW vs. ~$1.8M/MW
+  air-cooled, and a real quoted carrying-cost figure ($2.8M/month for idle equipment awaiting a
+  missing transformer on a 50MW site).
 - **Turner & Townsend's real *Data Centre Construction Cost Index 2025-2026*** (9th year, 52
   markets, ~250 experts surveyed): 5 real market benchmarks in US$/W (Tokyo $15.2, Singapore
   $14.5, Zurich $14.2, Silicon Valley $13.3, New Jersey $12.9), a real 5.5% YoY cost-per-watt
@@ -680,3 +691,58 @@ erosion feeding contingency reassessment), not full CPM ownership; and the sibli
 Cloudflare-Worker "Ask AI" feature (a real Anthropic API key backing free-text chat) was
 deliberately **not** replicated here — that's a live paid-API commitment gated on an explicit ask,
 per this project's own cost-discipline rule, not something borrowing a few mechanisms implies.
+
+**Deep-research pass on all 24 KPIs (2026-08-26)** — 4 parallel research agents ran genuine,
+sourced web research (WebSearch/WebFetch, not recalled knowledge) against every citation this
+dashboard makes, one agent per tab cluster. Found and fixed 16 issues across nearly every tab:
+
+*Real errors, already live, now corrected* — **Cost-Driver Split**: a "40-45%/15-25%" split
+misattributed to "Archdesk 2026" (a direct fetch of Archdesk's actual post found different figures)
+replaced with Turner & Townsend's real split (~48-54% electrical, 22% mechanical air-cooled / 33%
+liquid-cooled). **Total Priced Risk Exposure**: re-cited from AACE RP 40R-08 (verified real title:
+"Contingency Estimating — General Principles," not a risk-register RP) to **RP 62R-11** ("Risk
+Assessment: Identification and Qualitative Analysis"), the actual on-point practice — Gate 4
+correctly keeps RP 40R-08, which fits it. **Tenant Power-Ramp Lag**: dropped an unverifiable
+"DOE-funded 2026 study" citation entirely; the 12-30 month envelope itself is now honestly labeled
+an illustrative synthesis (not a directly-cited range) bracketing 2 real, narrower sources
+(Adventures in CRE's case study, Build Inc.'s 2026 lease-terms brief). **Leased vs. Metered Revenue
+Mix**: the whole KPI flipped from "real" to "illustrative" — the cited Cushman & Wakefield report is
+real but dated 2023 (not 2026) and contains no leased/metered split at all. **Revenue per MW /
+Adjusted EBITDA Margin**: renamed from "gross margin" — Equinix's real Q2 2026 earnings (July 29,
+2026) report adjusted EBITDA margin (53%, up from 50%), not GAAP gross margin; range widened to a
+real 50-57% (Equinix's own regional spread).
+
+*Real logic changes, not just relabels* — **Control-Account CPI** moved from a bare `<1.0` cutoff to
+a real 3-tier threshold (`cpiBand()`: <0.90 trouble — DOD contract-tracking research says a
+cumulative CPI this low by ~20% completion "almost never recovers" — 0.90-0.94 watch, ≥0.95 good),
+now a genuine amber tier on the CPI stoplight grid, not just red/green; EIA-748 updated to its real
+2026 edition, **SAE/ANSI EIA-748-E**. **Consultant Deliverable Variance** moved from a flat,
+uncited ±5% tolerance to AACE RP 18R-97's real, asymmetric Class 1 bid/tender range (-10%/+15%) —
+under the real band, this program's own 3 illustrative consultants (previously 2 of 3 tripped the
+old ±5%) now all clear tolerance, so the warn branch is tested via a fixture instead; the section
+now carries a real, scoped citation badge. **Schedule Float Erosion** gained a genuine negative-float
+check straight from the real DCMA 14-Point Assessment (its single most urgent flag), a
+never-exercised-by-default branch since this program's float never actually goes negative.
+
+*Softened from "cited standard" to honestly labeled heuristic/judgment* — Contingency Drawdown's
+1.5x threshold, Monte Carlo's "P80 is the AACE standard" framing (RP 57R-09 treats it as a common
+reference point, not a mandate), the What-If tornado's ±10% swing, Data-Quality Reconciliation's
+14-day threshold (RP 108R-19 is real methodology, not a numeric SLA — the closest real analog found
+is DoD's IPMDAR 16-business-day EVMS cadence), and Gate 4's 1.00x coverage threshold (no AACE/PMI/
+FHWA source mandates a number here either).
+
+*Genuine additions* — **Portfolio Forecast** gained a second, real performance-based Estimate at
+Completion (AACE RP 80R-13, BAC ÷ aggregate CPI) alongside the existing cost-element bridge — two
+real, distinct EAC methods now answer two different questions. **Multi-Region Cost Variance** gained
+real Turner & Townsend $/W context for 3 of 4 regions (no real Latin America benchmark exists in any
+report checked — stated honestly, not fabricated). **SLA Penalty Exposure**'s formula is grounded in
+Equinix's actual published SLA credit mechanism (1/30th of Monthly Recurring Charge per breach) —
+the formula itself stayed a documented pro-rata simplification, not rewritten to exactly replicate a
+discrete, tiered real clause.
+
+Fixed 2 pre-existing gaps found along the way: AACE RP 108R-19 was cited in 4 places but had never
+actually been listed in its own glossary category, and a stress.cjs check for the CPI stoplight's
+non-color marker still matched the old binary-flag source text. Both real logic changes were
+falsification-tested (broke each, confirmed the real test suite catches it, restored, re-confirmed
+green). An independent fresh-context reviewer then checked the full batch for correctness.
+verify.cjs 417 → 432 (+15), stress.cjs 198 → 199 (+1), both green.

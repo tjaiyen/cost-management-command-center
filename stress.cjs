@@ -89,8 +89,12 @@ check(hoverClaims.length === 0, "no click-to-detail caption claims a 'hover' int
 
 console.log("--- Illustrative sections never carry a bare 'real' badge on their own heading ---");
 check(!/Priced Risk Register[^\n]*badge real/.test(indexHtml), "risk register heading doesn't carry a bare 'real' badge (methodology is real, rows aren't)");
-check(!/Consultant Deliverable Scorecard[^\n]*badge real/.test(indexHtml), "consultant scorecard heading doesn't carry a bare 'real' badge");
 check(!/Commercial Action Item Register[^\n]*badge real/.test(indexHtml), "actions register heading doesn't carry a bare 'real' badge");
+// Consultant Deliverable Scorecard is DELIBERATELY excluded from this list as of 2026-08-26
+// (deep-research pass): it now carries a real, SCOPED badge ("real AACE RP 18R-97 Class 1
+// tolerance"), the same "real method, illustrative rows" pattern already established by the
+// Contingency Drawdown section's own "real method" badge -- not a bare, unqualified "real" claim.
+check(/Consultant Deliverable Scorecard[^\n]*badge real">real AACE RP 18R-97 Class 1 tolerance</.test(indexHtml), "consultant scorecard heading carries the real, SCOPED AACE RP 18R-97 badge, not a bare or missing one");
 
 console.log("--- Coverage-of-coverage: every Phase 1-5 verdict function has BOTH branches tested in verify.cjs ---");
 const BRANCH_PAIRS = [
@@ -280,7 +284,9 @@ check(/id="sensBar' \+ i \+ '" tabindex="0"/.test(indexHtml), "sensitivity torna
 });
 // CPI stoplight tiles showed the bare CPI number with no non-color cue, unlike the ledger table's
 // own ✓/⚠ right above it on the same tab (independent-reviewer finding).
-check(/st-val">' \+ a\.cpi\.toFixed\(2\) \+ ' ' \+ \(ok \? "✓" : "⚠"\)/.test(indexHtml), "CPI stoplight tiles carry a ✓/⚠ marker, not color alone");
+// Regex updated 2026-08-26 (deep-research pass): the binary ok/warn marker became a real 3-band
+// good/watch/trouble system (icon var, not an inline ternary) -- see cpiBand().
+check(/st-val">' \+ a\.cpi\.toFixed\(2\) \+ ' ' \+ icon/.test(indexHtml), "CPI stoplight tiles carry a non-color icon marker (✓/▲/⛔), not color alone");
 // The maturity ladder's "real classification framework" badge had no src-note disambiguating that
 // the SPECIFIC class shown (Class 3) is illustrative -- the only new visual missing that pattern.
 check(/AACE RP 17R-97 verbatim[\s\S]{0,150}Class 3/.test(indexHtml), "the maturity ladder has its own real-vs-illustrative src-note (Class 3 is illustrative, the 5-class system is real)");
@@ -476,7 +482,7 @@ if (calCsvMatch) {
     "all 4 dollar columns (BAC/EV/AC/CV) route through fmt(), not a raw unconverted `key` lookup");
   check(block.includes('currentCurrency + ".csv"'), "the filename embeds the currency code, evaluated at click time (a function, not a string captured once at page load)");
 }
-check(/function rangeChipHTML\(low, high, value, unit\)\{/.test(indexHtml), "rangeChipHTML() is a real shared pure function, not copy-pasted per call site");
+check(/function rangeChipHTML\(low, high, value, unit, rangeLabel\)\{/.test(indexHtml), "rangeChipHTML() is a real shared pure function, not copy-pasted per call site");
 check((indexHtml.match(/rangeChipHTML\(/g) || []).length >= 5, "rangeChipHTML() is called for all 4 real-cited-range figures on the Commercial Ramp tab (ramp lag, leased%, metered%, margin), not just defined");
 check(/function makeSliderHistory\(maxEntries\)\{/.test(indexHtml), "makeSliderHistory() is a real shared factory function, exposed for direct testing");
 check(indexHtml.includes('id="wiHistoryBackBtn"') && indexHtml.includes('wiHistoryBackBtn.addEventListener("click"'),

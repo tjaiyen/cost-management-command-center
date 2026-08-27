@@ -413,6 +413,7 @@
     transition:opacity 500ms, transform 500ms}
   .stoplight-tile.shown{opacity:1; transform:translateY(0)}
   .stoplight-tile.ok{background:rgb(var(--c-success)/0.12); border:1px solid rgb(var(--c-success)/0.4)}
+  .stoplight-tile.watch{background:rgb(var(--c-warning)/0.12); border:1px solid rgb(var(--c-warning)/0.4)}
   .stoplight-tile.warn{background:rgb(var(--c-danger)/0.12); border:1px solid rgb(var(--c-danger)/0.4)}
   .stoplight-tile .st-name{font-size:11px; color:rgb(var(--c-text-secondary))}
   .stoplight-tile .st-val{font:700 18px/1.3 ui-monospace,monospace}
@@ -605,9 +606,12 @@
     repository.</b> Real facts are threaded through it and badge-labeled inline wherever they
     appear: a real $208K variance root-cause trace, a real 100+ bid-package contingency-tracking
     pattern, AACE International's real Recommended Practices (RP 57R-09, 65R-11, 44R-08, 17R-97,
-    40R-08, 58R-10, 68R-11, 86R-14, 22R-01, 49R-06), Turner &amp; Townsend's real <i>Data Centre Construction Cost
+    18R-97, 40R-08, 58R-10, 62R-11, 68R-11, 80R-13, 86R-14, 22R-01, 49R-06, 108R-19 — see the
+    Reference tab's Data Freshness audit for the full citation-by-citation ledger, including 2
+    corrections made in a 2026-08-26 deep-research pass), Turner &amp; Townsend's real <i>Data Centre Construction Cost
     Index 2025-2026</i> (market benchmarks in the Cost tab, cited again in the Reference glossary —
-    not a floating claim), and RICS/ICMS &amp; Uptime Institute's real industry standards (see the
+    not a floating claim), the DCMA 14-Point Assessment &amp; DoD IPMDAR's real federal
+    schedule/EVMS standards, and RICS/ICMS &amp; Uptime Institute's real industry standards (see the
     Reference tab). Everything else — the program name, dollar amounts,
     dates, vendor labels — is invented to make the methodology legible and marked
     <span class="badge illustrative">illustrative</span>. <b>The currency selector converts this
@@ -718,7 +722,8 @@
         <p class="src-note"><span class="badge real">real</span> The Field Execution Variance step is
           a real $208K labor-variance root-cause trace, recast here as a bridge step and structured
           per <b>AACE RP 86R-14</b>'s variance-analysis-and-reporting framework (aligned to
-          ANSI/EIA-748 EVMS) — a real named practice, not this program's own invention. It's
+          SAE/ANSI EIA-748-E EVMS, the 2026 edition) — a real named practice, not this program's own
+          invention. It's
           deliberately held to its true, unadjusted dollar value rather than scaled up with the rest
           of this program — at this campus's ~$1.75B scale it's honestly small, and it isn't the
           largest driver here (Scope Change is); the point it proves is that the <i>methodology</i>
@@ -778,15 +783,22 @@
         liquid-cooled) matter as much as scale.</p>
       <div class="card">
         <div class="kpis">
-          <div class="kpi"><div class="lbl">Electrical / power infra</div><div class="val">40–45%</div><div class="sub">of total data-center cost</div></div>
-          <div class="kpi"><div class="lbl">Cooling</div><div class="val">15–25%</div><div class="sub">second-largest driver</div></div>
+          <div class="kpi"><div class="lbl">Electrical / power infra</div><div class="val">~48–54%</div><div class="sub">of total cost, air-cooled baseline</div></div>
+          <div class="kpi"><div class="lbl">Mechanical / cooling</div><div class="val">22–33%</div><div class="sub">air-cooled (22%) to liquid-cooled (33%)</div></div>
           <div class="kpi"><div class="lbl">Liquid-cooled premium</div><div class="val">$4.5–5.2M/MW</div><div class="sub">vs. ~$1.8M/MW air-cooled</div></div>
           <div class="kpi"><div class="lbl">Idle-equipment carrying cost</div><div class="val">$2.8M/mo</div><div class="sub">50MW site, cooling skids awaiting a transformer</div></div>
         </div>
-        <p class="src-note"><span class="badge real">real</span> Sourced to published 2026 industry
-          data (Archdesk data-center construction breakdown; irecruit.co cost-per-MW benchmarks) —
-          not any specific employer's cost data. Cost Estimate Classification follows
-          <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1, most-defined).</p>
+        <p class="src-note"><span class="badge real">real</span> Sourced to Turner &amp; Townsend's
+          <i>Data Centre Construction Cost Index 2025-2026</i> (electrical/power ~48–54% of total
+          cost for an air-cooled build, mechanical/cooling 22% air-cooled vs. 33% liquid-cooled) and
+          irecruit.co's 2026 cost-per-MW benchmarks (liquid-cooled premium, idle-equipment carrying
+          cost) — not any specific employer's cost data. Correction, 2026-08-26 (deep-research pass):
+          an earlier version cited these percentages to "Archdesk 2026," but a direct fetch of
+          Archdesk's actual 2026 post found different figures (32–38% electrical, ~75% MEP+controls
+          combined) — the split shown here now traces to the Turner &amp; Townsend index instead,
+          the same report already cited for the market $/W benchmarks below. Cost Estimate
+          Classification follows <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1,
+          most-defined).</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span>
@@ -978,7 +990,11 @@
           <div id="drawdownGaugeWrap" style="margin:12px 0"></div>
           <p class="src-note">Sliders are <span class="badge illustrative">illustrative</span> —
             the underlying early-warning pattern is grounded in a real 100+ bid-package
-            contingency/change-order-tracking history, $50M+ per project.</p>
+            contingency/change-order-tracking history, $50M+ per project. Note, 2026-08-26
+            (deep-research pass): the 1.5x warning threshold itself is a <b>practitioner
+            heuristic</b>, not a numbered AACE Recommended Practice — no AACE RP codifies a specific
+            drawn%÷complete% ratio (AACE's own conference material treats drawdown curves as a
+            named topic, but not with a numbered threshold).</p>
         </div>
         <div class="card">
           <h3>Monte Carlo completion cost (2,000 draws) <span class="badge illustrative">tri-point playground</span>
@@ -1038,8 +1054,13 @@
       <div class="card" style="margin-top:16px">
         <div style="overflow-x:auto"><table id="riskTable"></table></div>
         <p class="src-note">Risk rows are illustrative. The scoring methodology (probability ×
-          impact, prioritized for mitigation before pricing) follows <b>AACE RP 40R-08</b>'s
-          risk-driver framework — a real, named practice, not this program's own invention.</p>
+          impact, prioritized for mitigation before pricing) follows <b>AACE RP 62R-11</b>
+          ("Risk Assessment: Identification and Qualitative Analysis") — a real, named practice, not
+          this program's own invention. Correction, 2026-08-26 (deep-research pass): an earlier
+          version cited RP 40R-08 here — verified real, but its actual title is "Contingency
+          Estimating – General Principles," a general-principles RP (correctly cited elsewhere on
+          this page for Gate 4), not the risk-register-specific practice this section actually
+          follows.</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Exposure by risk category <span class="badge illustrative">illustrative rows, real bucketing practice</span></h3>
@@ -1071,9 +1092,14 @@
           readings, invented; the erosion-rate math and the "reassess within N weeks" framing are
           real and reused as-is from how a leading indicator works elsewhere on this build (the
           contingency drawdown ratio). Critical-path identification (what float is measured against)
-          follows <b>AACE RP 49R-06</b> — a real named practice. A real, independently published
-          finding backs the framing itself: float declining at an increasing rate is a leading
-          indicator of program trouble roughly 2–3 months before it shows up in SPI.</p>
+          follows <b>AACE RP 49R-06</b> — a real named practice. Added, 2026-08-26 (deep-research
+          pass): a negative-float check straight from the <b>DCMA 14-Point Assessment</b> (a real,
+          numeric federal schedule-health standard — negative float is its single most urgent flag)
+          — this program's own float history never actually goes negative, so that branch is
+          illustrative-by-construction, exercised only via a direct test. A real, independently
+          published finding backs the trending framing itself: float declining at an increasing
+          rate is a leading indicator of program trouble roughly 2–3 months before it shows up in
+          SPI.</p>
       </div>
     </section>
 
@@ -1095,7 +1121,7 @@
   <!-- ============================================================ VENDOR & GOVERNANCE ============================================================ -->
   <div class="tabpanel" id="panel-governance" role="tabpanel" aria-labelledby="tab-governance">
     <section>
-      <h2>Consultant Deliverable Scorecard
+      <h2>Consultant Deliverable Scorecard <span class="badge real">real AACE RP 18R-97 Class 1 tolerance</span>
         <button class="info-toggle" type="button" data-explainer="exp16" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp16"></div>
       <p class="lede" style="font-size:13px">Pre-bid-estimate-vs-actual variance tracking for
@@ -1106,7 +1132,12 @@
         <div style="overflow-x:auto"><table id="consultantTable"></table></div>
         <p class="src-note"><span class="badge illustrative">illustrative</span> Grounded in real
           subcontractor/vendor pricing negotiation experience and BOM/data-quality-defect-fix work —
-          not any real consultant's actual submissions.</p>
+          not any real consultant's actual submissions. Corrected, 2026-08-26 (deep-research pass):
+          the tolerance band was a flat, symmetric ±5% with no citation — AACE RP 18R-97's real
+          Class 1 (bid/tender stage) estimate-accuracy range is <b>asymmetric, -10% to +15%</b>, not
+          a rounded symmetric guess. Under the real, wider band, none of these 3 illustrative
+          consultants happen to trip the warning by default (the widest, +9.7%, still clears +15%)
+          — the warn branch is tested directly via a fixture instead.</p>
       </div>
     </section>
 
@@ -1125,7 +1156,14 @@
         </div>
         <p class="src-note"><span class="badge real">real</span> Grounded in a real master-data
           validation control that "eliminated recurring downstream reconciliation failures" — the
-          strongest single direct proof point in this whole build. Sync-lag numbers shown are
+          strongest single direct proof point in this whole build. Note, 2026-08-26 (deep-research
+          pass): AACE RP 108R-19's real scope is accounting-alignment methodology (aligning
+          cost-control practice with GAAP/IFRS) — it does NOT itself specify a numeric sync-lag
+          day-count threshold, so the 14-day figure below is this program's own policy choice, not
+          an AACE-mandated number. The closest real, cited analog found is DoD's IPMDAR (Integrated
+          Program Management Data and Analysis Report) EVMS reporting cadence — contractor data due
+          to the central repository within 16 business days of accounting-period close — a federal
+          EVMS practice, not a construction-specific standard. Sync-lag numbers shown are
           <span class="badge illustrative">illustrative</span>.</p>
       </div>
     </section>
@@ -1160,6 +1198,17 @@
       <div class="card">
         <h3 style="font-size:13px; margin:0 0 4px">All 4 regions, ranked <span class="src-note" style="display:inline">— click a bar to open that region below</span></h3>
         <div id="regionRankedBar"></div>
+        <p class="src-note"><span class="badge real">real</span> Added 2026-08-26 (deep-research
+          pass): real regional data-center construction cost differentials exist (Turner &amp;
+          Townsend's <i>Data Centre Construction Cost Index 2025-2026</i>, already cited on the Cost
+          tab) — Silicon Valley $13.3/W (North America), Frankfurt $11.6/W (Europe), Tokyo $15.2/W
+          (Asia-Pacific). This program's own per-region baseline/forecast $ figures above stay fully
+          illustrative (they measure cost VARIANCE against each region's own baseline, a different
+          question than a cross-market $/W level), but the real spread confirms these 3 regions are
+          genuinely not interchangeable cost environments. <b>No real Latin America benchmark was
+          found</b> in this session's research across Turner &amp; Townsend, JLL, or CBRE's 2025-2026
+          reports — that region's figures here remain entirely illustrative, flagged honestly rather
+          than assigned a fabricated real range.</p>
         <div class="region-tabs" id="regionTabs" style="margin-top:16px"></div>
         <div id="regionDetail"></div>
         <div class="slider-row" style="margin-top:14px">
@@ -1175,7 +1224,7 @@
   <!-- ============================================================ COMMERCIAL RAMP ============================================================ -->
   <div class="tabpanel" id="panel-ramp" role="tabpanel" aria-labelledby="tab-ramp">
     <section id="ramp-lag-section">
-      <h2>Tenant Power-Ramp Lag &amp; Reserve <span class="badge illustrative">illustrative program, real cited range</span>
+      <h2>Tenant Power-Ramp Lag &amp; Reserve <span class="badge illustrative">illustrative program, real underlying phenomenon</span>
         <button class="info-toggle" type="button" data-explainer="expRampLag" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expRampLag"></div>
       <p class="lede" style="font-size:13px">Construction ending is not revenue starting — a signed
@@ -1192,18 +1241,24 @@
         </div>
         <p class="src-note" id="rampDelayNote">Non-destructive — projects the reserve burn from
           additional ramp delay without changing the baseline figures above.</p>
-        <p class="src-note"><span class="badge real">real</span> A tenant's power draw commonly takes
-          roughly 12–30 months to ramp from lease commencement to full contracted capacity — real,
-          cited industry sources describe this dynamic directly: Adventures in CRE's own data-center
-          development model, and a DOE-funded 2026 study ("Hidden Economic Consequences of Adapting
-          to Fast-Ramping Datacenter Loads"). This program's own 18-month assumed ramp and its $42M
-          reserve are <span class="badge illustrative">illustrative</span>.</p>
+        <p class="src-note"><span class="badge real">real</span> A tenant's power draw takes real,
+          multi-month time to ramp from lease commencement to full contracted capacity — two real
+          sources describe this directly: Adventures in CRE's data-center development model (a
+          worked case: ramp begins ~3 months after lease commencement, then climbs to a 6MW
+          commitment at ~417kW/month) and Build Inc.'s 2026 hyperscale lease-terms analysis
+          (contractual ramp "tranches" of 6–12 months of additional MW each). Correction, 2026-08-26
+          (deep-research pass): an earlier version also cited a "DOE-funded 2026 study" here, which
+          could not be found to exist on a genuine search — dropped. The <span class="badge
+          illustrative">illustrative</span> 12–30 month envelope shown below is this program's own
+          synthesis bracketing those two real, narrower data points (not a single source's own
+          stated range), and this program's 18-month assumed ramp and $42M reserve are illustrative
+          too.</p>
         <div id="rampLagRangeChip"></div>
       </div>
     </section>
 
     <section id="leased-metered-section">
-      <h2>Leased vs. Metered Power Mix <span class="badge real">real revenue-mix benchmark</span>
+      <h2>Leased vs. Metered Power Mix <span class="badge illustrative">illustrative split, real underlying distinction</span>
         <button class="info-toggle" type="button" data-explainer="expLeasedMetered" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expLeasedMetered"></div>
       <p class="lede" style="font-size:13px">Most hyperscale revenue comes from the reserved-capacity
@@ -1211,11 +1266,14 @@
         cash-flow and OpEx-recovery consequences.</p>
       <div class="card">
         <div class="kpis" id="leasedMeteredKpis"></div>
-        <p class="src-note"><span class="badge real">real</span> Hyperscale data-center revenue
-          typically splits 70–80% reserved-capacity base rent and 15–20% metered power pass-through
-          (Cushman &amp; Wakefield, <i>Data Center Spotlight: Power and Lease Pricing Outlook</i>) — a
-          real, published revenue-mix benchmark, not a stabilization-timeline target. This program's
-          own mix is <span class="badge illustrative">illustrative</span>.</p>
+        <p class="src-note"><span class="badge illustrative">illustrative</span> Correction,
+          2026-08-26 (deep-research pass): an earlier version cited a 70–80%/15–20% split to
+          Cushman &amp; Wakefield's <i>Data Center Spotlight: Power and Lease Pricing Outlook</i> —
+          that report is real (confirmed by direct fetch) but is dated <b>2023</b>, not 2026, and
+          contains <b>no leased-vs-metered revenue split at all</b>. The 70–80%/15–20% figures below
+          are this program's own modeling assumption, not a reported industry statistic. Cushman
+          &amp; Wakefield is kept cited only for what it actually reports: real lease-rate and
+          power-cost trend data across six markets (2023).</p>
         <div id="leasedMeteredRangeChip"></div>
       </div>
     </section>
@@ -1234,26 +1292,40 @@
           standards: Tier III ≈ 99.982% (~1.6 hrs/yr allowed downtime), Tier IV ≈ 99.995% (~26 min/yr)
           — this program commits to the real Tier IV standard, not a blanket "five nines"
           (99.999%) claim (that figure is real only as Equinix's own power-specific SLA, not a
-          universal industry standard). Actual uptime and the resulting penalty math are
-          <span class="badge illustrative">illustrative</span>.</p>
+          universal industry standard). Added 2026-08-26 (deep-research pass): Equinix publishes a
+          real, findable SLA credit structure grounding the "computed the same way an actual
+          SLA-credit clause would" claim above in an actual document, not an invented pro-rata
+          calc — real service credits of 1/30th of the Monthly Recurring Charge per affected
+          circuit per unavailability-threshold breach, plus an additional 1/30th MRC credit per
+          extra full hour beyond it. This build's own continuous pro-rata formula is a simplified
+          approximation of that real, tiered mechanic (not an exact replica — a real clause credits
+          per discrete breach-day, not continuously by the minute). Actual uptime and the resulting
+          penalty math are <span class="badge illustrative">illustrative</span>.</p>
       </div>
     </section>
 
     <section id="revenue-yield-section">
-      <h2>Revenue per MW &amp; Gross Margin <span class="badge illustrative">illustrative figures, real benchmark range</span>
+      <h2>Revenue per MW &amp; Adjusted EBITDA Margin <span class="badge illustrative">illustrative figures, real benchmark range</span>
         <button class="info-toggle" type="button" data-explainer="expRevenueYield" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expRevenueYield"></div>
-      <p class="lede" style="font-size:13px">Revenue per megawatt and stabilized gross margin are the
-        real, named metrics operators actually report — not the single blended "gross margin per MW"
-        figure sometimes proposed, which no real operator's filings or earnings calls report.</p>
+      <p class="lede" style="font-size:13px">Revenue per megawatt and stabilized adjusted EBITDA
+        margin are the real, named metrics operators actually report — not the single blended
+        "gross margin per MW" figure sometimes proposed, which no real operator's filings or
+        earnings calls report.</p>
       <div class="card">
         <div class="kpis" id="revenueYieldKpis"></div>
         <p class="src-note"><span class="badge real">real</span> "Revenue per MW" is the real,
           named capacity-economics metric data-center investors actually track (S&amp;P Global Visible
-          Alpha / Chronograph); real stabilized gross margins for hyperscale/colocation assets run
-          roughly 50–55% (Digital Realty, Equinix Q1 2026 reporting). This program's own revenue and
-          direct-cost figures are <span class="badge illustrative">illustrative</span>, sized to land
-          inside that real range, not to invent a new one.</p>
+          Alpha / Chronograph); Equinix's real Q2 2026 earnings release (July 29, 2026) reports a
+          company-wide <b>adjusted EBITDA margin of 53%</b> (up from 50% in Q2 2025), with a real
+          regional spread of Americas 51% / EMEA 54% / APAC 57%. Correction, 2026-08-26
+          (deep-research pass): an earlier version labeled this "gross margin" and cited Digital
+          Realty alongside Equinix — the actual reported metric is <b>adjusted EBITDA margin</b>, not
+          GAAP gross margin, and Digital Realty's own real Q2 2026 figure found is a development
+          stabilized yield (11.5%), a different metric that doesn't independently corroborate a
+          margin number. This program's own revenue and direct-cost figures are
+          <span class="badge illustrative">illustrative</span>, sized to land inside Equinix's real
+          50–57% range, not to invent a new one.</p>
         <div id="marginRangeChip"></div>
       </div>
     </section>
@@ -1274,6 +1346,12 @@
         <div class="kpis" id="gateFwKpis"></div>
         <div id="gate4Gauge" style="margin:12px 0"></div>
         <div id="gateFwStatus" aria-live="polite"></div>
+        <p class="src-note">The <b>math</b> (remaining reserve ÷ total priced risk exposure) follows
+          AACE RP 40R-08's real contingency-estimating principles. Note, 2026-08-26 (deep-research
+          pass): the specific <b>1.00x pass/fail threshold</b> is this program's own reasonable
+          practitioner judgment, not a numeric gate value RP 40R-08 — or any AACE/PMI/FHWA source
+          found this session — actually mandates; FHWA's own major-projects contingency guidance
+          explicitly leaves the gate threshold to program judgment rather than setting one.</p>
       </div>
     </section>
     <section>
@@ -1741,13 +1819,13 @@
   // numbers, real lead-time figures) or an accurate description of this build's own real
   // mechanism (Gate 4's live computation, the DuckDB parity layer) -- never a new, uncited claim.
   var TAB_FACTOIDS = {
-    overview: "AACE guidance generally prices contingency to P80, not P50 — a P50-priced reserve is, by definition, expected to run out roughly half the time (RP 57R-09).",
+    overview: "P80, not P50, is common industry convention for pricing contingency — a P50-priced reserve is, by definition, expected to run out roughly half the time. RP 57R-09 treats P80 as one common reference point, though it doesn't itself mandate it as a hard standard.",
     exec: "This board brief has its own print stylesheet — ⌘/Ctrl+P here keeps only this page on the printed sheet, dropping the nav and every other tab.",
     cost: "Real data-center transformer lead times run 160+ weeks, with the largest high-voltage units up to ~200+ weeks — see the Long-Lead Equipment tracker below.",
     contingency: "A risk doesn't have to be the biggest dollar figure to deserve the most attention — a high-probability, low-impact risk can outrank a rare catastrophic one on expected value.",
-    governance: "AACE RP 108R-19 treats a stale field-vs-ERP sync as a real accounting-alignment problem — past its threshold, this month's numbers are provably stale, not just possibly stale.",
+    governance: "AACE RP 108R-19 treats a stale field-vs-ERP sync as a real accounting-alignment problem — though the specific day-count threshold here is a program policy choice, not an AACE-mandated number (the closest real analog: DoD's IPMDAR requires EVMS data within 16 business days of period close).",
     portfolio: "Try the escalation-swing slider under a region's detail panel below — it's non-destructive and resets the moment you switch regions.",
-    ramp: "A tenant's power draw commonly takes 12–30 months to ramp from lease signing to full contracted capacity — real, cited industry sources describe this exact lag.",
+    ramp: "A tenant's power draw takes real, multi-month time to ramp from lease signing to full contracted capacity — two real sources describe it directly, though the 12–30 month envelope shown here is this program's own synthesis, not one source's stated range.",
     framework: "Gate 4 here is genuinely computed from remaining reserve (reserve minus drawn) ÷ total risk exposure, not a status bar someone set to \"pending\" by policy.",
     actions: "A closed action item never counts toward staleness, no matter how old it is — only open items age against the threshold.",
     triage: "This tab re-checks the same alert functions already computed on other tabs — a digest, not a second implementation that could quietly drift from the original.",
@@ -2221,11 +2299,19 @@
       })(i);
     }
   }
+  // Pure function: CPI in, a real 3-band verdict out (deep-research pass, 2026-08-26). Replaces a
+  // bare "< 1.0 is bad" cutoff -- real industry practice (DOD contract-tracking research) treats
+  // <0.90 as a hard trouble threshold ("almost never recovers" once breached ~20% through a
+  // project), 0.90-0.94 as an amber watch band, and >=0.95 as healthy. A CPI of exactly 0.9009 or
+  // 0.9434 (this program's own real default values) previously showed a bare "over budget" warning
+  // indistinguishable from a genuinely troubled account -- the 3-band system now tells them apart.
+  function cpiBand(cpi){ return cpi >= 0.95 ? "good" : cpi >= 0.90 ? "watch" : "trouble"; }
   function renderControlAccounts(){
     var accounts = computeControlAccounts(bridgeResult.baseline, wbsData, controlAccountPctComplete, controlAccountAcEvRatio);
     var el = document.getElementById("calTable");
     var rows = accounts.map(function(a, i){
-      var cpiFlag = a.cpi >= 1 ? "✓" : "⚠";
+      var band = cpiBand(a.cpi);
+      var cpiFlag = band === "good" ? "✓" : band === "watch" ? "▲" : "⛔";
       return "<tr id='calRow" + i + "' tabindex='0'><td>" + a.name + "</td><td class='tabular'>" + fmt(a.bac) + "</td>" +
         "<td class='tabular'>" + Math.round(a.pctComplete * 100) + "%</td>" +
         "<td class='tabular'>" + fmt(a.ev) + "</td><td class='tabular'>" + fmt(a.ac) + "</td>" +
@@ -2336,7 +2422,7 @@
     // the illustrative Monte Carlo band -- recomputed live every time the sliders move.
     var realPoint = bridgeSteps[0].value + 208000;
     var band = realPoint <= lastMC.p50 ? "at or below the P50 (median) forecast"
-      : realPoint <= lastMC.p80 ? "between the P50 and P80 band — exactly why AACE guidance favors pricing contingency to P80, not P50"
+      : realPoint <= lastMC.p80 ? "between the P50 and P80 band — exactly why common industry convention favors pricing contingency to P80, not P50"
       : realPoint <= lastMC.p90 ? "between P80 and P90 — a real driver this large would have breached a P80-sized reserve"
       : "above even the P90 tail of this particular tri-point estimate";
     // At this program's real ~$1.75B scale, $208K is well under 1% of baseline -- small enough that
@@ -2688,11 +2774,26 @@
   }
 
   // ---- 1. Bullet chart: Portfolio Forecast (Overview tab) ----
+  // Pure function: control accounts in, a performance-based EAC out -- AACE RP 80R-13's
+  // "Estimate at Completion (EAC)" real practice, added 2026-08-26 (deep-research pass). This
+  // build's own bullet-chart forecast is a COST-ELEMENT bridge (baseline + scope + escalation +
+  // variance − drawdown) -- a real, distinct approach answering "why did the number move," not
+  // RP 80R-13's own performance-based question ("where does current CPI/SPI trend say it lands").
+  // EAC = BAC / aggregate-CPI is RP 80R-13's documented "performance continues as-is" variant.
+  function computePerformanceEAC(accounts){
+    var totalBac = accounts.reduce(function(s, a){ return s + a.bac; }, 0);
+    var totalEv = accounts.reduce(function(s, a){ return s + a.ev; }, 0);
+    var totalAc = accounts.reduce(function(s, a){ return s + a.ac; }, 0);
+    var aggregateCpi = totalAc > 0 ? totalEv / totalAc : 0;
+    var eac = aggregateCpi > 0 ? totalBac / aggregateCpi : totalBac;
+    return { totalBac: totalBac, aggregateCpi: aggregateCpi, eac: eac };
+  }
   function renderBulletForecast(){
     var el = document.getElementById("bulletForecast");
     if (!el) return null;
     var baseline = bridgeResult.baseline, forecast = bridgeResult.final, worst = lastMC.p90 || forecast;
-    var axisMax = Math.max(baseline, forecast, worst) * 1.08;
+    var perfEac = computePerformanceEAC(controlAccounts);
+    var axisMax = Math.max(baseline, forecast, worst, perfEac.eac) * 1.08;
     var fillPct = Math.min(100, (forecast / axisMax) * 100);
     var targetPct = Math.min(100, (baseline / axisMax) * 100);
     var worstPct = Math.min(100, (worst / axisMax) * 100);
@@ -2705,15 +2806,20 @@
       '<div class="bfill" id="bulletFill"></div>' +
       '<div class="btarget" style="left:' + targetPct + '%"></div>' +
       '<div class="bworst" style="left:' + worstPct + '%"></div></div>' +
-      '<div class="bcaption">Bar = current forecast · vertical line = underwriting baseline · red line = ' +
-      'Monte Carlo P90 worst-case. Click to open the Cost tab.</div></div>';
+      '<div class="bcaption">Bar = current forecast (cost-element bridge) · vertical line = underwriting baseline · ' +
+      'red line = Monte Carlo P90 worst-case. Click to open the Cost tab.</div>' +
+      '<p class="src-note" style="margin-top:8px"><span class="badge real">real</span> Added 2026-08-26 ' +
+      '(deep-research pass, AACE RP 80R-13 "Estimate at Completion"): a second, performance-based EAC — ' +
+      'BAC ÷ aggregate CPI = ' + fmt(perfEac.totalBac) + ' ÷ ' + perfEac.aggregateCpi.toFixed(2) + ' = <b>' + fmt(perfEac.eac) + '</b> — ' +
+      'answers "where does current cost performance trend say this lands," a different question than the ' +
+      'cost-element bridge above ("why did the number move").</p></div>';
     var track = document.getElementById("bulletTrack");
     if (track) track.addEventListener("click", function(){ activateTab("cost"); });
     runOnFrame(function(){
       var f = document.getElementById("bulletFill");
       if (f) f.style.width = fillPct + "%";
     });
-    return { baseline: baseline, forecast: forecast, worst: worst, fillPct: fillPct, targetPct: targetPct, worstPct: worstPct };
+    return { baseline: baseline, forecast: forecast, worst: worst, fillPct: fillPct, targetPct: targetPct, worstPct: worstPct, perfEac: perfEac };
   }
 
   // ---- 2. Gauge: Contingency Drawdown Ratio (Contingency tab) ----
@@ -2809,10 +2915,12 @@
     var el = document.getElementById("cpiStoplightGrid");
     if (!el) return null;
     el.innerHTML = controlAccounts.map(function(a, i){
-      var ok = a.cpi >= 1;
-      return '<div class="stoplight-tile ' + (ok ? "ok" : "warn") + '" id="stoplightTile' + i + '" tabindex="0" ' +
+      var band = cpiBand(a.cpi);
+      var cls = band === "good" ? "ok" : band === "watch" ? "watch" : "warn";
+      var icon = band === "good" ? "✓" : band === "watch" ? "▲" : "⛔";
+      return '<div class="stoplight-tile ' + cls + '" id="stoplightTile' + i + '" tabindex="0" ' +
         'title="' + a.name + ': CPI ' + a.cpi.toFixed(2) + '"><div class="st-name">' + a.name + '</div>' +
-        '<div class="st-val">' + a.cpi.toFixed(2) + ' ' + (ok ? "✓" : "⚠") + '</div></div>';
+        '<div class="st-val">' + a.cpi.toFixed(2) + ' ' + icon + '</div></div>';
     }).join("");
     controlAccounts.forEach(function(a, i){
       var tile = document.getElementById("stoplightTile" + i);
@@ -2876,8 +2984,10 @@
   }
 
   // ---- 7. Tornado: What-If sensitivity ranking (Cost tab) ----
-  // Fixed ±10% swing per lever -- the standard tornado-diagram convention (vary one input at a
-  // time by a common step, rank by resulting $ swing) -- not this program's own invention.
+  // Fixed ±10% swing per lever -- vary one input at a time by a common step, rank by resulting $
+  // swing. Relabeled 2026-08-26 (deep-research pass): ±10% is A common default swing in
+  // tornado/sensitivity analysis, not a single codified AACE-mandated standard -- an earlier
+  // version of this comment overstated it as "the standard" convention.
   function computeSensitivityScenarios(baseline, fieldVariance, drawdown, currentFinal){
     var deltas = [
       { name: "Scope +10%", scope: 10, esc: 0 },
@@ -3023,7 +3133,12 @@
     var rate = computeFloatErosionRate(history);
     var remaining = history[history.length - 1].floatDays;
     var weeksToZero = rate > 0 ? remaining / rate : Infinity;
-    return { rate: rate, remaining: remaining, weeksToZero: weeksToZero, elevated: weeksToZero < 8 };
+    // negativeFloat (deep-research pass, 2026-08-26): the DCMA 14-Point Assessment's own real,
+    // numeric float check -- negative float is that assessment's single most urgent flag,
+    // independent of this build's own "weeks to zero" trending framing. This program's own float
+    // history never goes negative, so this branch is never-exercised by default (tested directly
+    // via a synthetic fixture instead).
+    return { rate: rate, remaining: remaining, weeksToZero: weeksToZero, elevated: weeksToZero < 8 || remaining < 0, negativeFloat: remaining < 0 };
   }
   function renderFloatSignal(){
     var signal = floatRiskSignal(floatHistory);
@@ -3035,7 +3150,12 @@
     var el = document.getElementById("floatWarn");
     if (el) {
       el.className = signal.elevated ? "alert-card warn" : "alert-card ok";
-      el.innerHTML = signal.elevated
+      el.innerHTML = signal.negativeFloat
+        ? '<div class="alert-head"><span class="alert-shape">▲</span> NEGATIVE FLOAT — DCMA 14-Point Assessment Flag</div>' +
+          '<div class="alert-row"><b>Detected:</b> ' + signal.remaining + ' days of float remaining — already behind, not just approaching zero</div>' +
+          '<div class="alert-row"><b>Probable cause:</b> near-critical activities have consumed all float and are now driving the completion date directly</div>' +
+          '<div class="alert-row"><b>Suggested action:</b> this is a schedule-recovery conversation first, cost-risk reassessment second — negative float is a real, most urgent DCMA 14-Point Assessment schedule-health flag</div>'
+        : signal.elevated
         ? '<div class="alert-head"><span class="alert-shape">▲</span> ELEVATED — Float Erosion as a Cost-Risk Input</div>' +
           '<div class="alert-row"><b>Detected:</b> at ' + signal.rate.toFixed(1) + ' days/week, float reaches zero in ~' + signal.weeksToZero.toFixed(1) + ' weeks</div>' +
           '<div class="alert-row"><b>Probable cause:</b> near-critical activities are absorbing float without a corresponding cost-risk reassessment</div>' +
@@ -3145,12 +3265,18 @@
     { name:"Consultant B (electrical)", preBid:2100000, actual:2085000 },
     { name:"Consultant C (civil)", preBid:640000, actual:702000 }
   ];
+  // Pure function (deep-research pass, 2026-08-26): AACE RP 18R-97's real Class 1 (bid/tender
+  // stage) estimate-accuracy range is ASYMMETRIC (-10% to +15%), not a flat symmetric ±5% band --
+  // an earlier version of this KPI used a rounded, symmetric simplification of that real range.
+  // pct = (actual - preBid) / preBid * 100, so positive means the actual bid came in over the
+  // pre-bid estimate (the AACE range's own "+" direction), negative means under (its "-" direction).
+  function withinConsultantTolerance(pct){ return pct >= -10 && pct <= 15; }
   function renderConsultantTable(){
     var el = document.getElementById("consultantTable");
     var rows = consultants.map(function(c){
       var delta = c.actual - c.preBid;
       var pct = (delta / c.preBid) * 100;
-      var flag = Math.abs(pct) > 5 ? "⚠" : "✓";
+      var flag = withinConsultantTolerance(pct) ? "✓" : "⚠";
       return "<tr><td>" + c.name + "</td><td class='tabular'>" + fmt(c.preBid) + "</td>" +
         "<td class='tabular'>" + fmt(c.actual) + "</td><td class='tabular'>" + (pct>=0?"+":"") + pct.toFixed(1) + "% " + flag + "</td></tr>";
     }).join("");
@@ -3159,8 +3285,8 @@
   renderConsultantTable();
 
   // ---- Phase 2, #16: Consultant pre-bid-vs-actual scatter plot (Governance tab) -- same
-  // `consultants` rows and the same ±5% tolerance threshold the table's own ✓/⚠ flag already uses,
-  // plotted instead of read column by column. ----
+  // `consultants` rows and the same real AACE RP 18R-97 Class 1 tolerance threshold the table's
+  // own ✓/⚠ flag already uses, plotted instead of read column by column. ----
   function renderConsultantScatter(){
     var el = document.getElementById("consultantScatter");
     if (!el) return null;
@@ -3169,11 +3295,11 @@
     function sx(v){ return pad + (v / maxVal) * (w - pad * 1.4); }
     function sy(v){ return h - pad - (v / maxVal) * (h - pad * 1.4); }
     var diag = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal) + '" stroke="rgb(var(--c-text-secondary)/0.4)" stroke-width="1"/>';
-    var bandUpper = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 1.05) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
-    var bandLower = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 0.95) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
+    var bandUpper = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 1.15) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
+    var bandLower = '<line x1="' + sx(0) + '" y1="' + sy(0) + '" x2="' + sx(maxVal) + '" y2="' + sy(maxVal * 0.90) + '" stroke="rgb(var(--c-warning)/0.5)" stroke-width="1" stroke-dasharray="3,3"/>';
     var dots = consultants.map(function(c, i){
       var pct = ((c.actual - c.preBid) / c.preBid) * 100;
-      var withinTolerance = Math.abs(pct) <= 5;
+      var withinTolerance = withinConsultantTolerance(pct);
       return '<circle cx="' + sx(c.preBid).toFixed(1) + '" cy="' + sy(c.actual).toFixed(1) + '" r="0" ' +
         'class="scatter-dot ' + (withinTolerance ? "ok" : "warn") + '" id="scatterDot' + i + '" tabindex="0" ' +
         'title="' + c.name + ': pre-bid ' + fmt(c.preBid) + ', actual ' + fmt(c.actual) + " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)"/>';
@@ -3188,7 +3314,7 @@
     });
     return consultants.map(function(c){
       var pct = ((c.actual - c.preBid) / c.preBid) * 100;
-      return { name: c.name, preBid: c.preBid, actual: c.actual, pct: pct, withinTolerance: Math.abs(pct) <= 5 };
+      return { name: c.name, preBid: c.preBid, actual: c.actual, pct: pct, withinTolerance: withinConsultantTolerance(pct) };
     });
   }
   var consultantScatterResult = renderConsultantScatter();
@@ -3400,7 +3526,7 @@
   // ---- Section 1: tenant power-ramp lag + reserve burn ----
   var rampAssumptions = {
     assumedRampMonths: 18,       // illustrative: this program's own assumed lease-to-full-ramp lag
-    realCitedLowMonths: 12,      // real, cited: see src-note in the HTML
+    realCitedLowMonths: 12,      // illustrative synthesis bracketing 2 real, narrower data points -- see src-note (corrected 2026-08-26, deep-research pass)
     realCitedHighMonths: 30,
     reserve: 42000000,           // illustrative: $ set aside for ramp-period unrecoverable OpEx
     incurred: 18500000,          // illustrative: $ actually incurred so far
@@ -3435,17 +3561,17 @@
   // inside the real cited range" PROSE into a visual marker -- pct is clamped to [0,100] so a
   // value that (by construction) never falls outside its own cited range can't overflow the
   // track even from a future edit; NOT a claim-strength change, same underlying citation.
-  function rangeChipHTML(low, high, value, unit){
+  function rangeChipHTML(low, high, value, unit, rangeLabel){
     var pct = high > low ? Math.max(0, Math.min(100, ((value - low) / (high - low)) * 100)) : 50;
     return '<div class="range-chip"><span class="rc-track" style="--rc-pct:' + pct.toFixed(1) + '%"><span class="rc-dot"></span></span>' +
-      'This program: <b>' + value + unit + '</b> — real cited range ' + low + '–' + high + unit + '</div>';
+      'This program: <b>' + value + unit + '</b> — ' + (rangeLabel || "real cited range") + ' ' + low + '–' + high + unit + '</div>';
   }
   function renderRampKpis(){
     var status = computeRampReserveStatus(rampAssumptions.reserve, rampAssumptions.incurred);
     var el = document.getElementById("rampKpis");
     if (el) el.innerHTML =
       '<div class="kpi"><div class="lbl">Assumed ramp lag (this program)</div><div class="val">' + rampAssumptions.assumedRampMonths + ' mo</div></div>' +
-      '<div class="kpi"><div class="lbl">Real cited range</div><div class="val">' + rampAssumptions.realCitedLowMonths + '–' + rampAssumptions.realCitedHighMonths + ' mo</div></div>' +
+      '<div class="kpi"><div class="lbl">Synthesized envelope</div><div class="val">' + rampAssumptions.realCitedLowMonths + '–' + rampAssumptions.realCitedHighMonths + ' mo</div><div class="sub">bracketing 2 real, narrower data points</div></div>' +
       '<div class="kpi"><div class="lbl">Ramp reserve</div><div class="val tabular">' + fmt(rampAssumptions.reserve) + '</div></div>' +
       '<div class="kpi"><div class="lbl">Remaining reserve</div><div class="val tabular">' + fmt(status.remaining) + '</div></div>';
     var warnEl = document.getElementById("rampWarn");
@@ -3455,7 +3581,7 @@
       warnEl.innerHTML = content.html;
     }
     var chipEl = document.getElementById("rampLagRangeChip");
-    if (chipEl) chipEl.innerHTML = rangeChipHTML(rampAssumptions.realCitedLowMonths, rampAssumptions.realCitedHighMonths, rampAssumptions.assumedRampMonths, " mo");
+    if (chipEl) chipEl.innerHTML = rangeChipHTML(rampAssumptions.realCitedLowMonths, rampAssumptions.realCitedHighMonths, rampAssumptions.assumedRampMonths, " mo", "synthesized envelope");
     return status;
   }
   var rampStatus = renderRampKpis();
@@ -3477,23 +3603,26 @@
 
   // ---- Section 2: leased vs. metered power revenue mix ----
   var leasedMeteredMix = {
-    realLowLeasedPct: 70, realHighLeasedPct: 80,   // real, cited: Cushman & Wakefield
+    // Corrected 2026-08-26 (deep-research pass): the real Cushman & Wakefield report cited here is
+    // dated 2023 (not 2026) and contains no leased-vs-metered revenue split at all -- these 4
+    // numbers are this program's own illustrative modeling assumption, not a reported benchmark.
+    realLowLeasedPct: 70, realHighLeasedPct: 80,
     realLowMeteredPct: 15, realHighMeteredPct: 20,
-    thisProgramLeasedPct: 76,                       // illustrative, sized inside the real cited range
+    thisProgramLeasedPct: 76,
     thisProgramMeteredPct: 19
   };
   function renderLeasedMeteredKpis(){
     var el = document.getElementById("leasedMeteredKpis");
     if (!el) return;
     el.innerHTML =
-      '<div class="kpi"><div class="lbl">Real benchmark: reserved-capacity rent</div><div class="val">' + leasedMeteredMix.realLowLeasedPct + '–' + leasedMeteredMix.realHighLeasedPct + '%</div><div class="sub">of total revenue</div></div>' +
-      '<div class="kpi"><div class="lbl">Real benchmark: metered pass-through</div><div class="val">' + leasedMeteredMix.realLowMeteredPct + '–' + leasedMeteredMix.realHighMeteredPct + '%</div><div class="sub">of total revenue</div></div>' +
+      '<div class="kpi"><div class="lbl">Illustrative assumption: reserved-capacity rent</div><div class="val">' + leasedMeteredMix.realLowLeasedPct + '–' + leasedMeteredMix.realHighLeasedPct + '%</div><div class="sub">of total revenue</div></div>' +
+      '<div class="kpi"><div class="lbl">Illustrative assumption: metered pass-through</div><div class="val">' + leasedMeteredMix.realLowMeteredPct + '–' + leasedMeteredMix.realHighMeteredPct + '%</div><div class="sub">of total revenue</div></div>' +
       '<div class="kpi"><div class="lbl">This program\'s mix — leased</div><div class="val">' + leasedMeteredMix.thisProgramLeasedPct + '%</div></div>' +
       '<div class="kpi"><div class="lbl">This program\'s mix — metered</div><div class="val">' + leasedMeteredMix.thisProgramMeteredPct + '%</div></div>';
     var chipEl = document.getElementById("leasedMeteredRangeChip");
     if (chipEl) chipEl.innerHTML =
-      rangeChipHTML(leasedMeteredMix.realLowLeasedPct, leasedMeteredMix.realHighLeasedPct, leasedMeteredMix.thisProgramLeasedPct, "% leased") +
-      rangeChipHTML(leasedMeteredMix.realLowMeteredPct, leasedMeteredMix.realHighMeteredPct, leasedMeteredMix.thisProgramMeteredPct, "% metered");
+      rangeChipHTML(leasedMeteredMix.realLowLeasedPct, leasedMeteredMix.realHighLeasedPct, leasedMeteredMix.thisProgramLeasedPct, "% leased", "illustrative assumption") +
+      rangeChipHTML(leasedMeteredMix.realLowMeteredPct, leasedMeteredMix.realHighMeteredPct, leasedMeteredMix.thisProgramMeteredPct, "% metered", "illustrative assumption");
   }
   renderLeasedMeteredKpis();
 
@@ -3553,18 +3682,21 @@
     directCosts: 85000000       // illustrative, sized so the resulting margin lands inside the real cited range
   };
   function computeRevenuePerMW(annualRevenue, contractedMW){ return contractedMW > 0 ? annualRevenue / contractedMW : 0; }
-  function computeGrossMarginPct(revenue, directCosts){ return revenue > 0 ? ((revenue - directCosts) / revenue) * 100 : 0; }
+  // Renamed 2026-08-26 (deep-research pass, independent-reviewer finding): every user-visible
+  // surface (KPI tile, kpiCatalog name, explainer, citation) was relabeled from "gross margin" to
+  // "adjusted EBITDA margin" -- this function name lagged behind until now.
+  function computeAdjEbitdaMarginPct(revenue, directCosts){ return revenue > 0 ? ((revenue - directCosts) / revenue) * 100 : 0; }
   function renderRevenueYieldKpis(){
     var revenuePerMW = computeRevenuePerMW(revenueYieldAssumptions.annualRevenue, slaAssumptions.contractedMW);
-    var marginPct = computeGrossMarginPct(revenueYieldAssumptions.annualRevenue, revenueYieldAssumptions.directCosts);
+    var marginPct = computeAdjEbitdaMarginPct(revenueYieldAssumptions.annualRevenue, revenueYieldAssumptions.directCosts);
     var el = document.getElementById("revenueYieldKpis");
     if (el) el.innerHTML =
       '<div class="kpi"><div class="lbl">Annual revenue</div><div class="val tabular">' + fmt(revenueYieldAssumptions.annualRevenue) + '</div></div>' +
       '<div class="kpi"><div class="lbl">Revenue per MW</div><div class="val tabular">' + fmt(revenuePerMW) + '</div><div class="sub">per MW / year</div></div>' +
-      '<div class="kpi"><div class="lbl">Gross margin</div><div class="val">' + marginPct.toFixed(1) + '%</div></div>' +
-      '<div class="kpi"><div class="lbl">Real cited stabilized range</div><div class="val">50–55%</div></div>';
+      '<div class="kpi"><div class="lbl">Adj. EBITDA margin</div><div class="val">' + marginPct.toFixed(1) + '%</div></div>' +
+      '<div class="kpi"><div class="lbl">Real cited range (Equinix, Q2 2026)</div><div class="val">50–57%</div></div>';
     var chipEl = document.getElementById("marginRangeChip");
-    if (chipEl) chipEl.innerHTML = rangeChipHTML(50, 55, Math.round(marginPct * 10) / 10, "% margin");
+    if (chipEl) chipEl.innerHTML = rangeChipHTML(50, 57, Math.round(marginPct * 10) / 10, "% margin");
     return { revenuePerMW: revenuePerMW, marginPct: marginPct };
   }
   var revenueYieldResult = renderRevenueYieldKpis();
@@ -3829,20 +3961,24 @@
   /* ================= REFERENCE TAB: glossaries ================= */
   var aaceTerms = [
     { term:"RP 57R-09", def:"Integrated Cost and Schedule Risk Analysis Using Risk Drivers and Monte Carlo Simulation of a CPM Model — the method behind this build's contingency band." },
+    { term:"RP 80R-13", def:"Estimate at Completion (EAC) — the real practice behind this build's second, performance-based EAC on the Overview tab (BAC ÷ aggregate CPI), added 2026-08-26 alongside the existing cost-element bridge." },
+    { term:"RP 18R-97", def:"Cost Estimate Classification System — As Applied in Engineering, Procurement, and Construction for the Process Industries — its real Class 1 (bid/tender stage) asymmetric accuracy range (-10% to +15%) grounds this build's Consultant Deliverable Scorecard tolerance band, added 2026-08-26 replacing an uncited symmetric ±5%." },
+    { term:"RP 108R-19", def:"Accounting Considerations in Cost Control — aligns project cost-control practice with GAAP/IFRS accounting methods; the real practice behind this build's Data-Quality Reconciliation Health accounting-alignment principle. Its real scope is methodology, not a numeric sync-lag threshold (see DoD IPMDAR below for the closest real analog to this build's 14-day figure). Added to this glossary 2026-08-26 — a pre-existing gap: this RP was cited elsewhere on the page well before this pass but had never actually been listed here." },
     { term:"RP 65R-11", def:"Integrated Cost and Schedule Risk Analysis and Contingency Determination Using Expected Value — a complementary, distinct method (extends RP 44R-08), not used in this build's simulation." },
     { term:"RP 44R-08", def:"Risk Analysis and Contingency Determination Using Expected Value — the base practice RP 65R-11 extends." },
     { term:"RP 17R-97", def:"Cost Estimate Classification System — the generic 5-class matrix (Class 5, least-defined, through Class 1, most-defined)." },
-    { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the risk-driver framework behind this build's priced risk register." },
+    { term:"RP 40R-08", def:"Contingency Estimating — General Principles — the real practice behind this build's Gate 4 contingency-coverage check. (Not the risk register below — see RP 62R-11.)" },
+    { term:"RP 62R-11", def:"Risk Assessment: Identification and Qualitative Analysis — the real, named practice behind this build's priced risk register and probability × impact heat-map. Corrected 2026-08-26: an earlier version cited RP 40R-08 for this instead, which is a general-principles RP, not this specific qualitative-risk-assessment practice." },
     { term:"RP 58R-10", def:"Escalation Estimating Principles and Methods Using Indices — the foundational index-based escalation practice grounding this build's Market Escalation bridge step." },
     { term:"RP 68R-11", def:"Escalation Estimating Using Indices and Monte Carlo Simulation — extends RP 58R-10 with simulation for escalation uncertainty specifically; real, distinct, not the same simulation as this build's completion-cost Monte Carlo above." },
-    { term:"RP 86R-14", def:"Variance Analysis and Reporting — aligned to ANSI/EIA-748 Earned Value Management Systems; the real named practice behind this build's budget-bridge variance narrative." },
+    { term:"RP 86R-14", def:"Variance Analysis and Reporting — aligned to SAE/ANSI EIA-748-E (2026) Earned Value Management Systems, the current edition superseding EIA-748-D (2019); the real named practice behind this build's budget-bridge variance narrative." },
     { term:"RP 22R-01", def:"Direct Labor Productivity Measurement — the real named practice behind this build's Crew Labor Productivity Factor (earned/actual hours)." },
     { term:"RP 49R-06", def:"Identifying the Critical Path — the real named practice grounding what schedule float is measured against, behind this build's float-erosion cost-risk signal." }
   ];
   var realFigures = [
     { term:"$208K labor variance", def:"A real GL labor-variance root-cause trace at a prior role — a structural BOM-posting gap, not a bid overrun." },
     { term:"100+ bid packages, $50M+ each", def:"A real bid-pricing and contingency-tracking history at a prior construction-estimating role." },
-    { term:"40–45% electrical, 15–25% cooling", def:"Real published 2026 data-center construction cost-driver percentages (Archdesk)." },
+    { term:"~48–54% electrical, 22–33% mechanical/cooling", def:"Real published 2026 data-center construction cost-driver percentages (Turner & Townsend Data Centre Construction Cost Index 2025-2026 — the mechanical share ranges from 22% for an air-cooled build to 33% for a liquid-cooled one). Corrected 2026-08-26: an earlier version misattributed a different split to \"Archdesk,\" which a direct fetch of Archdesk's own 2026 post did not support." },
     { term:"$4.5–5.2M/MW liquid-cooled vs. ~$1.8M/MW air-cooled", def:"Real published per-MW cost figures for cooling topology (irecruit.co, 2026)." },
     { term:"$2.8M/month idle-equipment carrying cost", def:"A real, quoted cost-of-delay figure for commissioned equipment awaiting a missing transformer on a 50MW site (irecruit.co, 2026)." },
     { term:"$12.9–$15.2/W across 5 real markets (Tokyo, Singapore, Zurich, Silicon Valley, New Jersey)", def:"Real 2025 market cost-per-watt benchmarks from Turner & Townsend's Data Centre Construction Cost Index 2025-2026 (9th year, 52 markets, ~250 experts surveyed)." },
@@ -3851,7 +3987,9 @@
   ];
   var otherStandards = [
     { term:"RICS / ICMS (International Cost Management Standards)", def:"A real, named global standard (a 49-member coalition) for how cost consultancies classify and report construction project costs across portfolios and programs — cited here as the real framework tier-one QS/cost-consultancy firms report against, not as evidence of having overseen one directly (see the accompanying Fit Brief's named gap)." },
-    { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." }
+    { term:"Uptime Institute Tier I–IV", def:"The real industry classification for data-center redundancy/uptime archetypes (Tier I basic capacity, through Tier IV fully fault-tolerant, ≤26.3 min/year downtime). Uptime Institute does not publish official per-tier cost figures — verified directly against its own site, not assumed — so no cost number is attached to a tier anywhere in this build." },
+    { term:"DCMA 14-Point Assessment", def:"A real, numeric federal schedule-health standard (Defense Contract Management Agency) — its negative-float check (a hard, zero-based flag, its single most urgent flag) backs this build's own negative-float alert, added 2026-08-26 alongside AACE RP 49R-06's critical-path-identification role." },
+    { term:"DoD IPMDAR", def:"Integrated Program Management Data and Analysis Report — a real federal EVMS reporting cadence requiring contractor cost/schedule data within 16 business days of accounting-period close. Cited here as the closest real analog to this build's own 14-day Data-Quality Reconciliation threshold (a program policy choice, not an AACE-mandated number), added 2026-08-26." }
   ];
   var industryVocab = [
     { term:"AOR / EOR (Architect / Engineer of Record)", def:"The design professional(s) of legal record on a project — the party whose stamped drawings/specs the cost-management function budgets and tracks WBS commitments against, distinct from delivery-side GC/subcontractor roles. Real, standard AEC terminology; called out here explicitly rather than assumed familiar." },
@@ -3864,29 +4002,29 @@
      already in the HTML (each with an empty #expNN div) -- this just fills them in, reusing the
      existing .info-toggle click-delegation with zero new wiring. ---------- */
   var kpiExplainers = {
-    exp01: "Portfolio Forecast = Underwriting Baseline + Σ(scope change + market escalation + field-execution variance − contingency drawdown). Reads live off the Cost tab's own budget bridge, not a separately-typed number. A forecast climbing faster than physical progress is usually the first sign a re-baseline conversation is coming.",
+    exp01: "Portfolio Forecast = Underwriting Baseline + Σ(scope change + market escalation + field-execution variance − contingency drawdown). Reads live off the Cost tab's own budget bridge, not a separately-typed number. A forecast climbing faster than physical progress is usually the first sign a re-baseline conversation is coming. Added 2026-08-26 (deep-research pass): a second, performance-based Estimate at Completion (AACE RP 80R-13) — EAC = BAC ÷ aggregate CPI — answers a different question (where current cost-performance trend says this lands) than the cost-element bridge above (why the number moved).",
     exp0206: "Net Variance = Current Forecast − Underwriting Baseline (AACE RP 86R-14 variance-analysis framework). The Market Escalation step is priced using an index-based method (AACE RP 58R-10, extended by RP 68R-11 with Monte Carlo for escalation uncertainty specifically) — a variance concentrated in the escalation step usually means the market moved, not that the team executed poorly.",
-    exp03: "Drawdown Ratio = % Contingency Drawn ÷ % Physical Complete. A ratio above 1.5x means contingency is being spent faster than the work that's supposed to justify spending it — the earlier this fires in a project's life, the more useful the warning.",
-    exp04: "Runs 2,000 simulated draws from a triangular distribution (optimistic/most-likely/pessimistic) per AACE RP 57R-09, producing P50/P80/P90 completion-cost percentiles instead of one point estimate. AACE guidance generally favors pricing contingency to P80, not P50 — a P50-priced reserve is, by definition, expected to run out roughly half the time.",
-    exp05: "Expected Value = Probability × Impact per risk (AACE RP 40R-08 risk-driver framework), summed for total exposure. Ranks risks for mitigation priority before they're priced into contingency — a high-probability, low-impact risk can rank above a low-probability catastrophic one.",
-    exp0708: "Real published 2026 industry splits (Archdesk): electrical/power ~40–45% of total cost, cooling ~15–25% (the second-largest driver). Cost Estimate Classification follows AACE RP 17R-97 (Class 5 = least-defined/conceptual, through Class 1 = most-defined/as-built) — knowing which class an estimate sits at tells you how much variance is actually normal.",
+    exp03: "Drawdown Ratio = % Contingency Drawn ÷ % Physical Complete. A ratio above 1.5x (a practitioner heuristic, not a numbered AACE threshold) means contingency is being spent faster than the work that's supposed to justify spending it — the earlier this fires in a project's life, the more useful the warning.",
+    exp04: "Runs 2,000 simulated draws from a triangular distribution (optimistic/most-likely/pessimistic) per AACE RP 57R-09, producing P50/P80/P90 completion-cost percentiles instead of one point estimate. P80, not P50, is common industry convention for pricing contingency — a P50-priced reserve is, by definition, expected to run out roughly half the time — though RP 57R-09 itself treats P80 as a reference point, not a mandated threshold (corrected 2026-08-26, deep-research pass).",
+    exp05: "Expected Value = Probability × Impact per risk (AACE RP 62R-11 qualitative risk-assessment framework), summed for total exposure. Ranks risks for mitigation priority before they're priced into contingency — a high-probability, low-impact risk can rank above a low-probability catastrophic one.",
+    exp0708: "Real published 2026 industry splits (Turner & Townsend Data Centre Construction Cost Index 2025-2026): electrical/power ~48–54% of total cost for an air-cooled build; mechanical/cooling 22% air-cooled vs. 33% liquid-cooled. Cost Estimate Classification follows AACE RP 17R-97 (Class 5 = least-defined/conceptual, through Class 1 = most-defined/as-built) — knowing which class an estimate sits at tells you how much variance is actually normal.",
     exp09: "Real US$/W benchmarks from Turner & Townsend's Data Centre Construction Cost Index 2025-2026 (9th year, 52 markets). A site pricing meaningfully above its market's benchmark is either paying a real premium (liquid cooling, site conditions) or has an estimating problem — the benchmark is what tells you which.",
     exp10: "Percent of baseline allocated per WBS category (GCs & Trades, Long Lead Equipment, Design & Engineering, Site & Utilities). A category consuming a disproportionate share relative to its historical norm is usually the first place to look when a program starts drifting.",
-    exp1112: "Per account: EV (Earned Value) = BAC × % Complete; AC (Actual Cost) = EV × an actual/earned ratio; CPI = EV/AC (ANSI/EIA-748 EVMS formulation, ≥1.0 is healthy); CV = EV − AC (negative means overrun). Drills the program-level variance down to which specific account is actually driving it.",
+    exp1112: "Per account: EV (Earned Value) = BAC × % Complete; AC (Actual Cost) = EV × an actual/earned ratio; CPI = EV/AC (SAE/ANSI EIA-748-E EVMS formulation, the 2026 edition superseding EIA-748-D). Corrected 2026-08-26 (deep-research pass): the real, cited industry trouble threshold is CPI <0.90 (DOD contract-tracking research: a cumulative CPI below 0.90 by ~20% completion 'almost never recovers'), with 0.90-0.94 a real amber watch band and ≥0.95 healthy — not a bare <1.0 cutoff. CV = EV − AC (negative means overrun). Drills the program-level variance down to which specific account is actually driving it.",
     exp13: "Adjusted Forecast = Baseline × (1 + scope%) × (1 + escalation%), plus the real, held-constant $208K driver and contingency drawdown. Lets you see the cost impact of a scope or escalation assumption before it's locked into next month's report, not after.",
-    exp14: "Erosion Rate = (first float reading − last float reading) ÷ number of periods. Critical-path identification follows AACE RP 49R-06. A real published finding: float declining at an increasing rate is a leading indicator of program trouble roughly 2–3 months before it shows up in SPI — by the time schedule performance looks bad, this would already have been flashing.",
+    exp14: "Erosion Rate = (first float reading − last float reading) ÷ number of periods. Critical-path identification follows AACE RP 49R-06; a negative-float check (illustrative-by-construction here, since this program's float never actually goes negative) follows the real DCMA 14-Point Assessment's own most-urgent flag. A real published finding: float declining at an increasing rate is a leading indicator of program trouble roughly 2–3 months before it shows up in SPI — by the time schedule performance looks bad, this would already have been flashing.",
     exp15: "Dispute EV = Σ(probability × outcome cost) + process cost, compared against the known settle-now cost — the same probability × impact logic as the risk register, applied to a binary settle-or-fight decision instead of a mitigation-priority ranking.",
-    exp16: "Variance % = (Actual Bid − Pre-Bid Estimate) ÷ Pre-Bid Estimate. Flags an estimate within ±5% of actual as normal tolerance (✓) and anything wider as worth a conversation with that consultant (⚠) before the next submission.",
-    exp17: "Compares unposted PCOs and sync-lag days (field system vs. corporate ERP) against a threshold, aligned to AACE RP 108R-19's accounting-alignment principles. A lag past threshold means this month's reported numbers are provably stale, not just possibly stale.",
+    exp16: "Variance % = (Actual Bid − Pre-Bid Estimate) ÷ Pre-Bid Estimate. Flags an estimate within AACE RP 18R-97's real, asymmetric Class 1 (bid/tender) accuracy range of -10% to +15% as normal tolerance (✓) and anything wider as worth a conversation with that consultant (⚠) before the next submission — corrected 2026-08-26 from a flat, uncited symmetric ±5% band.",
+    exp17: "Compares unposted PCOs and sync-lag days (field system vs. corporate ERP) against a threshold, aligned to AACE RP 108R-19's accounting-alignment principles. A lag past threshold means this month's reported numbers are provably stale, not just possibly stale. The 14-day threshold itself is a program policy choice, not something RP 108R-19 specifies numerically (corrected 2026-08-26) — the closest real cited analog is DoD's IPMDAR 16-business-day EVMS reporting cadence.",
     exp18: "LPF = Earned Direct-Labor Hours ÷ Actual Direct-Labor Hours Expended (AACE RP 22R-01, direct labor productivity measurement). LPF ≥ 1.0 means the crew earned at least as much work as it spent hours on; below 1.0 is a real, quantified productivity loss, not a guess.",
-    exp19: "Variance % = (Forecast − Baseline) ÷ Baseline, computed per region. Ranking by ratio rather than raw dollars means a small region running badly over doesn't hide behind a large region running fine.",
-    exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure. A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy.",
+    exp19: "Variance % = (Forecast − Baseline) ÷ Baseline, computed per region. Ranking by ratio rather than raw dollars means a small region running badly over doesn't hide behind a large region running fine. Added 2026-08-26: real Turner & Townsend $/W figures for 3 of 4 regions confirm these markets aren't interchangeable cost environments, though this program's own baseline/forecast numbers (a different question — variance, not market level) stay illustrative; no real Latin America benchmark was found.",
+    exp20: "Contingency Coverage Ratio = Remaining Reserve ÷ Total Priced Risk Exposure (AACE RP 40R-08). A ratio below 1.00 means the priced risks currently on the books exceed what's left to pay for them if they hit — genuinely blocking the gate, not a bar someone set to “pending” by policy. The 1.00x threshold itself is reasonable practitioner judgment, not a numeric value RP 40R-08 (or any source found in a 2026-08-26 deep-research pass) actually mandates.",
     expLLE: "Buffer = Available Schedule Window − Procurement Lead Time, per long-lead package. A negative buffer means that package's own delivery date is already later than the schedule it's meant to feed — it is the critical path, whether or not it's been named that yet. Real data-center transformer lead times running 160+ weeks (up to ~200+ for the largest HV units) are what make this check load-bearing rather than academic.",
     expEscGov: "Age (days) = today − last re-validated date, compared against a fixed re-validation cadence (here, a 90-day/quarterly cadence). Escalation assumptions are index-driven and market conditions move continuously — treating a re-basing cadence as a hard check, not a calendar reminder someone can forget, is what keeps a cited escalation rate defensible months after it was first pulled.",
     expBullet: "One bar answers what three separate KPI tiles used to require reading in sequence: the forecast bar itself, a baseline reference line, and a Monte Carlo P90 worst-case line, all on one axis. A forecast bar that's already crept past the baseline line — while still sitting comfortably short of the P90 line — is a materially different conversation than one pressing up against P90.",
-    expSensitivity: "Runs the same what-if forecast function used by the sandbox above at a fixed ±10% swing on each lever in isolation, then ranks by absolute $ impact — the standard tornado-diagram technique for showing which input actually moves the total most, before touching the real sliders.",
-    expHeatmap: "Places each priced risk into a probability × impact cell (AACE RP 40R-08's own risk-driver framework), bubble size scaled to expected value. A risk doesn't have to be the biggest dollar figure to deserve the most attention — high-probability/high-impact risks in the top-right are the ones a mitigation plan should reach first.",
-    expStoplight: "One tile per control account, colored by the same CPI formula as the ledger table below (EV/AC, ANSI/EIA-748) — an account run over multiple periods should be escalated well before its cumulative CV becomes unrecoverable, and a stoplight reads faster than a table column at a glance.",
+    expSensitivity: "Runs the same what-if forecast function used by the sandbox above at a fixed ±10% swing on each lever in isolation, then ranks by absolute $ impact — a common (not a single codified AACE-mandated) tornado-diagram default for showing which input actually moves the total most, before touching the real sliders.",
+    expHeatmap: "Places each priced risk into a probability × impact cell (AACE RP 62R-11's qualitative risk-assessment framework), bubble size scaled to expected value. A risk doesn't have to be the biggest dollar figure to deserve the most attention — high-probability/high-impact risks in the top-right are the ones a mitigation plan should reach first.",
+    expStoplight: "One tile per control account, banded by the same real 3-tier CPI threshold as the ledger table below (EV/AC, SAE/ANSI EIA-748-E) — good (≥0.95), watch (0.90-0.94), trouble (<0.90) — an account run over multiple periods should be escalated well before its cumulative CV becomes unrecoverable, and a stoplight reads faster than a table column at a glance.",
     expCvTornado: "Ranks control accounts by |CV| (Earned Value − Actual Cost), worst first — the same accounts and the same formula as the ledger table, just re-sorted so the account actually driving the program's overall variance doesn't have to be found by scanning every row.",
     expMaturity: "AACE RP 17R-97 defines 5 estimate classes from Class 5 (conceptual, least-defined) to Class 1 (as-built, most-defined) — each with a wider or narrower expected accuracy range as design and procurement mature. Knowing which class an estimate sits at is what tells leadership how much variance is actually normal versus a real red flag.",
     expVarianceTrend: "The same Net Variance figure from the KPI tile above (Current Forecast − Baseline), shown as a trend instead of a single point. A variance that's growing period over period is a materially different signal than one that spiked once and has been flat since — the point-in-time number alone can't tell those two stories apart.",
@@ -3894,10 +4032,10 @@
     expTreemap: "Block width = each control account's BAC ÷ total program BAC — the same real dollar amounts as the Control Account Ledger table below, not a second invented split. A block visibly wider than the others is where a 1% productivity or scope swing does the most damage in absolute dollars, even if its % share hasn't changed.",
     expFloatBurndown: "Plots the same 4 float readings driving the KPI tiles and the alert above, then extends a dashed projection to the same 'weeks to zero' figure computeFloatErosionRate() already calculates — seeing the trajectory, not just the current reading, is what makes an erosion pattern legible before it's a crisis.",
     expInterconnection: "$ Exposure = Baseline × a real, cited 30–37% share of total project budget (RMI / Eckert Seamans / Data Center Knowledge, 2026). Schedule risk = a real, cited up-to-12-year typical wait for a data-center-scale interconnection request compared against this program's own assumed development schedule. Interconnection is now frequently the true critical path — not the construction activities a schedule traditionally tracks — which is exactly why it gets its own line here instead of being absorbed into 'site work.'",
-    expRampLag: "Remaining Reserve = Ramp Reserve − Unrecoverable OpEx Incurred. Real, cited industry sources (Adventures in CRE's data-center development model; a DOE-funded 2026 study on fast-ramping datacenter loads) describe a genuine 12–30 month lag between lease commencement and full contracted power draw — this program's own 18-month assumption and its reserve math are illustrative, sized inside that real range.",
-    expLeasedMetered: "Real, published revenue-mix benchmark (Cushman & Wakefield, Data Center Spotlight): hyperscale data-center revenue typically splits 70–80% reserved-capacity base rent and 15–20% metered power pass-through. This is a revenue-MIX benchmark, not a stabilization-timeline target — a distinction an earlier version of this section's source material blurred.",
-    expSlaPenalty: "Penalty Exposure = (Actual Downtime Minutes − Committed-Tier Allowed Downtime Minutes) ÷ Minutes per Year × Annual Revenue — the same mechanics a real SLA-credit clause uses. Committed to the real Uptime Institute Tier IV standard (99.995%, ~26 min/yr allowed downtime), not a blanket 'five nines' (99.999%) claim, which is real only as Equinix's own power-specific SLA, not a universal industry standard.",
-    expRevenueYield: "Revenue per MW = Annual Revenue ÷ Contracted MW — the real, named capacity-economics metric data-center investors actually track (S&P Global Visible Alpha / Chronograph). Gross Margin = (Revenue − Direct Costs) ÷ Revenue, sized here to land inside the real ~50–55% stabilized range Digital Realty and Equinix actually report — not the single blended 'gross margin per MW' figure sometimes proposed, which no real operator's filings report."
+    expRampLag: "Remaining Reserve = Ramp Reserve − Unrecoverable OpEx Incurred. Two real sources (Adventures in CRE's data-center development model; Build Inc.'s 2026 hyperscale lease-terms analysis) describe a genuine, real ramp lag between lease commencement and full contracted power draw — this program's own 18-month assumption, its reserve math, AND the 12–30 month envelope itself are illustrative, synthesized to bracket those two real but narrower data points (corrected 2026-08-26: an earlier version also cited an unverifiable \"DOE-funded 2026 study,\" now dropped).",
+    expLeasedMetered: "Illustrative revenue-mix assumption (70–80% reserved-capacity base rent, 15–20% metered power pass-through) — corrected 2026-08-26: the previously-cited Cushman & Wakefield report (Data Center Spotlight) is real but dated 2023, not 2026, and contains no leased-vs-metered split at all. The underlying distinction (lease revenue vs. metered pass-through) is still a real one; the specific split shown is this program's own modeling assumption, not a reported benchmark.",
+    expSlaPenalty: "Penalty Exposure = (Actual Downtime Minutes − Committed-Tier Allowed Downtime Minutes) ÷ Minutes per Year × Annual Revenue — a continuous pro-rata simplification of a real SLA-credit mechanic (Equinix's own published SLA: 1/30th of Monthly Recurring Charge per affected circuit per breach, plus 1/30th MRC per additional full hour beyond it, added 2026-08-26). Committed to the real Uptime Institute Tier IV standard (99.995%, ~26 min/yr allowed downtime), not a blanket 'five nines' (99.999%) claim, which is real only as Equinix's own power-specific SLA, not a universal industry standard.",
+    expRevenueYield: "Revenue per MW = Annual Revenue ÷ Contracted MW — the real, named capacity-economics metric data-center investors actually track (S&P Global Visible Alpha / Chronograph). Adjusted EBITDA Margin = (Revenue − Direct Costs) ÷ Revenue, sized here to land inside Equinix's real 50–57% range (Q2 2026 earnings, July 29, 2026: 53% company-wide, up from 50% a year prior; 51%/54%/57% across Americas/EMEA/APAC) — not the single blended 'gross margin per MW' figure sometimes proposed, which no real operator's filings report. Corrected 2026-08-26: this KPI previously called the figure 'gross margin' and cited Digital Realty alongside Equinix; the metric Equinix actually reports is adjusted EBITDA margin, and Digital Realty's own findable real figure (an 11.5% stabilized development yield) is a different metric that doesn't independently corroborate a margin number."
   };
   // Plain-English alternates to every explainer above, toggled by #explainBtn -- same ids, so
   // rendering just picks which object to read from rather than needing a second render path.
@@ -3965,29 +4103,29 @@
 
   /* ---------- Reference tab: the 20-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
   var kpiCatalog = [
-    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver" },
+    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13" },
     { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14" },
     { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method" },
     { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09" },
-    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 40R-08" },
+    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 62R-11" },
     { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11" },
     { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97" },
-    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Archdesk 2026" },
+    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026" },
     { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026" },
     { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
-    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"ANSI/EIA-748" },
-    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"ANSI/EIA-748" },
+    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E" },
+    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E" },
     { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
-    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06" },
+    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06 + DCMA 14-Point" },
     { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design" },
-    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"illustrative", cite:"—" },
-    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19" },
+    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 18R-97 (Class 1, -10%/+15%)" },
+    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19 (threshold: program policy, cf. DoD IPMDAR 16-day cadence)" },
     { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01" },
-    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"—" },
-    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + DOE 2026 (12-30mo ramp lag)" },
-    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Cushman & Wakefield" },
-    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix" },
-    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Gross Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Digital Realty/Equinix" },
+    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"Turner & Townsend 2025-2026 (real $/W context, added 2026-08-26)" },
+    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + Build Inc. 2026 (real method, illustrative 12-30mo envelope)" },
+    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"illustrative assumption (corrected 2026-08-26; C&W doesn't report this split)" },
+    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix's real SLA credit structure" },
+    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Adj. EBITDA Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Equinix Q2 2026 earnings" },
     { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08" }
   ];
   function renderKpiCatalog(){
@@ -4175,25 +4313,33 @@
   // invention. year: null means this build genuinely never stated a year for that source --
   // listed honestly rather than silently dropped (see the section's own src-note).
   var dataFreshnessLog = [
-    { source:"AACE RP 108R-19", citedFor:"Data-quality/field-vs-ERP reconciliation staleness", year:2019 },
+    { source:"AACE RP 108R-19", citedFor:"Accounting-alignment methodology (not a numeric threshold -- corrected 2026-08-26)", year:2019 },
+    { source:"DoD IPMDAR", citedFor:"16-business-day EVMS reporting cadence (closest real analog to this build's 14-day threshold), added 2026-08-26", year:null },
     { source:"AACE RP 65R-11", citedFor:"Expected-value contingency (complementary method)", year:2011 },
     { source:"AACE RP 68R-11", citedFor:"Escalation estimating with Monte Carlo simulation", year:2011 },
-    { source:"AACE RP 86R-14", citedFor:"Variance analysis & reporting (ANSI/EIA-748 aligned)", year:2014 },
+    { source:"AACE RP 86R-14", citedFor:"Variance analysis & reporting (SAE/ANSI EIA-748-E aligned)", year:2014 },
+    { source:"SAE/ANSI EIA-748-E", citedFor:"EVMS CPI 3-band threshold (<0.90 trouble, 0.90-0.94 watch, >=0.95 healthy), added 2026-08-26", year:2026 },
     { source:"AACE RP 58R-10", citedFor:"Index-based escalation estimating", year:2010 },
     { source:"AACE RP 57R-09", citedFor:"Monte Carlo contingency simulation", year:2009 },
+    { source:"AACE RP 80R-13", citedFor:"Performance-based Estimate at Completion (added 2026-08-26)", year:2013 },
+    { source:"AACE RP 18R-97", citedFor:"Class 1 bid/tender asymmetric accuracy range (-10%/+15%), added 2026-08-26", year:1997 },
     { source:"AACE RP 44R-08", citedFor:"Expected-value contingency (base practice)", year:2008 },
-    { source:"AACE RP 40R-08", citedFor:"Risk-driver contingency estimating", year:2008 },
-    { source:"AACE RP 49R-06", citedFor:"Critical-path identification (float-erosion signal)", year:2006 },
+    { source:"AACE RP 40R-08", citedFor:"Contingency estimating general principles (Gate 4 coverage check)", year:2008 },
+    { source:"AACE RP 62R-11", citedFor:"Priced risk register / probability-impact heat-map (qualitative risk assessment) -- corrected 2026-08-26 from a misapplied RP 40R-08 citation", year:2011 },
+    { source:"AACE RP 49R-06", citedFor:"Critical-path identification (what float is measured against)", year:2006 },
+    { source:"DCMA 14-Point Assessment", citedFor:"Negative-float threshold (added 2026-08-26)", year:null },
     { source:"AACE RP 22R-01", citedFor:"Direct labor productivity measurement", year:2001 },
     { source:"AACE RP 17R-97", citedFor:"Cost estimate classification (Class 5-1)", year:1997 },
     { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Market $/W benchmarks, escalation rate/outlook", year:2026 },
-    { source:"Archdesk", citedFor:"Data-center cost-driver split (electrical/cooling %)", year:2026 },
+    { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Data-center cost-driver split (electrical/mechanical %, air-cooled vs. liquid-cooled) -- corrected 2026-08-26 from a misattributed \"Archdesk\" citation", year:2026 },
+    { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Multi-region $/W cost differentials (NA/EMEA/APAC; no LatAm figure found), added 2026-08-26", year:2026 },
     { source:"irecruit.co", citedFor:"Liquid-cooled vs. air-cooled $/MW, idle-equipment carrying cost", year:2026 },
-    { source:"Digital Realty / Equinix (Q1 2026 reporting)", citedFor:"Stabilized gross-margin range (50-55%)", year:2026 },
-    { source:"DOE-funded study (fast-ramping datacenter loads)", citedFor:"Tenant power-ramp lag", year:2026 },
+    { source:"Equinix (Q2 2026 earnings, July 29, 2026)", citedFor:"Adjusted EBITDA margin range (50-57%) -- corrected 2026-08-26 from a mislabeled 'gross margin' claim previously also citing Digital Realty", year:2026 },
+    { source:"Build Inc. (2026 hyperscale lease-terms analysis)", citedFor:"Tenant power-ramp lag (6-12mo contractual tranches) -- replaces an unverifiable \"DOE-funded study\" citation, 2026-08-26", year:2026 },
     { source:"RMI / Eckert Seamans / Data Center Knowledge", citedFor:"Interconnection cost share & wait time", year:2026 },
-    { source:"Cushman & Wakefield (Data Center Spotlight)", citedFor:"Leased vs. metered revenue mix", year:null },
+    { source:"Cushman & Wakefield (Data Center Spotlight)", citedFor:"Lease-rate/power-cost trends (real, 2023) -- corrected 2026-08-26: does NOT report a leased-vs-metered split; that figure is now illustrative", year:2023 },
     { source:"Uptime Institute", citedFor:"Tier I-IV uptime/redundancy standards", year:null },
+    { source:"Equinix (published Colocation Service SLA)", citedFor:"Real SLA credit structure (1/30th MRC per breach) grounding the penalty-exposure formula, added 2026-08-26", year:null },
     { source:"S&P Global Visible Alpha / Chronograph", citedFor:"Revenue-per-MW metric", year:null },
     { source:"Adventures in CRE", citedFor:"Tenant power-ramp lag (data-center development model)", year:null },
     { source:"RICS / ICMS", citedFor:"Cost-management reporting standard", year:null }
@@ -4527,12 +4673,12 @@
         var ok = Math.abs(expected - slaResult.penaltyExposure) < 1e-6;
         return [ok, fmt(slaResult.penaltyExposure)];
       }},
-    { n:"Revenue/MW and gross margin recompute from raw revenue/cost literals, land inside the real cited 50-55% range", run:function(){
+    { n:"Revenue/MW and adj. EBITDA margin recompute from raw revenue/cost literals, land inside Equinix's real cited 50-57% range", run:function(){
         var expectedRevPerMW = 180000000 / 50;
         var expectedMarginPct = ((180000000 - 85000000) / 180000000) * 100;
         var ok = Math.abs(expectedRevPerMW - revenueYieldResult.revenuePerMW) < 1e-6 &&
           Math.abs(expectedMarginPct - revenueYieldResult.marginPct) < 1e-6 &&
-          expectedMarginPct >= 50 && expectedMarginPct <= 55;
+          expectedMarginPct >= 50 && expectedMarginPct <= 57;
         return [ok, fmt(expectedRevPerMW) + "/MW, " + expectedMarginPct.toFixed(1) + "%"];
       }}
   ];
@@ -4611,6 +4757,7 @@
     computeRiskCategorySubtotals: computeRiskCategorySubtotals,
     // Director-grade visuals (brainstorm build)
     bandForValue: bandForValue,
+    cpiBand: cpiBand,                 // deep-research pass, 2026-08-26: real 3-tier CPI threshold
     bulletResult: bulletResult,
     gaugeResult: gaugeResult,
     computeRiskHeatCells: computeRiskHeatCells,
@@ -4635,6 +4782,7 @@
     computeTwoBarLayout: computeTwoBarLayout,
     GATE4_GAUGE_BANDS: GATE4_GAUGE_BANDS,
     consultantScatterResult: consultantScatterResult,
+    withinConsultantTolerance: withinConsultantTolerance, // deep-research pass, 2026-08-26: real AACE RP 18R-97 Class 1 asymmetric band
     dqLagTrendResult: dqLagTrendResult,
     lpfDivergingBarResult: lpfDivergingBarResult,
     computeRegionVariancePct: computeRegionVariancePct,
@@ -4677,7 +4825,7 @@
     getSlaResult: function(){ return slaResult; },
     revenueYieldAssumptions: revenueYieldAssumptions,
     computeRevenuePerMW: computeRevenuePerMW,
-    computeGrossMarginPct: computeGrossMarginPct,
+    computeGrossMarginPct: computeAdjEbitdaMarginPct, // key kept for backward compatibility; function renamed 2026-08-26
     getRevenueYieldResult: function(){ return revenueYieldResult; },
     // 10-feature UX/UI brainstorm pass (2026-08-26)
     arrayToCSV: arrayToCSV,               // #1 CSV export -- pure formatting half

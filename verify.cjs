@@ -524,13 +524,25 @@ assertEqual(state.AACE_CLASSES.length, 5, "5 AACE cost-estimate classes (Class 5
 assertEqual(state.costEstimateClass, 3, "this build's illustrative current class is Class 3 (mid-procurement)");
 assertEqual(state.ladderResult.current, state.costEstimateClass, "ladderResult.current matches the module-level costEstimateClass, not a stale copy");
 
-console.log("--- Director-grade visuals: CPI stoplight grid ---");
+console.log("--- Director-grade visuals: CPI stoplight grid (real 3-band threshold, deep-research pass 2026-08-26) ---");
 assertEqual(state.stoplightResult.length, state.controlAccounts.length, "one stoplight tile per control account, no silent drop or duplicate");
+// Independent re-derivation via the raw formula (real DOD-cited thresholds: <0.90 trouble,
+// 0.90-0.94 watch, >=0.95 good), NOT a second call to cpiBand() with the same input -- same
+// tautology class this build's other GUARDS entries avoid. The prior version of this test compared
+// `a.cpi >= 1` to itself, which could never fail regardless of what the real code did -- fixed.
 state.stoplightResult.forEach((a) => {
-  // Re-derive the ok/warn classification independently rather than trusting the page's own class name.
-  const expectedOk = a.cpi >= 1;
-  assertStrEqual(expectedOk, a.cpi >= 1, `stoplight tile "${a.name}" ok/warn classification matches cpi >= 1.0 independently re-checked`);
+  const expectedBand = a.cpi >= 0.95 ? "good" : a.cpi >= 0.90 ? "watch" : "trouble";
+  assertStrEqual(state.cpiBand(a.cpi), expectedBand, `stoplight tile "${a.name}" (CPI ${a.cpi.toFixed(4)}) bands as "${expectedBand}", independently re-derived from the real threshold literals`);
 });
+// This program's own real default data must exercise BOTH the "good" and "watch" bands (confirmed,
+// not assumed) -- "trouble" (<0.90) is never hit by default, so it's tested via a fixture below.
+const realBands = state.controlAccounts.map((a) => state.cpiBand(a.cpi));
+assertStrEqual(realBands.includes("good") && realBands.includes("watch"), true, "this program's real default control accounts exercise both the 'good' and 'watch' CPI bands, not just one");
+assertStrEqual(realBands.includes("trouble"), false, "this program's real default control accounts never hit 'trouble' (<0.90) -- confirmed, not assumed; that branch is tested via a fixture next");
+assertStrEqual(state.cpiBand(0.8999), "trouble", "cpiBand(): just below 0.90 is 'trouble' (the real DOD-cited threshold), the never-exercised-by-default branch");
+assertStrEqual(state.cpiBand(0.90), "watch", "cpiBand(): exactly 0.90 is 'watch', not 'trouble' -- the boundary is inclusive on the watch side");
+assertStrEqual(state.cpiBand(0.9499), "watch", "cpiBand(): just below 0.95 is still 'watch', not 'good'");
+assertStrEqual(state.cpiBand(0.95), "good", "cpiBand(): exactly 0.95 is 'good' -- the boundary is inclusive on the good side");
 
 console.log("--- Director-grade visuals: Control-Account CV tornado ---");
 const expectedCvRanking = state.controlAccounts.slice().sort((a, b) => Math.abs(b.cv) - Math.abs(a.cv)).map((a) => a.name);
@@ -595,17 +607,29 @@ const disputeWinsLayout = state.computeTwoBarLayout(100000, 60000, "dispute");
 assertStrEqual(disputeWinsLayout.settleWins, false, "computeTwoBarLayout() correctly flags dispute as the winner when disputeEV < settleNowCost (never-exercised-by-default branch)");
 assertEqual(disputeWinsLayout.disputePct, (60000 / (100000 * 1.15)) * 100, "dispute-bar height % independently re-derives in the dispute-wins fixture", 0.01);
 
-console.log("--- Phase 2 director-grade visuals: Consultant scatter plot ---");
+console.log("--- Phase 2 director-grade visuals: Consultant scatter plot (real AACE RP 18R-97 Class 1 asymmetric band, corrected 2026-08-26) ---");
 assertEqual(state.consultantScatterResult.length, 3, "3 consultants plotted");
+// Independent re-derivation via the real, asymmetric literals (-10% to +15%), NOT a second call to
+// withinConsultantTolerance() with the same input -- same tautology class this build's GUARDS avoid.
 const expectedTolerance = [
-  Math.abs((1310000 - 1240000) / 1240000 * 100) <= 5,
-  Math.abs((2085000 - 2100000) / 2100000 * 100) <= 5,
-  Math.abs((702000 - 640000) / 640000 * 100) <= 5
+  ((1310000 - 1240000) / 1240000 * 100) >= -10 && ((1310000 - 1240000) / 1240000 * 100) <= 15,
+  ((2085000 - 2100000) / 2100000 * 100) >= -10 && ((2085000 - 2100000) / 2100000 * 100) <= 15,
+  ((702000 - 640000) / 640000 * 100) >= -10 && ((702000 - 640000) / 640000 * 100) <= 15
 ];
 state.consultantScatterResult.forEach((c, i) => {
-  assertStrEqual(c.withinTolerance, expectedTolerance[i], `consultant #${i + 1} (${c.name}) tolerance flag independently re-derives from its real pre-bid/actual figures`);
+  assertStrEqual(c.withinTolerance, expectedTolerance[i], `consultant #${i + 1} (${c.name}) tolerance flag independently re-derives from its real pre-bid/actual figures against the real asymmetric band`);
 });
-assertStrEqual(state.consultantScatterResult[0].withinTolerance, false, "Consultant A (+5.6%) correctly falls OUTSIDE the +/-5% tolerance band (never-exercised-by-a-passing-demo branch)");
+// Under the OLD flat symmetric ±5% band, Consultant A (+5.6%) and Consultant C (+9.7%) both fell
+// OUTSIDE tolerance -- confirming here that the real, wider AACE band now correctly clears both,
+// not silently the same result under a different label.
+assertStrEqual(state.consultantScatterResult[0].withinTolerance, true, "Consultant A (+5.6%) is WITHIN the real -10%/+15% AACE Class 1 band (would have failed the old, incorrect ±5% band)");
+assertStrEqual(state.consultantScatterResult[2].withinTolerance, true, "Consultant C (+9.7%) is WITHIN the real -10%/+15% AACE Class 1 band (would have failed the old, incorrect ±5% band)");
+// The warn (outside-tolerance) branch is never exercised by this program's own real default data
+// under the new, wider band -- tested directly via a fixture instead, at both the real boundaries.
+assertStrEqual(state.withinConsultantTolerance(15), true, "withinConsultantTolerance(): exactly +15% is WITHIN tolerance -- the upper boundary is inclusive");
+assertStrEqual(state.withinConsultantTolerance(15.01), false, "withinConsultantTolerance(): just above +15% is OUTSIDE tolerance (the never-exercised-by-default warn branch)");
+assertStrEqual(state.withinConsultantTolerance(-10), true, "withinConsultantTolerance(): exactly -10% is WITHIN tolerance -- the lower boundary is inclusive");
+assertStrEqual(state.withinConsultantTolerance(-10.01), false, "withinConsultantTolerance(): just below -10% is OUTSIDE tolerance");
 
 console.log("--- Phase 2 director-grade visuals: DQ sync-lag trend ---");
 assertEqual(state.dqLagTrendResult.values.length, 5, "DQ lag trend has 5 points (4 illustrative + 1 real)");
@@ -676,7 +700,7 @@ assertStrEqual(state.slaAlertContent(slaNoBreach).className, "alert-card ok", "s
 assertEqual(state.computeRevenuePerMW(180000000, 50), 3600000, "computeRevenuePerMW(): this program's real default ($180M revenue / 50 contracted MW) is $3.6M/MW/yr");
 assertEqual(state.computeRevenuePerMW(180000000, 0), 0, "computeRevenuePerMW() guards divide-by-zero on zero contracted MW, not NaN/Infinity");
 const marginPct = state.computeGrossMarginPct(180000000, 85000000);
-assertStrEqual(marginPct >= 50 && marginPct <= 55, true, "computeGrossMarginPct(): this program's real default margin genuinely lands inside the real cited 50-55% stabilized range, not just claimed to");
+assertStrEqual(marginPct >= 50 && marginPct <= 57, true, "computeGrossMarginPct(): this program's real default margin genuinely lands inside Equinix's real cited 50-57% adjusted-EBITDA-margin range (corrected 2026-08-26 from a mislabeled '50-55% gross margin' claim), not just claimed to");
 assertEqual(state.computeGrossMarginPct(180000000, 0), 100, "computeGrossMarginPct() at zero direct cost is a 100% margin, not a divide error");
 assertEqual(state.computeGrossMarginPct(0, 0), 0, "computeGrossMarginPct() guards divide-by-zero on zero revenue, not NaN");
 
