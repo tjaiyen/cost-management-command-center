@@ -1756,12 +1756,12 @@
     cost: { label:"Cost", q:"What does this program actually cost, and where does the money go?", note:"Budget bridge, benchmarks, WBS, control-account ledger, what-if sandbox." },
     contingency: { label:"Contingency & Risk", q:"Is the reserve keeping pace with real risk, or running out?", note:"Monte Carlo, drawdown ratio, priced risk register, float signal, EMV settlement." },
     governance: { label:"Vendor & Governance", q:"Can leadership trust the numbers, and is the crew performing?", note:"Consultant scorecard, data-quality health, crew productivity." },
-    portfolio: { label:"Portfolio", q:"How is this program doing across its own regions?", note:"Multi-region cost rollup." },
+    portfolio: { label:"Portfolio", q:"How is this program doing across its own regions?", note:"Multi-region cost rollup, plus cross-border FX & regulatory-regime exposure." },
     ramp: { label:"Commercial Ramp", q:"After construction ends, does the revenue actually show up on schedule?", note:"Tenant power-ramp lag, leased-vs-metered mix, SLA penalty exposure, revenue per MW." },
     framework: { label:"Operating Framework", q:"What governance does this program actually run on?", note:"A genuinely computed Gate 4, plus the illustrative stage-gate track." },
     actions: { label:"Actions", q:"What's open, who owns it, and what's gone stale?", note:"A commercial action-item register with real staleness logic." },
     triage: { label:"Attention & Triage", q:"Out of everything on this dashboard, what actually needs a human right now?", note:"A cross-tab digest re-checking every alert already computed elsewhere." },
-    data: { label:"Data Strategy", q:"How does scattered data actually become these numbers?", note:"Pipeline architecture, plus a free local DuckDB parity layer." },
+    data: { label:"Data Strategy", q:"How does scattered data actually become these numbers?", note:"Pipeline architecture, a free local DuckDB parity layer, sustainability/compliance benchmarks, and a technology maturity ledger." },
     reference: { label:"Reference", q:"What does this term mean, and which visual answers it?", note:"The 25-KPI catalog, plus a searchable glossary of every citation used." }
   };
   // Mini-sparkline preview (brainstorm build, 2026-08-26): only for the 3 tabs that already have
@@ -4154,6 +4154,7 @@
     { term:"Bank for International Settlements (BIS)", def:"Maintains real, active guidance on FX-settlement risk mitigation in cross-border payments — the standards body behind this build's cross-currency-swap hedging framing, added 2026-08-27." },
     { term:"The Green Grid", def:"The real industry consortium that originally defined PUE (2007, White Paper #49), WUE (White Paper #35), and CUE (White Paper #32) — the standard data-center efficiency/sustainability metrics grounding this build's Sustainability &amp; Compliance section, added 2026-08-27." },
     { term:"EU Energy Efficiency Directive, Article 12", def:"Real, binding EU regulation (plus Commission Delegated Regulation (EU) 2024/1364): any data center with ≥500kW installed IT power must publicly report PUE, WUE, Energy Reuse Factor, and Renewable Energy Factor annually via a standard template, due every 15 May. The actual near-term compliance driver for an EU-sited facility this size — more specific and binding than CSRD. Added 2026-08-27." },
+    { term:"Technology Maturity Ledger", def:"This build's own honest evidence-strength grading (Data Strategy tab) of 5 cost/schedule-forecasting technologies surveyed in the 2026-08-27 research pass — CV-based progress monitoring and EVM graded Mature (decades of real, standardized use), ML forecasting and AI/NLP risk-mining graded real-but-early, and construction-phase digital twins graded mostly vendor-narrative once checked. Added so a ⌘K search for 'technology maturity' or similar actually surfaces it, not just its parent tab." },
     { term:"Bain &amp; Company, \"Beyond the Stage Gate\"", def:"Real, published Bain &amp; Company research (via IPA) concluding most capital-project value erosion happens before final investment decision, not after — the specific >17,000-project/~22%-NPV-erosion figures often cited for it could not be independently re-located this pass and are stated as reported, not independently re-verified. Cited evidence for why Gate 4 here is genuinely computed, not a status someone sets to \"pending.\" Added 2026-08-27." },
     { term:"Flyvbjerg, JAPA 2002", def:"Bent Flyvbjerg's core peer-reviewed paper (\"Underestimating Costs in Public Works Projects: Error or Lie?\", Journal of the American Planning Association) examined 258 real transportation projects worth $90B and found systematic cost underestimation best explained by strategic misrepresentation, not honest error — real evidence for why an independently-computed gate matters more than a bigger spreadsheet. Added 2026-08-27." }
   ];
@@ -4331,7 +4332,9 @@
   }
   renderKpiCatalog();
 
-  /* ---------- Guided Tour: walks kpiCatalog's own 20 stops, no separate data set ---------- */
+  /* ---------- Guided Tour: walks kpiCatalog's own stops (its .length, not a hardcoded count
+     here -- this comment previously said "20 stops" and drifted stale as the catalog grew to 25,
+     the exact defect class a /stress-test pass on 2026-08-27 caught), no separate data set ---------- */
   var tourActive = false;
   var tourStep = 0;
   var tourBanner = document.getElementById("tourBanner");
@@ -4733,6 +4736,7 @@
     interconnectionResult = renderInterconnectionExposure();
     regionRankedBarResult = renderRegionRankedBar();
     regionAdjustResult = renderRegionAdjust();
+    fxExposureResult = renderFxExposureTable();
     rampStatus = renderRampKpis();
     rampDelayResult = renderRampDelaySlider();
     slaResult = renderSlaKpis();
@@ -4872,6 +4876,17 @@
         var expected = (excess / minutesPerYear) * annualRevenue;
         var ok = Math.abs(expected - slaResult.penaltyExposure) < 1e-6;
         return [ok, fmt(slaResult.penaltyExposure)];
+      }},
+    { n:"LATAM's unhedged FX exposure recomputes from its own real forecast x the cited 40% hedge ratio, raw literals", run:function(){
+        // Raw-literal recompute (region forecast/hedge ratio read as plain data, not a second call
+        // to computeUnhedgedExposure()) -- same tautology class every GUARDS entry above avoids.
+        // A stress-test pass (2026-08-27) found FX exposure was the only illustrative-input/real-
+        // math KPI of this shape (alongside Interconnection/Ramp/SLA above) with no GUARDS entry.
+        var latam = regions.filter(function(r){ return r.code === "LATAM"; })[0];
+        var expected = latam.forecast * (1 - 40 / 100);
+        var row = fxExposureResult.filter(function(r){ return r.code === "LATAM"; })[0];
+        var ok = Math.abs(expected - row.unhedged) < 1e-6;
+        return [ok, fmt(row.unhedged)];
       }},
     { n:"Revenue/MW and adj. EBITDA margin recompute from raw revenue/cost literals, land inside Equinix's real cited 50-57% range", run:function(){
         var expectedRevPerMW = 180000000 / 50;

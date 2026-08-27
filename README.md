@@ -785,7 +785,7 @@ visual there would have implied more rigor than exists.
 Every new pure-function branch (hedge-ratio math, PUE-vs-average categorization, the Mature-count
 tally) was falsification-tested (broken, confirmed the specific test fails as predicted, restored,
 re-confirmed green) before shipping. `otherStandards` glossary grows from 4 to 12 real entries;
-`dataFreshnessLog` grows from 30 to 39 real sourced rows. index.html 4,873 → 5,055 (+182), verify.cjs
+`dataFreshnessLog` grows from 30 to 39 real sourced rows. index.html 4,873 → 5,059 (+186), verify.cjs
 1,845 → 1,872 (+27), stress.cjs unchanged at 524 (explainer-div count updated in place). Both suites
 green.
 
@@ -801,3 +801,43 @@ cross-industry figure, and the specific ">17,000 projects / ~22% NPV erosion" nu
 attached to Bain's real "Beyond the Stage Gate" research could not be independently re-located —
 both now stated with that caveat rather than as flatly-confirmed figures, everywhere they appear
 (Estimate Maturity and Gate 4 src-notes, both glossary entries, both dataFreshnessLog rows).
+
+**`/stress-test` pass on the above (2026-08-27)** — a full adversarial stress-test (per this repo's
+own established method: self-review + an independent fresh-context reviewer + pre-registered/
+probed checks), separate from and deeper than the reviewer pass above. Found and fixed 3 real
+issues, all falsification-tested:
+
+*A real live bug, empirically probed* — the currency-toggle change handler re-renders ~20 other
+dollar-figure sections but never called `renderFxExposureTable()`, so switching currency left the
+new FX Exposure table's dollar amounts stale in whatever currency was active at page load — the
+exact defect class this same test suite already caught once before (the reliability-note $208K
+fix). Pre-registered the expected GBP-conversion failure, fired the real `change` event against a
+Node DOM-stub harness, confirmed the predicted FAIL, fixed with one added render call, re-confirmed
+green. A second probe (cold reload with a persisted GBP currency, not the live toggle) confirmed
+that path was already correct — added as its own permanent regression test since nothing had
+checked it before.
+
+*A real coverage gap against this codebase's own established pattern* — FX Exposure was the only
+"illustrative-input, real-math" KPI of its kind (alongside Interconnection Exposure, Ramp Reserve,
+and SLA Penalty, which all have one) with no client-side Live Integrity Gate reconciliation check.
+Added one (GUARDS 18 → 19), raw-literal recompute per this file's own non-tautology discipline,
+falsification-tested (broken the literal, confirmed the exact predicted 2-assertion failure,
+restored, re-confirmed green).
+
+*A real discoverability gap* — the Technology Maturity Ledger has no `kpiCatalog` row (deliberate —
+it's static reference content, not a computed KPI) and, unlike Sustainability, no glossary entry
+either, so it was completely unreachable through the page's own advertised "⌘K searches every tab,
+KPI, and glossary term" claim. Added a glossary entry (`otherStandards` 12 → 13); a fresh
+`paletteSearch("technology maturity")` probe now returns it, confirmed via a new permanent test.
+
+Also fixed 3 low-severity staleness items the reviewer caught: a Guided Tour dev comment still
+saying "20 stops" (catalog is now 25 — the same stale-count defect class already fixed twice
+elsewhere in this codebase); the Portfolio and Data Strategy tabs' hover-preview drawer notes,
+which didn't mention any of the 3 new sections now living on those tabs; and this changelog's own
+prior entry, which mis-stated index.html's line count as 5,055 instead of the actual 5,059 (its own
+`+186` and the commit message both already had it right — only this prose line was off).
+
+Accepted, stated explicitly: the Guided Tour's lack of a per-KPI scroll/highlight when landing on a
+step is a real UX limitation but pre-existing across the whole 25-row catalog, not something this
+pass introduced or worsened — left as-is. index.html 5,059 → 5,074 (+15), verify.cjs 1,872 → 1,904
+(+32), stress.cjs unchanged at 524 (2 hardcoded counts updated in place). Both suites green.

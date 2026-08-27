@@ -1064,6 +1064,23 @@ if (!currencySelectEl) {
   currencySelectEl.fire("change");
 }
 
+console.log("--- Stress-test finding (2026-08-27): does the currency toggle also refresh the FX Exposure table? ---");
+// Pre-registered expectation (B35): the FX exposure table's own unhedged-exposure column is
+// rendered via fmt(), the SAME currency-aware formatter as the reliability note proven above --
+// so switching to GBP should convert its dollar figures too. Same defect class this exact test
+// file already caught once (the currency-toggle handler is a hand-maintained list of render
+// calls; a table left off that list silently keeps stale figures in whatever currency was active
+// when it was first drawn).
+if (currencySelectEl) {
+  currencySelectEl.value = "GBP";
+  currencySelectEl.fire("change");
+  const fxTableHtml = elementsById["fxExposureTable"] ? elementsById["fxExposureTable"].innerHTML : "";
+  const fxConvertedToGbp = fxTableHtml.indexOf("£") !== -1 && fxTableHtml.indexOf("$") === -1;
+  assertStrEqual(fxConvertedToGbp, true, "the FX exposure table's dollar figures convert to GBP when the currency toggle fires, not left stale in the currency active when the page first loaded");
+  currencySelectEl.value = "USD";
+  currencySelectEl.fire("change");
+}
+
 console.log("--- Stress-test fix: actually FIRE a click on one of the 4 tabs added in Phases 2-3 ---");
 // A prior version of this suite's own .tabbtn stub list was stale at 7 tabs (missing exec,
 // framework, actions, triage), and per-element addEventListener was a no-op -- so activateTab()
@@ -1300,8 +1317,8 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 18, "exactly 18 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 18, "renderGuards() actually ran all 18 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 19, "exactly 19 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 19, "renderGuards() actually ran all 19 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
   console.log("pass: all 18 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
@@ -1418,6 +1435,13 @@ console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM o
   assertEqual(nonsenseResults.length, 0, "a nonsense query correctly returns zero results, not a fallback to everything");
   const kindsPresent = new Set(state.paletteIndex.map((it) => it.kind));
   assertStrEqual(kindsPresent.has("Tab") && kindsPresent.has("KPI") && kindsPresent.has("Glossary"), true, "the palette index covers all 3 real sources (tabs, KPIs, glossary terms), not just one");
+  // Independent-reviewer finding (2026-08-27 /stress-test pass): the Technology Maturity Ledger
+  // has no kpiCatalog row (deliberate -- it's static reference content, not a computed KPI, same
+  // treatment as the "Real vs. Illustrative" section), which meant it was completely unreachable
+  // through the page's own advertised "[CmdK] searches every tab, KPI, and glossary term at once"
+  // claim -- fixed by giving it a real glossary entry. Fresh query, not a stale prior claim.
+  const techMaturityResults = state.paletteSearch("technology maturity", state.paletteIndex);
+  assertStrEqual(techMaturityResults.some((r) => r.label.toLowerCase().indexOf("technology maturity") !== -1), true, "searching 'technology maturity' now finds the Technology Maturity Ledger (previously zero results for any variant of this query)");
 
   const paletteBtnEl = elementsById["paletteBtn"];
   const paletteInputEl = elementsById["paletteInput"];
@@ -1846,6 +1870,14 @@ console.log("--- Persistence round-trip: a REAL simulated reload restores every 
     assertStrEqual(documentStub2.documentElement.getAttribute("data-theme"), "dark", "a fresh load restores the persisted theme");
     assertStrEqual(state2.getCurrentTab(), "contingency", "a fresh load restores the persisted last-active tab");
     assertStrEqual(elementsById2["currencySelect"] && elementsById2["currencySelect"].value, "GBP", "a fresh load restores the persisted currency");
+    // Independent-reviewer finding (2026-08-27 /stress-test pass): the live currency-TOGGLE fires
+    // renderFxExposureTable(), but nothing had ever probed the OTHER path that must also honor a
+    // persisted currency -- a cold reload, which renders it once at initial load time reading
+    // currentCurrency directly. Pre-registered: since currentCurrency is restored from storage
+    // BEFORE the initial renderFxExposureTable() call runs, the FX table should already show GBP
+    // on this very first render, with no toggle fired at all.
+    const fxTableHtml2 = elementsById2["fxExposureTable"] ? elementsById2["fxExposureTable"].innerHTML : "";
+    assertStrEqual(fxTableHtml2.indexOf("£") !== -1 && fxTableHtml2.indexOf("$") === -1, true, "a fresh load with a persisted GBP currency renders the FX exposure table in GBP from its very first render, not just after the live toggle fires");
     assertStrEqual(state2.getExplainMode(), "simple", "a fresh load restores the persisted explain-mode");
     assertStrEqual(!!state2.visitedTabs.overview && !!state2.visitedTabs.cost, true, "a fresh load restores the persisted visited-tabs set");
     assertStrEqual(!!state2.getShownFactoids().overview, true, "a fresh load restores the persisted shown-factoids set");
