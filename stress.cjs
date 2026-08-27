@@ -427,6 +427,16 @@ check(indexHtml.includes('.tabpanel.active{display:block !important}') && !index
 ].forEach(([id, label]) => {
   check(indexHtml.includes(`id="${id}"`), `${label} (#${id}) exists in the HTML`);
 });
+// Second-pass stress-test finding: all 4 CSV download buttons rendered identical visible AND
+// accessible text ("Download CSV") with no aria-label, so a screen-reader user navigating by
+// button name couldn't tell which table each one downloads.
+const csvBtnIds = ["calDownloadBtn", "kpiCatalogDownloadBtn", "lleDownloadBtn", "glossaryDownloadBtn"];
+const csvBtnAriaLabels = csvBtnIds.map((id) => {
+  const m = indexHtml.match(new RegExp(`id="${id}"[^>]*aria-label="([^"]+)"`));
+  return m ? m[1] : null;
+});
+check(csvBtnAriaLabels.every(Boolean), "every CSV download button carries its own aria-label", JSON.stringify(csvBtnAriaLabels));
+check(new Set(csvBtnAriaLabels).size === csvBtnIds.length, "all 4 CSV download buttons' aria-labels are mutually distinct, not copy-pasted");
 check(/function wireArrowKeyRowNav\(idPrefix, count\)\{/.test(indexHtml), "wireArrowKeyRowNav() is defined as a shared, reusable function (not duplicated per call site)");
 // 1 definition + 5 real call sites -- independent-reviewer finding, 2026-08-26: an earlier version
 // of this check used a loose ">=3" threshold with a label claiming "renderRankedBar's own 4

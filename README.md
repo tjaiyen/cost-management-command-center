@@ -564,8 +564,10 @@ print button** (generalized the print stylesheet from a hardcoded `#panel-exec` 
 — every tab is now printable, not just Executive Command); a **hover-drawer mini-sparkline** on the
 3 tabs (Cost, Contingency & Risk, Vendor & Governance) that already had a real computed trend series,
 deliberately NOT extended to the other 9 tabs rather than inventing 9 fabricated series; **keyboard
-row-navigation** (Up/Down, clamped not wrapped) on the control-account ledger and all 4 usages of the
-shared ranked-bar renderer; **deep-linkable KPI anchors** (`#t-cost/exp0708`-style hash segments,
+row-navigation** (Up/Down, clamped not wrapped) on the control-account ledger, the shared ranked-bar
+renderer's 2 real usages, and the 3 tornado/diverging-bar UIs (CV tornado, sensitivity tornado, LPF
+bar) that render their own bars directly and are wired at their own call sites; **deep-linkable KPI
+anchors** (`#t-cost/exp0708`-style hash segments,
 round-tripped through real history state so Back/Forward restores them too); a **Data Freshness audit
 view** on the Reference tab — a hand-authored aggregation of every real citation already used
 elsewhere in this file, sorted newest-first, with any source that genuinely carries no year in this
@@ -614,6 +616,30 @@ falsification-tested: reverted the fix, confirmed the new end-to-end test failed
 predicted, restored, re-confirmed green. verify.cjs 408 → 415 (+7), stress.cjs 188 → 191 (+3), both
 green.
 
+**`/stress-test` pass on the shipped commit (2026-08-26)** — a formal stress-test (not another ad hoc
+review) run against the already-pushed, already-live commit above. Re-verified all 8 prior fixes
+directly against current code (all held) via a fresh independent reviewer, then found 6 more: (1)
+this README's own feature summary self-contradicted its later fix-list paragraph, claiming keyboard
+row-nav covered "all 4 usages of the shared ranked-bar renderer" when the renderer genuinely has only
+2 — corrected here too. (2) all 4 CSV download buttons carried identical, indistinguishable visible
+AND accessible text with no `aria-label`, so a screen-reader user navigating by button name couldn't
+tell which table each one downloads — each now has its own distinguishing label. (3) neither the new
+notification bell nor the pre-existing `.triage-jump` pills moved DOM focus into the newly-active tab
+after switching it — a keyboard/screen-reader user's Tab key continued through the OLD surroundings
+instead of the new panel; both now move focus to the destination tab's own button. (4) the new
+header controls (print/reading-mode/bell) weren't documented in the Shortcuts overlay — added the
+print button's real ⌘P binding (reading-mode/bell are mouse-only affordances with no keybinding of
+their own, so they're intentionally not listed in a *keyboard* shortcuts overlay). (5) `arrayToCSV`'s
+escaping regex didn't catch a bare `\r` (rows join with `\r\n`) — closed off, though never actually
+reachable given every field flows through `fmt()` or a static literal. (6) the header's new button
+row was checked for narrow-viewport safety by CSS analysis only (`agent-browser`'s own domain
+allowlist, B18, correctly refused to navigate to either `localhost` or the live GitHub Pages URL) —
+confirmed `flex-wrap` prevents any overflow bug, but a real visual mobile check remains an accepted,
+stated limitation. Two fixes were falsification-tested (temporarily broken, confirmed the test
+catches it, restored, re-confirmed green): the CSV bell/triage-jump focus-management test, and (from
+the reviewer's own independent falsification pass) `rangeChipHTML`'s clamp and `makeSliderHistory`'s
+eviction guard. verify.cjs 415 → 417 (+2), stress.cjs 191 → 193 (+2), both green.
+
 ## Design lineage
 
 Architecture (single self-contained HTML file, tab-based navigation, theme tokens, real-vs-
@@ -626,7 +652,7 @@ around a synthetic capital transit program). **Correction (`/stress-test` audit,
 earlier draft of this section claimed this repo underwent "a 5-phase expansion" that "mapped that
 reference's tabs" to match its scale — that never happened, and the metrics said so on inspection:
 this build sat at 11 tabs / ~3,030 lines at the time, not 13 / 12,191 — since grown to **12 tabs /
-~4,669 lines** with the Commercial Ramp tab and the 10-feature UX/UI pass below. What's true instead: a handful of
+~4,684 lines** with the Commercial Ramp tab and the 10-feature UX/UI pass below. What's true instead: a handful of
 individual mechanisms were selectively borrowed from that sibling project across several separate,
 unplanned feature requests over this repo's history — the GUARDS live-integrity-gate pattern, the
 Gate-4 tab-rail status pill, and the general "real-vs-illustrative badge" discipline itself. Two

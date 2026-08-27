@@ -1534,10 +1534,27 @@ assertStrEqual(csvLines[0], "A,B", "arrayToCSV: header row matches the column la
 assertStrEqual(csvLines[2], '"Has, comma",2', "arrayToCSV: a field containing a comma is quoted");
 assertStrEqual(csvLines[3], '"Has ""quote""",3', "arrayToCSV: an embedded quote is doubled, not left unescaped");
 assertStrEqual(state.downloadCSV("test.csv", "a,b"), false, "downloadCSV() degrades to a clean `false` (not a throw) in this sandbox, which has no real Blob/URL");
+// Second-pass stress-test finding: a bare \r (not just \n) must also be quoted, since rows are
+// joined with \r\n -- an unescaped \r could otherwise misalign a naive line-based CSV parser.
+const crRow = [{ a: "Has\ronlyCR", b: 9 }];
+const crOut = state.arrayToCSV(crRow, csvCols);
+assertStrEqual(crOut.split("\r\n")[1], '"Has\ronlyCR",9', "arrayToCSV: a field containing a bare \\r (not \\n) is also quoted");
 
 console.log("--- 10-feature UX/UI brainstorm pass: notification bell (reads the SAME computeTriageItems() Triage renders) ---");
 assertEqual(state.getAlertBellItems().length, state.triageItems.length, "the header bell's item count matches Attention & Triage's own item count exactly -- one alert model, not two");
 assertStrEqual(elementsById["alertBellCount"].hidden, false, "the bell's count badge is visible when this build's real default state has active alerts (4, per the Triage section above)");
+// Second-pass stress-test finding: clicking the bell must move DOM focus into the Triage tab's own
+// button, not just switch the panel visually (a keyboard/screen-reader user's Tab would otherwise
+// continue through the header instead of the newly-active panel's content).
+const triageTabBtnForFocus = lastTabButtonStubs.find((b) => b.dataset.tab === "triage");
+if (elementsById["alertBellBtn"] && triageTabBtnForFocus) {
+  let triageFocusCalls = 0;
+  triageTabBtnForFocus.focus = () => { triageFocusCalls++; };
+  elementsById["alertBellBtn"].fire("click");
+  assertStrEqual(triageFocusCalls >= 1, true, "clicking the alert bell moves DOM focus to the Triage tab button, not just the panel");
+} else {
+  failures++; console.error("FAIL: alertBellBtn or the Triage tab button stub not found in the DOM stub");
+}
 
 console.log("--- 10-feature UX/UI brainstorm pass: range-position chip (pure function) ---");
 assertStrEqual(state.rangeChipHTML(12, 30, 12, " mo").indexOf("--rc-pct:0.0%") !== -1, true, "rangeChipHTML: a value at the low end of the range positions at 0%");

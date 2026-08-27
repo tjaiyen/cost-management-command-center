@@ -846,7 +846,7 @@
         up as a bridge-step variance after the fact.</p>
       <div class="card">
         <div style="overflow-x:auto"><table id="lleTable"></table></div>
-        <button class="icobtn" id="lleDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
+        <button class="icobtn" id="lleDownloadBtn" type="button" style="margin-top:8px" aria-label="Download the Long-Lead Equipment tracker as CSV">⬇ Download CSV</button>
         <p class="src-note"><span class="badge real">real</span> Substation transformer lead times
           have stretched from roughly 140 weeks in 2023 to 160+ weeks in 2026 (power transformers
           averaging 128 weeks, generator step-up units 144 weeks per Wood Mackenzie's Q2 2025
@@ -897,7 +897,7 @@
         not a schedule baseline — this stays cost-management territory, not schedule integration.</p>
       <div class="card">
         <div style="overflow-x:auto"><table id="calTable"></table></div>
-        <button class="icobtn" id="calDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
+        <button class="icobtn" id="calDownloadBtn" type="button" style="margin-top:8px" aria-label="Download the control-account ledger as CSV">⬇ Download CSV</button>
         <p class="src-note" id="calDetail">Click any row for its own reconciliation.</p>
         <p class="src-note"><span class="badge illustrative">illustrative</span> % complete and
           AC/EV ratios per account are invented to make the drill-down legible; the BAC split
@@ -1357,7 +1357,7 @@
         <div style="overflow-x:auto">
           <table id="kpiCatalogTable"></table>
         </div>
-        <button class="icobtn" id="kpiCatalogDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
+        <button class="icobtn" id="kpiCatalogDownloadBtn" type="button" style="margin-top:8px" aria-label="Download the KPI catalog as CSV">⬇ Download CSV</button>
       </div>
     </section>
     <section>
@@ -1371,7 +1371,7 @@
         </div>
         <div class="region-tabs" id="glossaryCatTabs"></div>
         <p class="src-note" id="glossaryCount"></p>
-        <button class="icobtn" id="glossaryDownloadBtn" type="button">⬇ Download CSV</button>
+        <button class="icobtn" id="glossaryDownloadBtn" type="button" aria-label="Download the glossary as CSV">⬇ Download CSV</button>
       </div>
     </section>
     <section>
@@ -1437,7 +1437,8 @@
     <dl class="shortcuts-list">
       <div><dt><kbd>⌘</kbd><kbd>K</kbd></dt><dd>Open the search palette — jump to any tab, KPI, or glossary term</dd></div>
       <div><dt><kbd>1</kbd>–<kbd>9</kbd></dt><dd>Jump straight to that numbered tab</dd></div>
-      <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move focus one tab up/down (while a tab is focused)</dd></div>
+      <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move focus one tab up/down (while a tab is focused), or between rows on the control-account ledger/CV/sensitivity/LPF tables</dd></div>
+      <div><dt><kbd>⌘</kbd><kbd>P</kbd></dt><dd>Print only the currently active tab (same as the header's own Print button)</dd></div>
       <div><dt><kbd>?</kbd></dt><dd>Open/close this shortcuts overlay</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Close this overlay, or exit the guided Tour</dd></div>
     </dl>
@@ -3736,6 +3737,12 @@
     var fromTab = currentTab;
     activateTab(btn.dataset.jump);
     if (fromTab !== btn.dataset.jump) showJumpBreadcrumb(fromTab);
+    // Move DOM focus to the newly-active tab button itself (independent-reviewer finding,
+    // 2026-08-26) -- without this, a keyboard/screen-reader user who jumps tabs via a .triage-jump
+    // pill gets a silent visual tab change with focus still parked wherever it was, so Tab from
+    // there continues through the OLD tab's surroundings instead of the new panel's content.
+    var jumpedBtn = tabButtons.filter(function(b){ return b.dataset.tab === btn.dataset.jump; })[0];
+    if (jumpedBtn && typeof jumpedBtn.focus === "function") jumpedBtn.focus();
   });
 
   /* ---------- notification-center bell (brainstorm build, 2026-08-26) ---------- */
@@ -3755,6 +3762,10 @@
     var fromTab = currentTab;
     activateTab("triage");
     if (fromTab !== "triage") showJumpBreadcrumb(fromTab);
+    // Same focus-management fix as the .triage-jump delegation above (independent-reviewer
+    // finding, 2026-08-26) -- the bell is new in this pass and shipped with the same gap.
+    var triageBtn = tabButtons.filter(function(b){ return b.dataset.tab === "triage"; })[0];
+    if (triageBtn && typeof triageBtn.focus === "function") triageBtn.focus();
   });
 
   /* ---------- "return to origin tab" breadcrumb ---------- */
@@ -4076,7 +4087,11 @@
   function arrayToCSV(rows, columns){
     function esc(v){
       var s = v === null || v === undefined ? "" : String(v);
-      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      // Also quotes a bare \r (independent-reviewer finding, 2026-08-26: rows are joined with
+      // \r\n, so an unescaped embedded \r could misalign a naive line-based CSV parser -- not
+      // currently reachable since every field flows through fmt() or a static string literal, but
+      // cheap to close off regardless).
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     }
     var header = columns.map(function(c){ return esc(c.label); }).join(",");
     var lines = rows.map(function(r){
