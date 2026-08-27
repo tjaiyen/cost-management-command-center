@@ -74,6 +74,19 @@ sections.forEach((sec, si) => {
 });
 check(realBadgeChecks > 0, "at least one section-scoped 'real' badge check actually ran");
 
+console.log("--- Click-to-detail captions never promise a 'hover' interaction that isn't wired (2026-08-26 finding) ---");
+// Every click-to-detail visual on this page (control-account ledger, ranked bars, tornados,
+// stoplight, heatmap, maturity ladder) is wired identically: click/focus/Enter update a detail
+// panel; NONE of them have a real mouseenter/mouseover listener, only a native `title` tooltip on
+// hover. The maturity ladder's own caption uniquely claimed "Hover or click a class for its
+// definition" while every sibling correctly says "Click any X for its detail" -- a user hovering
+// (no CSS :hover state either) got zero feedback despite the promise. Fixed; this guards the class
+// of bug, not just the one instance -- fails if ANY detail-panel caption re-introduces "hover".
+const detailCaptions = [...indexHtml.matchAll(/id="[a-zA-Z]*Detail"[^>]*>([^<]*)</g)].map((m) => m[1]);
+check(detailCaptions.length >= 6, "found at least 6 click-to-detail captions to scan (control-account, sensitivity, maturity, stoplight, cvTornado, heatmap, lpf)", `found ${detailCaptions.length}`);
+const hoverClaims = detailCaptions.filter((c) => /hover/i.test(c));
+check(hoverClaims.length === 0, "no click-to-detail caption claims a 'hover' interaction (none of these are wired for it)", JSON.stringify(hoverClaims));
+
 console.log("--- Illustrative sections never carry a bare 'real' badge on their own heading ---");
 check(!/Priced Risk Register[^\n]*badge real/.test(indexHtml), "risk register heading doesn't carry a bare 'real' badge (methodology is real, rows aren't)");
 check(!/Consultant Deliverable Scorecard[^\n]*badge real/.test(indexHtml), "consultant scorecard heading doesn't carry a bare 'real' badge");
