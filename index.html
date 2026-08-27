@@ -645,6 +645,26 @@
         </div>
         <button class="icobtn" id="startTourBtn" type="button">Take the tour →</button>
       </div>
+      <section id="health-score-section">
+        <h2>Program Health <span class="badge illustrative">illustrative composite methodology, real underlying inputs</span>
+          <button class="info-toggle" type="button" id="toggle-expHealthScore" data-explainer="expHealthScore" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <div class="explainer" id="expHealthScore"></div>
+        <p class="lede" style="font-size:13px">One synthesized signal instead of four separate
+          tiles to scan — built entirely from real numbers already computed elsewhere on this
+          dashboard, combined by this program's own weighting, not a cited industry formula.</p>
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap">
+            <div>
+              <div class="lbl" style="font-size:11px; color:rgb(var(--c-text-secondary)); text-transform:uppercase; letter-spacing:.04em">Composite score</div>
+              <div class="val tabular" id="healthScoreVal" style="font-size:40px; font-weight:700">—</div>
+              <div class="sub" id="healthScoreBand" style="font-size:13px; font-weight:600; margin-top:2px">—</div>
+            </div>
+            <div style="flex:1; min-width:220px" id="healthScoreGauge"></div>
+          </div>
+          <p class="src-note" id="healthScoreNarrative" style="margin-top:12px"></p>
+          <div id="healthScoreBreakdown" style="margin-top:10px"></div>
+        </div>
+      </section>
       <h2>Portfolio snapshot
         <button class="info-toggle" type="button" id="toggle-exp01" data-explainer="exp01" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp01"></div>
@@ -1572,7 +1592,7 @@
   <!-- ============================================================ REFERENCE ============================================================ -->
   <div class="tabpanel" id="panel-reference" role="tabpanel" aria-labelledby="tab-reference">
     <section>
-      <h2>The 25-KPI Catalog <span class="badge illustrative">25 questions, all answered by a real built visual</span></h2>
+      <h2>The 26-KPI Catalog <span class="badge illustrative">26 questions, all answered by a real built visual</span></h2>
       <p class="lede" style="font-size:13px">Every KPI on this dashboard, the operational question
         it actually answers, and a jump straight to the tab where it's computed live — not a
         separate spec document, a map of what's already running.</p>
@@ -1815,7 +1835,7 @@
   // corrupting both this drawer and the return-breadcrumb. A real bug caught before it shipped,
   // not after -- fixed by giving the label its own source instead of deriving it from the DOM.
   var TAB_INFO = {
-    overview: { label:"Overview", q:"Where do I start, and what does this program look like right now?", note:"4 KPIs read live off the other tabs, plus the guided Tour entry point." },
+    overview: { label:"Overview", q:"Where do I start, and what does this program look like right now?", note:"A one-number Program Health synthesis, 4 KPIs read live off the other tabs, plus the guided Tour entry point." },
     exec: { label:"Executive Command", q:"For someone who has 90 seconds and needs to sign something, what does this program need?", note:"A board-status brief with its own print stylesheet." },
     cost: { label:"Cost", q:"What does this program actually cost, and where does the money go?", note:"Budget bridge, benchmarks, WBS, control-account ledger, what-if sandbox." },
     contingency: { label:"Contingency & Risk", q:"Is the reserve keeping pace with real risk, or running out?", note:"Monte Carlo, drawdown ratio, priced risk register, float signal, EMV settlement." },
@@ -1826,7 +1846,7 @@
     actions: { label:"Actions", q:"What's open, who owns it, and what's gone stale?", note:"A commercial action-item register with real staleness logic." },
     triage: { label:"Attention & Triage", q:"Out of everything on this dashboard, what actually needs a human right now?", note:"A cross-tab digest re-checking every alert already computed elsewhere." },
     data: { label:"Data Strategy", q:"How does scattered data actually become these numbers?", note:"Pipeline architecture, a free local DuckDB parity layer, sustainability/compliance benchmarks, and a technology maturity ledger." },
-    reference: { label:"Reference", q:"What does this term mean, and which visual answers it?", note:"The 25-KPI catalog, plus a searchable glossary of every citation used." }
+    reference: { label:"Reference", q:"What does this term mean, and which visual answers it?", note:"The 26-KPI catalog, plus a searchable glossary of every citation used." }
   };
   // Mini-sparkline preview (brainstorm build, 2026-08-26): only for the 3 tabs that already have
   // a REAL computed trend series elsewhere on this page (net-variance trend on Cost, float
@@ -2562,6 +2582,10 @@
     liveDrawdownRatio = updateDrawdown();
     if (typeof renderOverview === "function") renderOverview();
     if (typeof renderDrawdownGauge === "function") renderDrawdownGauge(); // gauge tracks the sliders live
+    // Program Health's own drawdown sub-score reads this same liveDrawdownRatio -- without this
+    // call it would go stale the moment either slider moves (the exact defect class an earlier
+    // pass caught with the FX-exposure/currency-toggle bug).
+    if (typeof renderProgramHealth === "function") programHealthResult = renderProgramHealth();
   }
   pctComplete.addEventListener("input", updateDrawdownAndOverview);
   drawdownPct.addEventListener("input", updateDrawdownAndOverview);
@@ -2832,9 +2856,17 @@
   // a ratio formatter for "x" multiples, etc.). Guarded the same way animateHistogram() below is --
   // no requestAnimationFrame in this repo's own verify.cjs Node sandbox means the final value is
   // set directly there, never a half-animated frame, so no test needs to know this exists.
+  // /stress-test finding (2026-08-27, UX/UI upgrade pass): this rAF-driven tween is NOT a CSS
+  // animation/transition, so the page's own global prefers-reduced-motion rule (top of <style>,
+  // which only zeroes CSS animation-duration/transition-duration) never touched it -- a real,
+  // separate accessibility gap. Checked explicitly here, same as any new motion this pass adds.
+  function prefersReducedMotion(){
+    return typeof window !== "undefined" && typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
   function animateValue(el, finalNumber, formatFn, duration){
     if (!el) return;
-    if (typeof requestAnimationFrame !== "function") { el.textContent = formatFn(finalNumber); return; }
+    if (typeof requestAnimationFrame !== "function" || prefersReducedMotion()) { el.textContent = formatFn(finalNumber); return; }
     var start = null;
     function step(ts){
       if (start === null) start = ts;
@@ -4409,7 +4441,8 @@
     expFxExposure: "Unhedged Exposure = Regional Forecast × (1 − Hedge Ratio). Currency, convertibility, and transferability risk is a real, formally named risk category in cross-border infrastructure financing (Global Infrastructure Hub), and the Bank for International Settlements maintains real, active guidance on FX-settlement risk mitigation; cross-currency swaps are the standard real hedge instrument for long-duration foreign-currency infrastructure liabilities. Added 2026-08-27 (global-program-controls research pass): a genuine white-space finding — no AACE/PMI/ISO project-controls standard integrates FX/regulatory-regime risk as a first-class dimension of the cost baseline, despite it being real, documented treasury practice. This program's own per-region hedge ratios are illustrative.",
     expSustainability: "PUE (Power Usage Effectiveness) = Total Facility Energy ÷ IT Equipment Energy; WUE (Water Usage Effectiveness) is its water-consumption analog — both real, standardized Green Grid metrics, not this program's invention. Real industry-average PUE runs 1.54–1.59; Google's own reported 2025 fleet-wide best-in-class is 1.09. The EU Energy Efficiency Directive, Article 12, is a real, binding reporting mandate for any data center at or above 500kW IT power draw, with an annual 15 May reporting deadline — a real compliance date, not a voluntary target. This program's own per-region PUE/WUE readings are illustrative.",
     expTechMaturity: "A plain evidence-strength grading, not a technology-adoption roadmap: each row states what this build's own 2026-08-27 research pass actually found, separating real, decades-proven methods (progress monitoring, EVM) from real-but-early fields (ML forecasting, AI risk-mining) and from claims that are mostly vendor narrative once checked (construction-phase digital twins). The point is to say plainly which of these a program could actually rely on today.",
-    expCostBreakdown: "Category $ = program baseline × the real Turner & Townsend category %; sub-trade $ = category $ × an illustrative sub-trade %. Two independent multiplies (not one figure derived from the other), so each level is checkable on its own — a full-scope, full-scale construction cost research pass (2026-08-27) confirmed via two independent research agents that no primary source decomposes site civil, structural, envelope, or individual equipment types (chillers vs. CRAH vs. cooling towers; generators vs. UPS vs. switchgear) any further than T&T's own 4-category split. Every sub-trade row is this program's own illustrative allocation, never presented as a second real figure."
+    expCostBreakdown: "Category $ = program baseline × the real Turner & Townsend category %; sub-trade $ = category $ × an illustrative sub-trade %. Two independent multiplies (not one figure derived from the other), so each level is checkable on its own — a full-scope, full-scale construction cost research pass (2026-08-27) confirmed via two independent research agents that no primary source decomposes site civil, structural, envelope, or individual equipment types (chillers vs. CRAH vs. cooling towers; generators vs. UPS vs. switchgear) any further than T&T's own 4-category split. Every sub-trade row is this program's own illustrative allocation, never presented as a second real figure.",
+    expHealthScore: "Score = 4 sub-scores of 25 points each, summed: cost performance (aggregate CPI against SAE/ANSI EIA-748-E's real 3-tier threshold), contingency drawdown (against the real 1.5x practitioner heuristic), Gate 4 readiness (cleared/blocked, the same real computation as the Operating Framework tab), and data-quality reconciliation (within/past the AACE RP 108R-19-aligned threshold). Each of the 4 inputs is real, already-computed methodology — the 25/25/25/25 equal-weighting that combines them into one 0-100 score is this program's own illustrative synthesis, not a cited industry composite-index formula. Added 2026-08-27 (UX/UI upgrade pass): one headline signal instead of 4 separate tiles a reader would otherwise have to mentally combine themselves."
   };
   // Plain-English alternates to every explainer above, toggled by #explainBtn -- same ids, so
   // rendering just picks which object to read from rather than needing a second render path.
@@ -4453,7 +4486,8 @@
     expFxExposure: "How much of each region's spend is sitting exposed to currency swings we haven't protected against?",
     expSustainability: "How energy- and water-efficient is each region, compared to the real published industry benchmarks?",
     expTechMaturity: "Of the new cost-forecasting tech out there, what's actually proven versus still mostly a sales pitch?",
-    expCostBreakdown: "Of every dollar this program spends, where does it actually go — down to the individual trade, not just 'mostly electrical and cooling'?"
+    expCostBreakdown: "Of every dollar this program spends, where does it actually go — down to the individual trade, not just 'mostly electrical and cooling'?",
+    expHealthScore: "Is this program actually doing okay right now, in one number — and if not, which one thing is dragging it down?"
   };
   var explainMode = "technical";
   (function(){
@@ -4494,7 +4528,7 @@
     });
   }
 
-  /* ---------- Reference tab: the 25-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
+  /* ---------- Reference tab: the 26-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
   // `anchor` (added /stress-test pass, 2026-08-27): the explainer div id that actually explains
   // THIS row's own KPI -- resolves the Guided Tour's own stated limitation (landing on a step only
   // ever switched tabs, never scrolled to or highlighted the specific KPI). Matched by content, not
@@ -4502,31 +4536,32 @@
   // pairing: exp0206/exp0708/exp1112 each explain 2 KPIs in one div, per this file's own kpiExplainers
   // comment), so the anchor is whichever shared id's own text actually covers that row's KPI.
   var kpiCatalog = [
-    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13", anchor:"exp01" },
-    { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14", anchor:"exp0206" },
-    { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method", anchor:"exp03" },
-    { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09", anchor:"exp04" },
-    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 62R-11", anchor:"exp05" },
-    { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11", anchor:"exp0206" },
-    { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97", anchor:"exp0708" },
-    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp0708" },
-    { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp09" },
-    { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp10" },
-    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112" },
-    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112" },
-    { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp13" },
-    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06 + DCMA 14-Point", anchor:"exp14" },
-    { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design", anchor:"exp15" },
-    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 18R-97 (Class 1, -10%/+15%)", anchor:"exp16" },
-    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19 (threshold: program policy, cf. DoD IPMDAR 16-day cadence)", anchor:"exp17" },
-    { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01", anchor:"exp18" },
-    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"Turner & Townsend 2025-2026 (real $/W context, added 2026-08-26)", anchor:"exp19" },
-    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + Build Inc. 2026 (real method, illustrative 12-30mo envelope)", anchor:"expRampLag" },
-    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"illustrative assumption (corrected 2026-08-26; C&W doesn't report this split)", anchor:"expLeasedMetered" },
-    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix's real SLA credit structure", anchor:"expSlaPenalty" },
-    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Adj. EBITDA Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Equinix Q2 2026 earnings", anchor:"expRevenueYield" },
-    { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08", anchor:"exp20" },
-    { q:"How much of each region's forecast sits exposed to currency swings we haven't hedged?", kpi:"Cross-Border FX Exposure", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"real risk category (GIHub/BIS), illustrative hedge ratios -- added 2026-08-27", anchor:"expFxExposure" }
+    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13", anchor:"exp01", why:"Miss this and leadership finds out about a cost overrun in a meeting, not in a report they saw coming." },
+    { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14", anchor:"exp0206", why:"A gap that's growing, not just present, is the earliest honest signal a re-baseline conversation is coming." },
+    { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method", anchor:"exp03", why:"Burn the reserve faster than progress and it's gone before the risks it was set aside for ever hit." },
+    { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09", anchor:"exp04", why:"Pricing a reserve to the wrong percentile turns contingency into a coin flip instead of a plan." },
+    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 62R-11", anchor:"exp05", why:"An unranked risk register sends mitigation dollars to the loudest risk in the room, not the costliest one." },
+    { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11", anchor:"exp0206", why:"A stale escalation rate quietly erodes the whole forecast without ever showing up as one dramatic miss." },
+    { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97", anchor:"exp0708", why:"Presenting a conceptual, least-defined number with as-built confidence sets leadership up to be blindsided later, not you." },
+    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp0708", why:"Knowing electrical alone is over half the budget tells you exactly whose schedule slip actually threatens the total." },
+    { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp09", why:"Without a market anchor, \"we're over budget\" and \"the whole market moved\" look identical from inside the program." },
+    { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp10", why:"A category quietly consuming more than its historical share is usually the first place a program starts to drift." },
+    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112", why:"One troubled account can hide inside a healthy portfolio-wide average until it's too late to recover." },
+    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112", why:"Knowing WHICH account is bleeding dollars, not just the total, is what actually makes a recovery plan possible." },
+    { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp13", why:"Seeing the cost impact before a scope decision is locked in beats explaining it to leadership after the fact." },
+    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06 + DCMA 14-Point", anchor:"exp14", why:"Float erosion is a real leading indicator that shows up here 2-3 months before it ever shows up as a schedule variance." },
+    { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design", anchor:"exp15", why:"Litigating on gut feel instead of expected value is how a program loses a dispute the math says it should have settled." },
+    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 18R-97 (Class 1, -10%/+15%)", anchor:"exp16", why:"A consultant who consistently misses tolerance is a data point for the NEXT contract award, not just this one." },
+    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19 (threshold: program policy, cf. DoD IPMDAR 16-day cadence)", anchor:"exp17", why:"Numbers built on stale field data are wrong before anyone in the room even reads the report." },
+    { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01", anchor:"exp18", why:"An LPF below 1.0 is a quantified productivity loss you can act on, not a foreman's gut feeling to argue about." },
+    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"Turner & Townsend 2025-2026 (real $/W context, added 2026-08-26)", anchor:"exp19", why:"Averaging across regions can hide one region quietly running over while the portfolio total still looks fine." },
+    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + Build Inc. 2026 (real method, illustrative 12-30mo envelope)", anchor:"expRampLag", why:"Finishing construction on time means little if the revenue behind it doesn't ramp on the same schedule." },
+    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"illustrative assumption (corrected 2026-08-26; C&W doesn't report this split)", anchor:"expLeasedMetered", why:"Getting this split wrong misprices exactly how much of the program's revenue actually depends on tenant usage." },
+    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix's real SLA credit structure", anchor:"expSlaPenalty", why:"An uptime miss isn't just a reputational problem — it has a real, calculable dollar penalty attached to it." },
+    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Adj. EBITDA Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Equinix Q2 2026 earnings", anchor:"expRevenueYield", why:"Full occupancy at a bad margin is a worse outcome than partial occupancy at a good one — revenue alone doesn't say which this is." },
+    { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08", anchor:"exp20", why:"A gate someone can quietly mark \"pending\" doesn't stop an underfunded program from proceeding — a computed number does." },
+    { q:"How much of each region's forecast sits exposed to currency swings we haven't hedged?", kpi:"Cross-Border FX Exposure", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"real risk category (GIHub/BIS), illustrative hedge ratios -- added 2026-08-27", anchor:"expFxExposure", why:"An unhedged region can turn a healthy program total into a currency-driven surprise the moment it's consolidated." },
+    { q:"Is this program actually doing okay right now, in one number?", kpi:"Program Health Score", tab:"overview", tabLabel:"Overview", badge:"illustrative", cite:"illustrative composite methodology, real underlying inputs -- added 2026-08-27", anchor:"expHealthScore", why:"One number a reader can act on immediately beats four separate tiles they'd have to mentally combine themselves." }
   ];
   function renderKpiCatalog(){
     var el = document.getElementById("kpiCatalogTable");
@@ -4534,9 +4569,14 @@
     var rows = kpiCatalog.map(function(k, i){
       return "<tr><td class='tabular'>" + (i + 1) + "</td><td>" + k.q + "</td><td><b>" + k.kpi + "</b></td>" +
         "<td><button class='icobtn triage-jump' type='button' data-jump='" + k.tab + "'>" + k.tabLabel + " →</button></td>" +
-        "<td><span class='badge " + k.badge + "'>" + k.badge + "</span></td><td>" + k.cite + "</td></tr>";
+        "<td><span class='badge " + k.badge + "'>" + k.badge + "</span></td><td>" + k.cite + "</td>" +
+        // UX/UI upgrade pass, 2026-08-27: the "why" column -- the practical stake, distinct from
+        // both `q` (the operational question) and the technical/simple explainer text (the
+        // formula). Every one of the 26 rows has its own, non-generic one-liner -- not a filler
+        // column for the sake of having 7 columns.
+        "<td style='font-size:12px'>" + k.why + "</td></tr>";
     }).join("");
-    el.innerHTML = "<thead><tr><th scope='col'>#</th><th scope='col'>Operational question</th><th scope='col'>KPI</th><th scope='col'>Jump to tab</th><th scope='col'>Badge</th><th scope='col'>Citation</th></tr></thead><tbody>" + rows + "</tbody>";
+    el.innerHTML = "<thead><tr><th scope='col'>#</th><th scope='col'>Operational question</th><th scope='col'>KPI</th><th scope='col'>Jump to tab</th><th scope='col'>Badge</th><th scope='col'>Citation</th><th scope='col'>Why it matters</th></tr></thead><tbody>" + rows + "</tbody>";
   }
   renderKpiCatalog();
 
@@ -4704,7 +4744,7 @@
   ], function(){ return "control-account-ledger-" + currentCurrency + ".csv"; });
   wireCsvButton("kpiCatalogDownloadBtn", function(){ return kpiCatalog; }, [
     { label:"Question", key:"q" }, { label:"KPI", key:"kpi" }, { label:"Tab", key:"tabLabel" },
-    { label:"Badge", key:"badge" }, { label:"Citation", key:"cite" }
+    { label:"Badge", key:"badge" }, { label:"Citation", key:"cite" }, { label:"Why it matters", key:"why" }
   ], "kpi-catalog.csv");
   wireCsvButton("lleDownloadBtn", function(){ return computeLLERisk(lleItems); }, [
     { label:"Package", key:"name" }, { label:"Lead time (wk)", key:"leadWeeks" },
@@ -4909,6 +4949,78 @@
   function jumpPill(tab, label){
     return '<button class="icobtn triage-jump" type="button" data-jump="' + tab + '" style="font-size:10.5px; padding:3px 8px; margin-top:6px">' + label + ' →</button>';
   }
+  /* ================= OVERVIEW TAB: Program Health composite score (UX/UI upgrade pass,
+     2026-08-27) -- synthesizes 4 already-real signals computed elsewhere on this dashboard
+     (CPI, contingency drawdown, Gate 4, data-quality reconciliation) into ONE headline number,
+     instead of making a reader scan 4 separate tiles/tabs to form the same judgment. The 4 INPUT
+     signals and their own thresholds are all real, already-cited methodology (SAE/ANSI EIA-748-E
+     for CPI, the practitioner 1.5x drawdown heuristic, Gate 4's own real computation, the DQ
+     reconciliation threshold) -- the WEIGHTING that combines them into one 0-100 score is this
+     program's own illustrative synthesis, not a cited industry formula, and is badged as such. */
+  var HEALTH_SCORE_BANDS = [ { max: 54, cls: "danger", label: "At Risk" }, { max: 79, cls: "watch", label: "Stable" }, { max: Infinity, cls: "success", label: "Strong" } ];
+  function computeProgramHealth(){
+    var accounts = controlAccounts;
+    var totalEv = accounts.reduce(function(s, a){ return s + a.ev; }, 0);
+    var totalAc = accounts.reduce(function(s, a){ return s + a.ac; }, 0);
+    var aggCpi = totalAc > 0 ? totalEv / totalAc : 0;
+    var cpiPoints = cpiBand(aggCpi) === "good" ? 25 : cpiBand(aggCpi) === "watch" ? 15 : 0;
+    var drawdownCls = bandForValue(liveDrawdownRatio, DRAWDOWN_GAUGE_BANDS);
+    var drawdownPoints = drawdownCls === "success" ? 25 : drawdownCls === "warning" ? 15 : 0;
+    var gatePoints = gateStatus.blocked ? 0 : 25;
+    var dqOk = dqDemoState.syncLagDays <= dqDemoState.thresholdDays;
+    var dqPoints = dqOk ? 25 : 0;
+    var score = cpiPoints + drawdownPoints + gatePoints + dqPoints;
+    var band = HEALTH_SCORE_BANDS[0];
+    for (var i = 0; i < HEALTH_SCORE_BANDS.length; i++){ if (score <= HEALTH_SCORE_BANDS[i].max) { band = HEALTH_SCORE_BANDS[i]; break; } }
+    var subScores = [
+      { name: "Cost performance (CPI)", points: cpiPoints },
+      { name: "Contingency drawdown", points: drawdownPoints },
+      { name: "Gate 4 readiness", points: gatePoints },
+      { name: "Data-quality reconciliation", points: dqPoints }
+    ];
+    var minPoints = Math.min.apply(null, subScores.map(function(s){ return s.points; }));
+    // /stress-test finding (independent reviewer, 2026-08-27): a naive sort()[0] silently names
+    // only the FIRST tied item when 2+ sub-scores share the same minimum (a real tie this build's
+    // own live default state actually hits -- drawdown and Gate 4 both land at 0/25) -- a reader
+    // who only reads the sentence would never learn Gate 4 is co-equally the problem. Named
+    // together instead, not picking a winner the data doesn't actually support.
+    var weakest = subScores.filter(function(s){ return s.points === minPoints; });
+    var weakestNames = weakest.map(function(s){ return s.name.toLowerCase(); });
+    var dragLeadIn = weakestNames.length === 1
+      ? "The single largest drag on this score right now is " + weakestNames[0]
+      : "The largest drag on this score right now is a tie: " + weakestNames.slice(0, -1).join(", ") + " and " + weakestNames[weakestNames.length - 1] + " co-equally";
+    var narrative = score === 100
+      ? "All 4 signals are clean right now — cost performance, contingency, Gate 4, and data quality all clear their real thresholds."
+      : dragLeadIn + " (" + minPoints + "/25) — the rest of this tab and the Cost/Contingency/Operating Framework tabs explain exactly why.";
+    return { score: score, band: band, cpiPoints: cpiPoints, drawdownPoints: drawdownPoints, gatePoints: gatePoints, dqPoints: dqPoints, narrative: narrative, aggCpi: aggCpi };
+  }
+  var healthScoreFirstRender = true;
+  function renderProgramHealth(){
+    var health = computeProgramHealth();
+    var valEl = document.getElementById("healthScoreVal");
+    var bandEl = document.getElementById("healthScoreBand");
+    var narrativeEl = document.getElementById("healthScoreNarrative");
+    var breakdownEl = document.getElementById("healthScoreBreakdown");
+    if (!valEl) return health;
+    valEl.textContent = health.score;
+    valEl.style.color = "rgb(var(--c-" + health.band.cls + "))";
+    bandEl.textContent = health.band.label.toUpperCase();
+    bandEl.style.color = "rgb(var(--c-" + health.band.cls + "))";
+    if (narrativeEl) narrativeEl.innerHTML = "<span class='badge illustrative'>illustrative synthesis</span> " + health.narrative;
+    if (breakdownEl) breakdownEl.innerHTML =
+      ["Cost performance (CPI)", "Contingency drawdown", "Gate 4 readiness", "Data-quality reconciliation"].map(function(name, i){
+        var pts = [health.cpiPoints, health.drawdownPoints, health.gatePoints, health.dqPoints][i];
+        return "<div class='barrow'><div class='wname' style='width:190px'>" + name + "</div>" +
+          "<div class='wtrack'><div class='wfill' style='width:" + (pts / 25 * 100) + "%; background:" + (pts >= 25 ? "rgb(var(--c-success))" : pts >= 15 ? "rgb(var(--c-watch))" : "rgb(var(--c-danger))") + "'></div></div>" +
+          "<div class='wpct'>" + pts + "/25</div></div>";
+      }).join("");
+    renderLinearGauge("healthScoreGauge", health.score, 0, 100, HEALTH_SCORE_BANDS, " pts");
+    if (healthScoreFirstRender && valEl) {
+      healthScoreFirstRender = false;
+      animateValue(valEl, health.score, function(v){ return Math.round(v).toString(); }, 700);
+    }
+    return health;
+  }
   var overviewFirstRender = true;
   function renderOverview(){
     var el = document.getElementById("overviewKpis");
@@ -4928,6 +5040,7 @@
     }
   }
   renderOverview();
+  var programHealthResult = renderProgramHealth();
 
   /* ---------- currency toggle wiring ---------- */
   var currencySelect = document.getElementById("currencySelect");
@@ -4949,6 +5062,7 @@
     renderRegionDetail();
     renderOverview();
     gateStatus = renderGateFramework();
+    programHealthResult = renderProgramHealth();
     renderExecBrief();
     renderBulletForecast();
     renderRiskHeatmap();
@@ -5009,8 +5123,8 @@
     { n:"Monte Carlo percentiles stay ordered: P50 ≤ P80 ≤ P90", run:function(){
         return [lastMC.p50 <= lastMC.p80 && lastMC.p80 <= lastMC.p90, lastMC.p50.toFixed(0) + " / " + lastMC.p80.toFixed(0) + " / " + lastMC.p90.toFixed(0)];
       }},
-    { n:"KPI catalog has exactly 25 entries, each pointing at a real tab", run:function(){
-        var ok = kpiCatalog.length === 25 && kpiCatalog.every(function(k){ return !!k.tab; });
+    { n:"KPI catalog has exactly 26 entries, each pointing at a real tab", run:function(){
+        var ok = kpiCatalog.length === 26 && kpiCatalog.every(function(k){ return !!k.tab; });
         return [ok, kpiCatalog.length + " registered"];
       }},
     { n:"Compliance sweep: no employer name in this build's own rendered content", run:function(){
@@ -5173,6 +5287,7 @@
     formatInCurrency: formatInCurrency, // exposed for verify.cjs to test the real currency logic
     drawdownAlertContent: drawdownAlertContent, // exposed to test both ok/warn branches directly
     dqAlertContent: dqAlertContent,             // exposed to test both ok/warn branches directly
+    dqDemoState: dqDemoState,                   // /stress-test finding: exposed so Program Health's own DQ sub-score can be independently re-derived, not just implied via the composite total
     CURRENCIES: CURRENCIES,
     controlAccounts: controlAccounts,           // Phase 1: control-account drill-down ledger
     computeControlAccounts: computeControlAccounts,
@@ -5197,7 +5312,7 @@
     allGlossaryItems: allGlossaryItems,         // Phase 5: unified searchable glossary
     filterGlossaryItems: filterGlossaryItems,
     visibleGlossaryItems: visibleGlossaryItems,
-    kpiCatalog: kpiCatalog,                     // KPI-catalog build: the 20 Q->KPI->tab->citation rows
+    kpiCatalog: kpiCatalog,                     // KPI-catalog build: the 26 Q->KPI->tab->citation rows
     getTourStep: function(){ return tourStep; }, // guided tour: exposed for direct test inspection
     isTourActive: function(){ return tourActive; },
     GUARDS: GUARDS,               // live Integrity Gate: exposed so tests can fire every check directly
@@ -5231,6 +5346,10 @@
     costDriverCategories: costDriverCategories,
     computeCostBreakdown: computeCostBreakdown,
     costDriverFullResult: costDriverFullResult,
+    computeProgramHealth: computeProgramHealth,
+    programHealthResult: programHealthResult,
+    HEALTH_SCORE_BANDS: HEALTH_SCORE_BANDS,
+    prefersReducedMotion: prefersReducedMotion,
     costBreakdownResult: costBreakdownResult,
     marketBenchmarkResult: marketBenchmarkResult,
     computeCumulativeCurve: computeCumulativeCurve,

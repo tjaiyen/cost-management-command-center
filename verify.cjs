@@ -544,6 +544,56 @@ assertStrEqual(state.cpiBand(0.90), "watch", "cpiBand(): exactly 0.90 is 'watch'
 assertStrEqual(state.cpiBand(0.9499), "watch", "cpiBand(): just below 0.95 is still 'watch', not 'good'");
 assertStrEqual(state.cpiBand(0.95), "good", "cpiBand(): exactly 0.95 is 'good' -- the boundary is inclusive on the good side");
 
+console.log("--- Program Health composite score (Overview tab, UX/UI upgrade pass, 2026-08-27) ---");
+// Independent re-derivation via the raw formula (each real sub-signal's own already-cited
+// threshold, mapped to 25/15/0 points, then summed), NOT a second call to computeProgramHealth()
+// with no inputs -- same non-tautology discipline every GUARDS-adjacent check in this file follows.
+{
+  const totalEv = state.controlAccounts.reduce((s, a) => s + a.ev, 0);
+  const totalAc = state.controlAccounts.reduce((s, a) => s + a.ac, 0);
+  const aggCpi = totalAc > 0 ? totalEv / totalAc : 0;
+  const expectedCpiPoints = state.cpiBand(aggCpi) === "good" ? 25 : state.cpiBand(aggCpi) === "watch" ? 15 : 0;
+  const drawdownCls = state.bandForValue(state.drawdownRatio, [{ max: 1.0, cls: "success" }, { max: 1.5, cls: "warning" }, { max: Infinity, cls: "danger" }]);
+  const expectedDrawdownPoints = drawdownCls === "success" ? 25 : drawdownCls === "warning" ? 15 : 0;
+  const expectedGatePoints = state.gateStatus.blocked ? 0 : 25;
+  // /stress-test finding (independent reviewer, 2026-08-27): this was previously only IMPLIED via
+  // expectedScore's own "+25" literal, with a comment claiming it was "verified separately below"
+  // when no such separate assertion actually existed. Fixed to a real, direct re-derivation.
+  const expectedDqPoints = state.dqDemoState.syncLagDays <= state.dqDemoState.thresholdDays ? 25 : 0;
+  const expectedScore = expectedCpiPoints + expectedDrawdownPoints + expectedGatePoints + expectedDqPoints;
+  const health = state.computeProgramHealth();
+  assertEqual(health.cpiPoints, expectedCpiPoints, "Program Health's CPI sub-score independently re-derives from the real aggregate CPI and its own cited 3-tier threshold");
+  assertEqual(health.drawdownPoints, expectedDrawdownPoints, "Program Health's drawdown sub-score independently re-derives from the real live drawdown ratio and its own cited 1.5x heuristic");
+  assertEqual(health.gatePoints, expectedGatePoints, "Program Health's Gate 4 sub-score independently re-derives from the real live gateStatus.blocked flag");
+  assertEqual(health.dqPoints, expectedDqPoints, "Program Health's DQ sub-score independently re-derives from the real live dqDemoState sync-lag-vs-threshold comparison, not just implied via the composite total");
+  assertEqual(health.score, expectedScore, "the composite score is the sum of all 4 real sub-scores, not a separately-invented number");
+  assertEqual(health.score, health.cpiPoints + health.drawdownPoints + health.gatePoints + health.dqPoints, "the composite score always equals the sum of its own 4 reported sub-scores (internal consistency)");
+  // /stress-test finding (independent reviewer, 2026-08-27): this program's own real live default
+  // state genuinely ties 2 sub-scores at the minimum (drawdown and Gate 4 both land at 0/25) --
+  // pre-registered and confirmed here, not assumed. A naive sort()[0] would silently name only the
+  // FIRST tied item; fixed to name every tied sub-score, not pick an arbitrary "winner."
+  assertEqual(health.drawdownPoints, 0, "pre-registered: this program's real default state has drawdown at the 0-point floor");
+  assertEqual(health.gatePoints, 0, "pre-registered: this program's real default state ALSO has Gate 4 at the 0-point floor -- a genuine tie, not a hypothetical one");
+  assertStrEqual(health.narrative.indexOf("contingency drawdown") !== -1 && health.narrative.indexOf("gate 4 readiness") !== -1, true, "the narrative names BOTH tied weakest sub-scores, not just the first one a naive sort would have picked");
+  assertStrEqual(health.narrative.indexOf("co-equally") !== -1, true, "the narrative explicitly flags the tie as a tie, rather than implying one sub-score is uniquely the problem");
+}
+// Fixture-based: force each band to prove all 3 bands are reachable, not just this program's own
+// real default (which the live-state check above already covers for one band each).
+assertStrEqual(state.HEALTH_SCORE_BANDS.find((b) => 30 <= b.max).label, "At Risk", "a score of 30 correctly bands as 'At Risk'");
+assertStrEqual(state.HEALTH_SCORE_BANDS.find((b) => 70 <= b.max).label, "Stable", "a score of 70 correctly bands as 'Stable'");
+assertStrEqual(state.HEALTH_SCORE_BANDS.find((b) => 100 <= b.max).label, "Strong", "a score of 100 correctly bands as 'Strong'");
+assertStrEqual(state.HEALTH_SCORE_BANDS.find((b) => 54 <= b.max).label, "At Risk", "a score of exactly 54 (the boundary) still bands as 'At Risk', not 'Stable'");
+assertStrEqual(state.HEALTH_SCORE_BANDS.find((b) => 55 <= b.max).label, "Stable", "a score of 55 (just past the boundary) correctly bands as 'Stable'");
+// Structural: the rendered score/band actually reach the DOM, not just the return value.
+assertStrEqual(elementsById["healthScoreVal"].textContent !== "" && elementsById["healthScoreVal"].textContent !== "—", true, "the rendered health score value is a real number, not the placeholder dash");
+assertStrEqual(elementsById["healthScoreBand"].textContent.length > 0, true, "the rendered health band label is non-empty");
+
+console.log("--- animateValue() respects prefers-reduced-motion (UX/UI upgrade pass, 2026-08-27) ---");
+// This repo's own verify.cjs sandbox has no window.matchMedia (confirmed: prefersReducedMotion()
+// returns false here, same as a real browser with no reduced-motion preference set) -- so this
+// checks the FUNCTION's own logic directly, not the DOM's actual media-query state.
+assertStrEqual(state.prefersReducedMotion(), false, "prefersReducedMotion() returns false in this sandbox (no window.matchMedia stub), matching a real browser with no reduced-motion preference -- not a crash on the missing API");
+
 console.log("--- Director-grade visuals: Control-Account CV tornado ---");
 const expectedCvRanking = state.controlAccounts.slice().sort((a, b) => Math.abs(b.cv) - Math.abs(a.cv)).map((a) => a.name);
 assertStrEqual(JSON.stringify(state.cvTornadoResult.map((a) => a.name)), JSON.stringify(expectedCvRanking), "CV tornado ranking matches an independent sort by |CV| descending");
@@ -1468,15 +1518,15 @@ if (!startTourBtnEl || !tourNextBtnEl || !tourPrevBtnEl || !tourExitBtnEl) {
   assertStrEqual(state.getTourOpenAnchorId(), "exp0708", "step 7 shares the same exp0708 anchor as step 6, not a different one");
   assertStrEqual(elementsById["exp0708"].classList.contains("open"), true, "the shared anchor stayed open across the step 6 -> 7 transition, never closed in between");
 
-  // Next at the last step must clamp at length-1, not run past the real 25-item array.
-  for (let i = 0; i < 25; i++) tourNextBtnEl.fire("click");
+  // Next at the last step must clamp at length-1, not run past the real 26-item array.
+  for (let i = 0; i < 26; i++) tourNextBtnEl.fire("click");
   assertEqual(state.getTourStep(), state.kpiCatalog.length - 1, "Next clamps at the last real KPI (index " + (state.kpiCatalog.length - 1) + "), never runs past the array");
-  assertStrEqual(state.getTourOpenAnchorId(), "expFxExposure", "the final step (Cross-Border FX Exposure) opens its own real anchor");
-  assertStrEqual(elementsById["expFxExposure"].classList.contains("open"), true, "the final step's explainer is genuinely open before Exit");
+  assertStrEqual(state.getTourOpenAnchorId(), "expHealthScore", "the final step (Program Health Score, appended 2026-08-27) opens its own real anchor");
+  assertStrEqual(elementsById["expHealthScore"].classList.contains("open"), true, "the final step's explainer is genuinely open before Exit");
 
   tourExitBtnEl.fire("click");
   assertStrEqual(state.isTourActive(), false, "Exit tour deactivates the tour");
-  assertStrEqual(elementsById["expFxExposure"].classList.contains("open"), false, "Exit closes whichever explainer the tour left open, not just deactivating the banner");
+  assertStrEqual(elementsById["expHealthScore"].classList.contains("open"), false, "Exit closes whichever explainer the tour left open, not just deactivating the banner");
   assertStrEqual(state.getTourOpenAnchorId(), null, "Exit clears the tracked tour-anchor state entirely");
 
   // Reset to Overview so later assertions' implicit "Overview is active" assumption still holds.
@@ -1527,8 +1577,19 @@ if (!complianceCheck) {
   assertStrEqual(complianceCheck.run()[1], "clean", "the compliance sweep reports 'clean' on this build's real rendered content");
 }
 
-console.log("--- KPI Catalog: exactly 25 rows, every 'real' badge carries a real citation, every tab is real ---");
-assertEqual(state.kpiCatalog.length, 25, "KPI catalog has exactly 25 rows, not 24 or 26");
+console.log("--- KPI Catalog: exactly 26 rows, every 'real' badge carries a real citation, every tab is real ---");
+assertEqual(state.kpiCatalog.length, 26, "KPI catalog has exactly 26 rows, not 25 or 27");
+// UX/UI upgrade pass (2026-08-27): every row now carries a "why it matters" one-liner -- the
+// practical stake, distinct from both `q` (the operational question) and the technical/simple
+// explainer text (the formula). Checking every row has a real, non-generic entry, not a filler
+// column silently left blank on some rows.
+const rowsWithoutWhy = state.kpiCatalog.filter((k) => !k.why || k.why.trim().length < 20);
+assertEqual(rowsWithoutWhy.length, 0, "every one of the 26 kpiCatalog rows has a real, non-trivial 'why it matters' one-liner (not blank, not a token placeholder)");
+const whyTexts = new Set(state.kpiCatalog.map((k) => k.why));
+assertEqual(whyTexts.size, state.kpiCatalog.length, "every row's 'why it matters' text is genuinely distinct -- no copy-pasted filler repeated across rows");
+const kpiCatalogHtml = elementsById["kpiCatalogTable"].innerHTML;
+assertStrEqual(kpiCatalogHtml.includes("Why it matters"), true, "the rendered KPI catalog table actually has a 'Why it matters' column header");
+assertStrEqual(kpiCatalogHtml.includes(state.kpiCatalog[0].why), true, "the rendered table's first row includes its own real 'why' text, not just the data model having it");
 const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","ramp","framework","actions","triage","data","reference"];
 let realBadgeNoCitation = 0, unknownTab = 0;
 state.kpiCatalog.forEach((k) => {

@@ -93,7 +93,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   **Live Integrity Gate** — 13 reconciliation checks that run in your browser on every page load,
   not just in a Node test file someone would have to clone the repo to see (including a live
   escalation-assumption staleness check and a cross-region cost-reporting schema check).
-- **Reference** — the 25-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
+- **Reference** — the 26-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
   badge → citation, one row per built visual across all 12 tabs), plus a searchable,
   category-filterable glossary of every AACE Recommended Practice, every real data-center cost
   figure, every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV), and (added
@@ -150,11 +150,11 @@ legible, marked `illustrative` throughout.
 
 - **Currency toggle** (USD/GBP/JPY/BRL, header) — converts this program's own illustrative dollar
   figures only; cited real industry benchmarks stay in their originally published currency.
-- **Contextual explainer toggles on all 25 KPIs** — click the (i) next to any KPI to see its real
+- **Contextual explainer toggles on all 26 KPIs** — click the (i) next to any KPI to see its real
   formula, a plain-language meaning, and diagnostic guidance inline, without leaving the tab (the
   original 20 numbered KPIs share 17 buttons — 3 pairs share one heading/section — the 4 Commercial
-  Ramp KPIs and the FX exposure KPI added later each get their own).
-- **A guided, 25-stop Tour** — walks the KPI catalog's own 25 rows in sequence, switching tabs live
+  Ramp KPIs, the FX exposure KPI, and the Program Health Score added later each get their own).
+- **A guided, 26-stop Tour** — walks the KPI catalog's own 26 rows in sequence, switching tabs live
   and showing each one's operational question (Start/Next/Prev/Exit, clamped at both ends).
 - **Structured, dual-encoded alert cards** — every warning (contingency drawdown, data quality,
   Gate 4, float erosion) shows Detected / Probable Cause / Suggested Action, with a shape (▲/●)
@@ -391,7 +391,7 @@ verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now exp
 **UX/navigation upgrade pass, 2026-08-26** — a full brainstorm-then-build round covering
 interactivity, navigation, and onboarding, none of it adding an external dependency:
 
-- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 25-KPI catalog, or the full
+- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 26-KPI catalog, or the full
   glossary from one search box, wired through the existing global keyboard-shortcut handler.
 - **Per-cluster tab-rail tinting + exploration progress** — the tab rail's existing 5 groups
   (Executive/Cost & Risk/Governance & Portfolio/Actions/Reference) now carry their own accent color
@@ -1029,3 +1029,64 @@ Also fixed: a stray trailing space in the `%` column header (LOW).
 
 index.html 5,303 → 5,319 (+16), verify.cjs 2,099 → 2,124 (+25), stress.cjs 544 → 553 (+9). Both
 suites green.
+
+**UX/UI upgrade pass, 2026-08-27** — asked in brainstorm mode to make the dashboard more
+interactive, engaging, lively, educational, and insightful. Calibrated "entertainment" for this
+audience (a Cost Management Associate portfolio, reviewed by finance hiring managers, not a
+consumer app) as delightful-to-explore and satisfying-to-interact-with — not literal gamification
+(no points, no badges, no confetti), consistent with this project's own established preference for
+polish over gimmick. Three real additions, plus one real bug caught while touching existing motion:
+
+- **Program Health Score** (new, Overview tab, top of the page) — synthesizes 4 already-real,
+  already-computed signals (aggregate CPI, contingency drawdown ratio, Gate 4 status, data-quality
+  reconciliation) into one 0-100 composite with a Strong/Stable/At Risk band and a narrative
+  identifying the single weakest sub-score, instead of a reader having to scan and mentally combine
+  4 separate tiles/tabs themselves. Every input is real, already-cited methodology; the equal
+  25/25/25/25 weighting that combines them is this program's own illustrative synthesis, badged as
+  such. Reuses the existing linear-gauge component rather than inventing a new visual. Wired into
+  both the currency toggle AND the contingency-drawdown sliders (the score reads
+  `liveDrawdownRatio`, which those sliders change live) — the exact staleness defect class an
+  earlier pass caught with the FX-exposure/currency-toggle bug, checked proactively this time.
+  Added as kpiCatalog row 26, appended (not inserted at the front) specifically to avoid cascading
+  every hardcoded Tour step-index assertion in the test suite.
+- **"Why it matters" column, all 26 KPIs** (KPI Catalog, Reference tab) — a third framing per KPI,
+  distinct from the operational question and the technical/simple formula: the practical stake of
+  ignoring the number. Every row got its own genuine, non-generic one-liner (verified: all 26 are
+  textually distinct, none copy-pasted) — the highest-leverage, lowest-risk way to add real
+  educational depth, since it extends an existing, complete, already-tested table rather than
+  building new UI. Also added to the table's existing CSV export.
+- **A real, pre-existing accessibility gap, found while extending the same motion pattern** — the
+  Overview tab's count-up number animation (`animateValue()`, already built) had NO
+  `prefers-reduced-motion` guard at all; the page's own global CSS rule only zeroes CSS
+  animation/transition durations, never touching a JS `requestAnimationFrame` tween. Fixed before
+  building any new motion on top of it, not after.
+
+Every new computation is falsification-tested (broken, confirmed the exact predicted failure,
+restored, re-confirmed green): the Health Score's 4 sub-score formulas, its 3 band boundaries, the
+reduced-motion guard, the "why" column's render wiring, and its cross-row uniqueness check.
+
+index.html 5,319 → 5,426 (+107), verify.cjs 2,124 → 2,172 (+48), stress.cjs 553 → 571 (+18). Both
+suites green.
+
+An independent reviewer hand-derived the Health Score math from this program's own real live
+state (not by re-running the function under test) and confirmed it exactly, checked the
+illustrative-methodology disclosure appears consistently everywhere it's visible, traced the actual
+wiring proving the score can't go stale, read all 26 "why it matters" entries for genuine
+distinctiveness, and confirmed the reduced-motion fix can't throw. It found and this pass fixed:
+
+- **A real narrative bug (MED)** — this program's own live default state genuinely ties 2
+  sub-scores at the 0-point floor (contingency drawdown and Gate 4 readiness). The narrative's
+  `sort()[0]` silently named only the first tied item, letting a reader believe one sub-score was
+  uniquely the problem when a second was equally at the floor. Fixed to name every tied sub-score
+  and say "co-equally" when there's a genuine tie — pre-registered against this program's own real
+  tied state and confirmed, not a hypothetical fixture.
+- **A test that was never actually written (LOW)** — the DQ sub-score was only implied via the
+  composite-score literal, with a comment claiming it was "verified separately below" when no such
+  assertion existed. Added a real, direct one (`dqDemoState` exposed on state for exactly this).
+- **3 stale-count nits (LOW)** — a verify.cjs console banner still said "25 rows" after the
+  assertion two lines below it was already correctly bumped to 26; a pre-existing `__CMCC_STATE__`
+  export comment still said "20" (stale since well before this pass, tidied while already there);
+  and a redundant, copy-pasted clause in one new stress.cjs check.
+
+index.html 5,426 → 5,438 (+12), verify.cjs 2,172 → 2,185 (+13), stress.cjs unchanged at 571 (one
+clause removed, one line simplified — net zero). Both suites green.

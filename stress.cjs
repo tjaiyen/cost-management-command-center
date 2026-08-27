@@ -133,7 +133,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 38, `found all 38 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 39, `found all 39 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
@@ -542,6 +542,24 @@ check(indexHtml.includes('term:"Full Scope Cost Breakdown"'),
   "the Full Scope Cost Breakdown has a real glossary entry -- previously unreachable via Cmd+K search (same defect class the Technology Maturity Ledger was fixed for, repeated here)");
 check(indexHtml.includes("costDriverCategories.reduce(function(s, c){ return s + c.pctAir; }, 0);"),
   "the GUARDS entry for the full-scope breakdown sums the LIVE costDriverCategories array, not hardcoded literals disconnected from live state (the original version would have stayed green even if the live array were broken)");
+
+console.log("--- UX/UI upgrade pass (2026-08-27): Program Health Score + reduced-motion fix ---");
+check(indexHtml.includes('id="healthScoreVal"') && indexHtml.includes('id="healthScoreGauge"'),
+  "the Program Health Score's DOM containers exist");
+check(indexHtml.includes("function prefersReducedMotion()"),
+  "prefersReducedMotion() is defined as its own function, not inlined ad hoc at each call site");
+// The pre-existing animateValue() count-up (Overview KPI tiles) had NO reduced-motion guard at all
+// -- a real, separate a11y gap from the global CSS rule (which only zeroes CSS animation/transition
+// durations, not a JS rAF loop) found while adding new motion this same pass. Structural check
+// since this repo's own verify.cjs sandbox has no window.matchMedia to flip the real condition.
+check(/function animateValue\(el, finalNumber, formatFn, duration\)\{\s*if \(!el\) return;\s*if \(typeof requestAnimationFrame !== "function" \|\| prefersReducedMotion\(\)\)/.test(indexHtml),
+  "animateValue() (the pre-existing count-up animation, previously unguarded) now also skips its tween when prefers-reduced-motion is set, not just when requestAnimationFrame is unavailable");
+check(indexHtml.includes("kpiCatalog.length === 26"),
+  "the Program Health Score row brings the KPI catalog to 26 (appended, not inserted at the front, to avoid cascading every Tour step-index assertion)");
+check(indexHtml.includes('{ label:"Why it matters", key:"why" }'),
+  "the KPI catalog's CSV export includes the new 'Why it matters' column, not just the on-screen table");
+check(indexHtml.includes("<th scope='col'>Why it matters</th>"),
+  "the rendered KPI catalog table's own header row includes the new column");
 
 console.log("");
 if (failures > 0) {
