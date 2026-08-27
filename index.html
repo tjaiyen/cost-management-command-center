@@ -4099,12 +4099,27 @@
     });
   }
   renderExplainers();
+  // Bug found (user report, 2026-08-27): "Explain simply" seemed to do nothing. Root cause, empirically
+  // confirmed by reading the actual wiring: (1) unlike #themeBtn/#readModeBtn -- whose toggles
+  // instantly repaint the WHOLE page, unmissable regardless of what's open -- this toggle only
+  // changes the text INSIDE explainer panels, which are hidden by default; clicking it with no
+  // panel open produces zero visible change anywhere. (2) the button's own label never reflected
+  // its state (always "💡 Explain simply", even after switching to simple mode), so even the
+  // click itself gave no feedback. Fixed both: the label now flips with the real state (immediate,
+  // guaranteed-visible feedback that doesn't depend on any panel being open), and this comment
+  // documents why #themeBtn/#readModeBtn don't need the same fix (their own effects already are).
   var explainBtn = document.getElementById("explainBtn");
+  function updateExplainBtnLabel(){
+    if (!explainBtn) return;
+    explainBtn.textContent = explainMode === "simple" ? "📖 Show technical" : "💡 Explain simply";
+  }
   if (explainBtn) {
     explainBtn.setAttribute("aria-pressed", explainMode === "simple" ? "true" : "false");
+    updateExplainBtnLabel();
     explainBtn.addEventListener("click", function(){
       explainMode = explainMode === "simple" ? "technical" : "simple";
       explainBtn.setAttribute("aria-pressed", explainMode === "simple" ? "true" : "false");
+      updateExplainBtnLabel();
       persistSet("cmcc-explain", explainMode);
       renderExplainers();
     });

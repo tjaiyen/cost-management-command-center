@@ -1363,12 +1363,20 @@ console.log('--- "Explain it simply" toggle: technical vs. plain-English explain
   const explainBtnEl = elementsById["explainBtn"];
   if (!explainBtnEl) { failures++; console.error("FAIL: #explainBtn was never registered"); }
   else {
+    // User-reported bug, 2026-08-27: the button's own visible label never changed with state
+    // (always "💡 Explain simply"), so unlike #themeBtn/#readModeBtn -- whose effects repaint the
+    // WHOLE page, unmissable regardless of what's open -- clicking this with no explainer panel
+    // open produced literally zero visible feedback anywhere on the page. Fixed: the label itself
+    // now flips, giving guaranteed-visible confirmation independent of any panel's open state.
+    assertStrEqual(explainBtnEl.textContent, "💡 Explain simply", "the button's own label starts as 'Explain simply', matching its real technical-mode default");
     explainBtnEl.fire("click");
     assertStrEqual(state.getExplainMode(), "simple", "clicking the toggle switches to simple mode");
     assertStrEqual(explainBtnEl.getAttribute("aria-pressed"), "true", "the toggle reflects its own on-state via aria-pressed");
+    assertStrEqual(explainBtnEl.textContent, "📖 Show technical", "the button's own label flips to 'Show technical' -- visible confirmation even with no explainer panel open (the actual bug reported)");
     assertStrEqual(elementsById["exp01"].textContent, state.kpiExplainersSimple.exp01, "exp01's rendered text actually switches to the simple version, not just the internal mode flag");
     explainBtnEl.fire("click");
     assertStrEqual(state.getExplainMode(), "technical", "clicking again switches back to technical mode");
+    assertStrEqual(explainBtnEl.textContent, "💡 Explain simply", "the button's own label flips back to 'Explain simply'");
     assertStrEqual(elementsById["exp01"].textContent, state.kpiExplainers.exp01, "exp01's rendered text switches back to the technical version");
   }
 }
