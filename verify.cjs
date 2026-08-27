@@ -982,6 +982,22 @@ if (typeof state.computeTriageItems === "function") {
 } else {
   failures++; console.error("FAIL: computeTriageItems was not exposed on window.__CMCC_STATE__");
 }
+// Resolved (/stress-test pass, 2026-08-27): the "View on ___ ->" jump buttons' own click
+// delegation was previously only "verified by reading" -- this sandbox's innerHTML doesn't parse
+// into real clickable child nodes, so nothing had ever actually fired it. Same synthetic-stub
+// technique this file already uses for the .info-toggle delegation above (a real classList +
+// dataset, fired through the real document click handler) -- not a stub-fidelity workaround
+// specific to this one button, an established pattern.
+{
+  const triageJumpBtnStub = withProperties(makeElementStub());
+  triageJumpBtnStub.classList.add("triage-jump");
+  triageJumpBtnStub.dataset = { jump: "contingency" };
+  const overviewBtnForTriageTest = lastTabButtonStubs.find((b) => b.dataset.tab === "overview");
+  if (overviewBtnForTriageTest) overviewBtnForTriageTest.fire("click"); // known starting tab, so the jump below is unambiguous
+  documentStub.fire("click", { target: triageJumpBtnStub });
+  assertStrEqual(state.getCurrentTab(), "contingency", "clicking a real 'View on ___ ->' triage-jump button actually activates its target tab, through the real delegation -- not verified by reading alone");
+  if (overviewBtnForTriageTest) overviewBtnForTriageTest.fire("click"); // reset for later assertions
+}
 
 console.log("--- Phase 4: Schedule float as a cost-risk input signal (independent re-derivation) ---");
 // Independent re-derivation: history [22,19,14,13] over 4 weeks -> (22-13)/3 = 3.0 days/week.
@@ -1105,6 +1121,35 @@ documentStub.fire("keydown", { key: "?", target: {} });
 assertStrEqual(elementsById["shortcutsOverlay"].hidden, false, "pressing ? opens the shortcuts overlay");
 documentStub.fire("keydown", { key: "Escape", target: {} });
 assertStrEqual(elementsById["shortcutsOverlay"].hidden, true, "pressing Escape closes it again");
+
+// Focus management + trap (/stress-test findings, 2026-08-27, both previously-stated
+// limitations): this overlay never moved focus in on open or back out on close, and had zero
+// Tab-trap. shortcutsCloseBtn is verified to be the ONLY real focusable element inside it.
+{
+  const shortcutsCloseBtnEl = elementsById["shortcutsCloseBtn"];
+  if (!shortcutsCloseBtnEl) { failures++; console.error("FAIL: #shortcutsCloseBtn was never registered"); }
+  else {
+    let closeBtnFocusCalls = 0;
+    const realFocus = shortcutsCloseBtnEl.focus.bind(shortcutsCloseBtnEl);
+    shortcutsCloseBtnEl.focus = () => { closeBtnFocusCalls++; realFocus(); };
+    documentStub.activeElement = elementsById["shortcutsBtn"]; // simulate "opened via the header button"
+    documentStub.fire("keydown", { key: "?", target: {} });
+    assertEqual(closeBtnFocusCalls, 1, "opening the shortcuts overlay moves focus onto its own close button, not leaving it stranded on whatever opened it");
+
+    shortcutsCloseBtnEl.fire("keydown", { key: "Tab", shiftKey: true, preventDefault: () => {} });
+    assertEqual(closeBtnFocusCalls, 2, "Shift+Tab on the close button (the ONLY focusable element inside) keeps focus on itself, rather than escaping backward into the page");
+    shortcutsCloseBtnEl.fire("keydown", { key: "Tab", shiftKey: false, preventDefault: () => {} });
+    assertEqual(closeBtnFocusCalls, 3, "...same for a plain forward Tab");
+
+    let returnFocusCalls = 0;
+    const btnEl = elementsById["shortcutsBtn"];
+    const realBtnFocus = btnEl.focus.bind(btnEl);
+    btnEl.focus = () => { returnFocusCalls++; realBtnFocus(); };
+    documentStub.fire("keydown", { key: "Escape", target: {} });
+    assertEqual(returnFocusCalls, 1, "closing the overlay returns focus to whichever element had focus when it opened (the header Shortcuts button), same discipline as the palette");
+    btnEl.focus = realBtnFocus;
+  }
+}
 // Typing "3" into a real form field must NOT jump tabs -- only a bare keypress should.
 overviewBtn.setAttribute("aria-selected", "true"); // reset known state before this check
 documentStub.fire("keydown", { key: "3", target: { tagName: "INPUT" } });
@@ -1128,6 +1173,19 @@ overviewBtn.fire("keydown", { key: "ArrowUp", preventDefault: noop });
 assertStrEqual(lastTabButtonStubs[lastTabButtonStubs.length - 1].getAttribute("aria-selected"), "true", "ArrowUp from the 1st tab wraps around to the LAST tab (Reference), not a dead stop");
 lastTabButtonStubs[lastTabButtonStubs.length - 1].fire("keydown", { key: "ArrowDown", preventDefault: noop });
 assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "ArrowDown from the last tab wraps back around to the 1st (Overview)");
+
+// Home/End (/stress-test finding, 2026-08-27: real WAI-ARIA APG guidance says a tablist should
+// support jumping straight to the first/last tab, not just one step at a time -- a previously
+// stated, unfixed gap). Start from the middle (Cost, index 2) so Home/End are genuinely tested
+// against a non-adjacent jump, not indistinguishable from an ArrowUp/ArrowDown wrap.
+lastTabButtonStubs[2].fire("keydown", { key: "ArrowDown", preventDefault: noop }); // Cost -> Contingency, just to move off both ends first
+lastTabButtonStubs[3].fire("keydown", { key: "Home", preventDefault: noop });
+assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "Home jumps straight to the 1st tab (Overview) from the middle of the list, not one step at a time");
+overviewBtn.fire("keydown", { key: "End", preventDefault: noop });
+assertStrEqual(lastTabButtonStubs[lastTabButtonStubs.length - 1].getAttribute("aria-selected"), "true", "End jumps straight to the LAST tab (Reference) from the 1st, not one step at a time");
+lastTabButtonStubs[lastTabButtonStubs.length - 1].fire("keydown", { key: "Home", preventDefault: noop });
+assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "Home from the LAST tab also returns to the 1st (not a no-op because it's 'already at an end')");
+overviewBtn.fire("click"); // reset back to Overview for later assertions
 
 console.log("--- Mobile sidebar overlay (hamburger toggle): open/close via button, backdrop click, Escape, and auto-close after selecting a tab ---");
 {
@@ -1239,6 +1297,37 @@ console.log("--- Mobile sidebar overlay (hamburger toggle): open/close via butto
       sidebarCloseBtnEl.fire("click");
       assertStrEqual(sidebarElTest.classList.contains("open"), false, "the in-drawer close button closes the overlay -- a real close affordance that doesn't depend on reaching the (now-covered) hamburger button");
     }
+
+    // Focus trap (/stress-test finding, 2026-08-27: a previously-stated limitation -- "Tab can
+    // still cycle out into page content behind an open overlay"). sidebarCloseBtn comes first in
+    // the drawer's own real DOM order, the last tabButton comes last -- Shift+Tab on the first and
+    // Tab on the last should each wrap to the OTHER end, only while the drawer is genuinely open.
+    if (sidebarCloseBtnEl) {
+      const lastTabBtn = lastTabButtonStubs[lastTabButtonStubs.length - 1];
+      let lastTabFocusCalls = 0;
+      const realLastTabFocus = lastTabBtn.focus.bind(lastTabBtn);
+      lastTabBtn.focus = () => { lastTabFocusCalls++; realLastTabFocus(); };
+      let closeBtnFocusCalls = 0;
+      const realCloseBtnFocus = sidebarCloseBtnEl.focus.bind(sidebarCloseBtnEl);
+      sidebarCloseBtnEl.focus = () => { closeBtnFocusCalls++; realCloseBtnFocus(); };
+
+      sidebarToggleBtnEl.fire("click"); // reopen the drawer
+      assertStrEqual(sidebarElTest.classList.contains("open"), true, "sanity check: the drawer is open before the focus-trap probe");
+      sidebarCloseBtnEl.fire("keydown", { key: "Tab", shiftKey: true, preventDefault: noop });
+      assertEqual(lastTabFocusCalls, 1, "Shift+Tab on sidebarCloseBtn (the drawer's first focusable) wraps to the LAST tab button, not out to the page behind it");
+      lastTabBtn.fire("keydown", { key: "Tab", shiftKey: false, preventDefault: noop });
+      assertEqual(closeBtnFocusCalls, 1, "Tab on the last tab button (the drawer's last focusable) wraps back to sidebarCloseBtn");
+
+      // The trap must NOT engage when the drawer is closed -- this is permanent desktop sidebar
+      // chrome the rest of the time, and Tab must keep working normally there.
+      sidebarToggleBtnEl.fire("click"); // close the drawer again
+      assertStrEqual(sidebarElTest.classList.contains("open"), false, "sanity check: the drawer is closed before the gating probe");
+      lastTabFocusCalls = 0; closeBtnFocusCalls = 0;
+      sidebarCloseBtnEl.fire("keydown", { key: "Tab", shiftKey: true, preventDefault: noop });
+      lastTabBtn.fire("keydown", { key: "Tab", shiftKey: false, preventDefault: noop });
+      assertEqual(lastTabFocusCalls, 0, "the trap does NOT engage while the drawer is closed (desktop-permanent chrome, not a dialog)");
+      assertEqual(closeBtnFocusCalls, 0, "...same for the other direction");
+    }
   }
 }
 
@@ -1259,7 +1348,7 @@ if (!costTabBtnForDrawer) {
   assertStrEqual(drawerEl.classList.contains("open"), false, "blurring the tab button closes the preview drawer");
 }
 
-console.log("--- Guided Tour (actually firing Start/Next/Prev/Exit, walking the real 20-KPI catalog) ---");
+console.log("--- Guided Tour (actually firing Start/Next/Prev/Exit, walking the real 25-KPI catalog) ---");
 const startTourBtnEl = elementsById["startTourBtn"];
 const tourNextBtnEl = elementsById["tourNextBtn"];
 const tourPrevBtnEl = elementsById["tourPrevBtn"];
@@ -1271,24 +1360,51 @@ if (!startTourBtnEl || !tourNextBtnEl || !tourPrevBtnEl || !tourExitBtnEl) {
   assertStrEqual(state.isTourActive(), true, "Start Tour activates the tour");
   assertEqual(state.getTourStep(), 0, "tour starts at step 0");
   assertStrEqual(elementsById["panel-" + state.kpiCatalog[0].tab].classList.contains("active"), true, "step 0 actually activates KPI #1's real tab (" + state.kpiCatalog[0].tab + ")");
+  // /stress-test finding (2026-08-27): landing on a Tour step previously only switched tabs, never
+  // scrolled to or highlighted the specific KPI -- a real, previously-stated-but-unfixed limitation.
+  // Pre-registered: step 0's own anchor (exp01) should now be open, tracked, and its paired button's
+  // aria-expanded flipped -- same mechanism openKpiAnchor() already uses for URL deep-links.
+  assertStrEqual(state.getTourOpenAnchorId(), "exp01", "step 0 opens (and tracks) its own real anchor, exp01");
+  assertStrEqual(elementsById["exp01"].classList.contains("open"), true, "step 0's own explainer div is genuinely open, not just tracked");
+  assertStrEqual(elementsById["toggle-exp01"].getAttribute("aria-expanded"), "true", "step 0's paired .info-toggle button's aria-expanded flips too");
 
   tourNextBtnEl.fire("click");
   assertEqual(state.getTourStep(), 1, "Next advances to step 1");
   assertStrEqual(elementsById["panel-" + state.kpiCatalog[1].tab].classList.contains("active"), true, "step 1 activates KPI #2's real tab (" + state.kpiCatalog[1].tab + ")");
+  assertStrEqual(elementsById["exp01"].classList.contains("open"), false, "advancing to step 1 closes step 0's own anchor, not leaving a trail of open explainers");
+  assertStrEqual(state.getTourOpenAnchorId(), "exp0206", "step 1 opens its own real anchor, exp0206");
+  assertStrEqual(elementsById["exp0206"].classList.contains("open"), true, "step 1's own explainer div is genuinely open");
 
   tourPrevBtnEl.fire("click");
   assertEqual(state.getTourStep(), 0, "Prev returns to step 0");
+  assertStrEqual(elementsById["exp0206"].classList.contains("open"), false, "going back to step 0 closes step 1's own anchor in turn");
+  assertStrEqual(state.getTourOpenAnchorId(), "exp01", "Prev back to step 0 re-opens exp01");
 
   // Prev at step 0 must clamp, not go negative -- an off-by-one here would silently wrap or crash.
   tourPrevBtnEl.fire("click");
   assertEqual(state.getTourStep(), 0, "Prev at step 0 clamps at 0 rather than going negative");
 
-  // Next at the last step must clamp at length-1, not run past the real 20-item array.
+  // Rows 7 & 8 (0-indexed 6 & 7) deliberately share one explainer div (exp0708 -- see kpiCatalog's
+  // own comment). Pre-registered: stepping from one to the other should NOT close-then-reopen the
+  // shared anchor -- it should just stay open, uninterrupted, the whole time.
+  for (let i = 0; i < 6; i++) tourNextBtnEl.fire("click");
+  assertEqual(state.getTourStep(), 6, "sanity check: 6 more Next clicks from step 0 lands on step 6 (row 7)");
+  assertStrEqual(state.getTourOpenAnchorId(), "exp0708", "step 6 (row 7, Cost Estimate Classification) opens the shared exp0708 anchor");
+  tourNextBtnEl.fire("click");
+  assertEqual(state.getTourStep(), 7, "one more Next lands on step 7 (row 8, Cost-Driver Split)");
+  assertStrEqual(state.getTourOpenAnchorId(), "exp0708", "step 7 shares the same exp0708 anchor as step 6, not a different one");
+  assertStrEqual(elementsById["exp0708"].classList.contains("open"), true, "the shared anchor stayed open across the step 6 -> 7 transition, never closed in between");
+
+  // Next at the last step must clamp at length-1, not run past the real 25-item array.
   for (let i = 0; i < 25; i++) tourNextBtnEl.fire("click");
   assertEqual(state.getTourStep(), state.kpiCatalog.length - 1, "Next clamps at the last real KPI (index " + (state.kpiCatalog.length - 1) + "), never runs past the array");
+  assertStrEqual(state.getTourOpenAnchorId(), "expFxExposure", "the final step (Cross-Border FX Exposure) opens its own real anchor");
+  assertStrEqual(elementsById["expFxExposure"].classList.contains("open"), true, "the final step's explainer is genuinely open before Exit");
 
   tourExitBtnEl.fire("click");
   assertStrEqual(state.isTourActive(), false, "Exit tour deactivates the tour");
+  assertStrEqual(elementsById["expFxExposure"].classList.contains("open"), false, "Exit closes whichever explainer the tour left open, not just deactivating the banner");
+  assertStrEqual(state.getTourOpenAnchorId(), null, "Exit clears the tracked tour-anchor state entirely");
 
   // Reset to Overview so later assertions' implicit "Overview is active" assumption still holds.
   overviewBtn.fire("click");
@@ -1450,6 +1566,23 @@ console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM o
     assertStrEqual(elementsById["paletteOverlay"].hidden, true, "the palette starts hidden, matching its real HTML default");
     paletteBtnEl.fire("click");
     assertStrEqual(elementsById["paletteOverlay"].hidden, false, "clicking the search button opens the palette");
+
+    // Focus trap (/stress-test finding, 2026-08-27: a previously-stated limitation). Every
+    // .palette-item result button carries tabindex="-1" by design (a combobox/listbox pattern --
+    // Up/Down move a virtual aria-activedescendant selection, not real DOM focus), so the input
+    // is the ONLY real Tab-stop inside the palette; Tab/Shift+Tab should both just keep focus on
+    // it rather than escaping into the page behind the overlay.
+    {
+      let inputFocusCalls = 0;
+      const realInputFocus = paletteInputEl.focus.bind(paletteInputEl);
+      paletteInputEl.focus = () => { inputFocusCalls++; realInputFocus(); };
+      paletteInputEl.fire("keydown", { key: "Tab", shiftKey: false, preventDefault: () => {} });
+      assertEqual(inputFocusCalls, 1, "Tab on the palette input (open, the only real focusable) keeps focus on itself");
+      paletteInputEl.fire("keydown", { key: "Tab", shiftKey: true, preventDefault: () => {} });
+      assertEqual(inputFocusCalls, 2, "Shift+Tab does the same in the other direction");
+      paletteInputEl.focus = realInputFocus;
+    }
+
     paletteInputEl.value = "cost";
     paletteInputEl.fire("input");
     assertStrEqual(elementsById["paletteResults"].innerHTML.indexOf("Cost") !== -1, true, "typing 'cost' renders at least one real matching result");
@@ -1716,12 +1849,20 @@ console.log("--- 10-feature UX/UI brainstorm pass: deep-linkable KPI anchors ---
   const opened = state.openKpiAnchor("exp01");
   assertStrEqual(opened, true, "openKpiAnchor() returns true when the target explainer div exists");
   assertStrEqual(kpiTarget.classList.contains("open"), true, "openKpiAnchor() opens the target explainer div directly, by id");
+  // /stress-test finding (2026-08-27): openKpiAnchor() previously only opened the explainer DIV,
+  // leaving its paired .info-toggle BUTTON's aria-expanded stuck at "false" until manually
+  // clicked -- a real, previously-stated-but-unfixed accessibility gap. Every button now carries
+  // a real id="toggle-<explainer-id>" in the HTML itself, so this is a direct getElementById
+  // check, not a querySelector/attribute-selector probe the stub can't support.
+  const pairedBtn = elementsById["toggle-exp01"];
+  assertStrEqual(pairedBtn.getAttribute("aria-expanded"), "true", "openKpiAnchor() also flips its paired .info-toggle button's aria-expanded to true, not just the div's own class");
   // Tests the `!id` guard specifically, not `!target` -- this sandbox's own getElementById
   // auto-vivifies a fresh stub for ANY id (unlike a real browser, which returns null for an
   // unknown one), so the `!target` branch is genuinely untestable through this harness; a falsy
   // id never reaches getElementById at all, so THIS branch is real and reachable here.
   assertStrEqual(state.openKpiAnchor(null), false, "openKpiAnchor() returns false (not a throw) for a falsy id -- a missing deep-link anchor degrades cleanly");
   kpiTarget.classList.remove("open"); // restore, so this probe doesn't leak into later assertions
+  pairedBtn.setAttribute("aria-expanded", "false"); // restore, same reason
 }
 {
   // End-to-end, through the REAL popstate handler -- not tabFromLocationHash()/openKpiAnchor() in

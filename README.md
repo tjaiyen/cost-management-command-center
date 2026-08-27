@@ -518,12 +518,10 @@ issues before shipping, most severe first:
 - **The 3-way overlay mutual exclusion** (palette / shortcuts / mobile drawer) needed completing in
   both directions -- opening any one of the three now closes whichever of the other two was open.
 
-**Accepted limitations, stated rather than silently dropped** (both pre-existing across all three
-overlays -- shortcuts, palette, and now the mobile drawer -- not introduced by this refactor, and
-out of scope for a navigation relocation specifically): none of the three overlays trap focus (Tab
-can still cycle out into page content behind an open overlay), and the vertical tablist has no
-Home/End key support to jump to the first/last tab (only Up/Down, one at a time). Both are real
-gaps, flagged for a future accessibility-focused pass rather than folded into this one.
+**Accepted limitations at the time, later resolved:** none of the three overlays trapped focus
+(Tab could cycle out into page content behind an open overlay), and the vertical tablist had no
+Home/End key support. Both flagged here for a future accessibility-focused pass -- see the
+"resolve all limitations" pass, 2026-08-27, below, which is that pass.
 
 verify.cjs 317 → 347 (+30), stress.cjs 151 → 160 (+9), both green.
 
@@ -837,7 +835,63 @@ which didn't mention any of the 3 new sections now living on those tabs; and thi
 prior entry, which mis-stated index.html's line count as 5,055 instead of the actual 5,059 (its own
 `+186` and the commit message both already had it right — only this prose line was off).
 
-Accepted, stated explicitly: the Guided Tour's lack of a per-KPI scroll/highlight when landing on a
-step is a real UX limitation but pre-existing across the whole 25-row catalog, not something this
-pass introduced or worsened — left as-is. index.html 5,059 → 5,074 (+15), verify.cjs 1,872 → 1,904
+Accepted, stated explicitly at the time: the Guided Tour's lack of a per-KPI scroll/highlight when
+landing on a step is a real UX limitation but pre-existing across the whole 25-row catalog, not
+something this pass introduced or worsened — left as-is. **Since resolved** — see "resolve all
+limitations," 2026-08-27, below. index.html 5,059 → 5,074 (+15), verify.cjs 1,872 → 1,904
 (+32), stress.cjs unchanged at 524 (2 hardcoded counts updated in place). Both suites green.
+
+**"Resolve all limitations" pass, 2026-08-27** — went back through every currently-standing
+"accepted limitation" this repo's own README/code comments had stated (not just the most recent
+one) and resolved every one that was genuinely fixable without violating this project's own
+discipline (no fabricating illustrative data just to hit a code branch). All 6 fixes below are
+falsification-tested (broken, confirmed the exact predicted failure, restored, re-confirmed green):
+
+- **Guided Tour now scrolls to and highlights the specific KPI each step is about** — previously
+  only switched tabs. Every `kpiCatalog` row got a real `anchor` field (its own explainer div id,
+  matched by content — several ids are deliberately shared by 2 rows, e.g. `exp0708` covers both
+  "Cost Estimate Classification" and "Cost-Driver Split"). Stepping through opens the current
+  step's own anchor and closes the previous one (skipping the close/reopen when 2 consecutive
+  steps share one anchor), and Exit closes whatever was left open.
+- **`openKpiAnchor()`'s paired `.info-toggle` button now flips `aria-expanded` too** — previously
+  only the explainer `<div>` opened; the button that supposedly controls it stayed stuck at
+  `aria-expanded="false"` until manually clicked. Every one of the 39 `.info-toggle` buttons in the
+  HTML now carries a real `id="toggle-<explainer-id>"`, so this is a direct `getElementById` call,
+  not a `querySelector`/attribute-selector pass the test harness can't support.
+- **Home/End now work on the vertical tablist** — real WAI-ARIA APG guidance says a tablist should
+  support jumping straight to the first/last tab, not just one Up/Down step at a time. Added.
+- **The keyboard-shortcuts overlay now traps focus and manages it correctly** — previously never
+  moved focus in on open, never returned it on close, and had zero Tab-trap (Tab could escape into
+  the page behind an open "modal"). Its one real focusable element (`shortcutsCloseBtn` — verified
+  against its own markup) now gets focus on open, returns focus to whatever opened it on close, and
+  Tab/Shift+Tab both keep focus on it while open.
+- **The command palette now traps Tab too** — every `.palette-item` result button is deliberately
+  `tabindex="-1"` (a combobox/listbox pattern; Up/Down move a virtual `aria-activedescendant`
+  selection, not real focus), so the input is the ONLY real Tab-stop inside it. Tab/Shift+Tab both
+  now keep focus on the input instead of escaping to the page behind the overlay.
+- **The mobile nav drawer now traps focus in both directions** — Shift+Tab on `sidebarCloseBtn`
+  (the drawer's first real focusable, confirmed against its own DOM order) now wraps to the last
+  tab button; Tab on the last tab button wraps back to `sidebarCloseBtn`. Gated on the drawer
+  genuinely being open (`sidebarOverlayOpen()`) — on desktop this sidebar is permanent chrome, not
+  a dialog, so Tab must keep working normally there; a dedicated test proves the trap does NOT
+  engage while closed.
+
+*A 7th, already-partially-fixable test-harness gap, resolved along the way*: the triage list's
+"View on ___ →" jump buttons' click delegation was previously only "verified by reading," since
+this suite's DOM stub doesn't parse `innerHTML` into real clickable child nodes. Reused the exact
+synthetic-stub technique (a real `classList` + `dataset`, fired through the real document click
+handler) this file already established for testing the `.info-toggle` delegation — no stub changes
+needed, just applying an existing pattern to a spot that hadn't gotten it yet.
+
+*One limitation deliberately left as-is, and why*: the Cost tab's Monte Carlo reliability note
+always lands "at or below P50" across every valid slider position at this program's real ~$1.75B
+scale (the real $208K driver is under 1% of baseline). This is a stated mathematical fact about the
+real cited data, not a code gap — the other 3 of its 4 narrative branches are honestly unreachable
+by the live default, and forcing them reachable would mean fabricating the baseline or the driver
+just to exercise a code path, which this project's own discipline explicitly rules out (the same
+reasoning that kept the consultant-tolerance illustrative figures honest rather than recalibrated
+to force a "warn" demonstration, in an earlier pass). Stated here rather than silently reclassified
+as "resolved."
+
+index.html 5,074 → 5,159 (+85), verify.cjs 1,904 → 2,045 (+141), stress.cjs unchanged at 524. Both
+suites green.

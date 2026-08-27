@@ -602,7 +602,7 @@
     program — 12 tabs, real math computed live in this page's own JavaScript, no build step, no
     server, no dependency to install.</p>
 
-  <button class="info-toggle disclaimer-toggle" type="button" data-explainer="fullDisclaimer" aria-expanded="false">
+  <button class="info-toggle disclaimer-toggle" type="button" id="toggle-fullDisclaimer" data-explainer="fullDisclaimer" aria-expanded="false">
     <span class="badge illustrative">Synthetic demo</span>
     <span>Real facts are badge-labeled inline throughout this page — read the full disclaimer</span>
     <span class="chev" aria-hidden="true">▾</span>
@@ -639,7 +639,7 @@
         <button class="icobtn" id="startTourBtn" type="button">Take the tour →</button>
       </div>
       <h2>Portfolio snapshot
-        <button class="info-toggle" type="button" data-explainer="exp01" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp01" data-explainer="exp01" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp01"></div>
       <div class="card">
         <div class="kpis" id="overviewKpis"></div>
@@ -648,7 +648,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Forecast bullet chart <span class="badge illustrative">illustrative worst-case marker, real inputs</span>
-          <button class="info-toggle" type="button" data-explainer="expBullet" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expBullet" data-explainer="expBullet" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expBullet"></div>
         <div id="bulletForecast"></div>
       </div>
@@ -707,7 +707,7 @@
     </details>
     <section id="bridge-section">
       <h2>CAPEX Budget Bridge <span class="badge illustrative">illustrative structure, real headline</span>
-        <button class="info-toggle" type="button" data-explainer="exp0206" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp0206" data-explainer="exp0206" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp0206"></div>
       <p class="lede" style="font-size:13px">Underwriting baseline → scope change → market
         escalation → field-execution variance → contingency drawdown → current forecast.</p>
@@ -721,7 +721,7 @@
         </div>
         <div style="margin-top:10px">
           <h3 style="font-size:13px; margin:0 0 4px">Net variance trend <span class="badge illustrative">illustrative history, real current point</span>
-            <button class="info-toggle" type="button" data-explainer="expVarianceTrend" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+            <button class="info-toggle" type="button" id="toggle-expVarianceTrend" data-explainer="expVarianceTrend" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
           <div class="explainer" id="expVarianceTrend"></div>
           <div id="netVarianceTrend"></div>
         </div>
@@ -746,7 +746,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>What-if forecast sandbox <span class="badge illustrative">illustrative sensitivity model</span>
-          <button class="info-toggle" type="button" data-explainer="exp13" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-exp13" data-explainer="exp13" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="exp13"></div>
         <p class="lede" style="font-size:12.5px">Recomputes live off the same baseline, separate
           from the "as-reported" bridge above — the real $208K driver and the contingency drawdown
@@ -773,7 +773,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Which lever moves the total most? <span class="badge illustrative">illustrative ±10% swing, real forecast function</span>
-          <button class="info-toggle" type="button" data-explainer="expSensitivity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expSensitivity" data-explainer="expSensitivity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expSensitivity"></div>
         <div id="sensitivityTornado" class="tornado"></div>
         <p class="src-note" id="sensitivityDetail">Click any bar for its detail.</p>
@@ -782,7 +782,7 @@
 
     <section id="benchmark-section">
       <h2>Data-center cost-driver benchmarks <span class="badge real">real published figures</span>
-        <button class="info-toggle" type="button" data-explainer="exp0708" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp0708" data-explainer="exp0708" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp0708"></div>
       <p class="lede" style="font-size:13px">Real, published industry percentages — not this
         program's own numbers — useful context for why cost archetype shifts (air-cooled vs.
@@ -808,7 +808,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span>
-          <button class="info-toggle" type="button" data-explainer="exp09" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-exp09" data-explainer="exp09" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="exp09"></div>
         <div id="marketBenchmarkBar"></div>
         <p class="src-note"><span class="badge real">real</span> Turner &amp; Townsend's
@@ -821,7 +821,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Where the budget actually sits <span class="badge illustrative">illustrative rows, real $ from the ledger below</span>
-          <button class="info-toggle" type="button" data-explainer="expTreemap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expTreemap" data-explainer="expTreemap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expTreemap"></div>
         <div id="costDriverTreemap" class="treemap"></div>
         <p class="src-note">Block width = share of total BAC (Budget at Completion) — the same
@@ -830,7 +830,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Estimate maturity <span class="badge real">real classification framework</span>
-          <button class="info-toggle" type="button" data-explainer="expMaturity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expMaturity" data-explainer="expMaturity" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expMaturity"></div>
         <div id="maturityLadder" class="ladder"></div>
         <div id="maturityDetail" class="src-note" style="min-height:1.4em">Click any class for its definition.</div>
@@ -850,7 +850,7 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Escalation assumption governance <span class="badge illustrative">illustrative dates, real cadence practice</span>
-          <button class="info-toggle" type="button" data-explainer="expEscGov" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expEscGov" data-explainer="expEscGov" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expEscGov"></div>
         <div class="kpis">
           <div class="kpi"><div class="lbl">Last re-validated</div><div class="val" id="escalationLastValidated">—</div></div>
@@ -867,7 +867,7 @@
 
     <section id="wbs-section">
       <h2>WBS Cost Allocation
-        <button class="info-toggle" type="button" data-explainer="exp10" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp10" data-explainer="exp10" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp10"></div>
       <div class="card">
         <div id="wbsChart"></div>
@@ -881,7 +881,7 @@
 
     <section id="lle-section">
       <h2>Long-Lead Equipment Schedule-Risk Tracker <span class="badge real">real lead-time data</span>
-        <button class="info-toggle" type="button" data-explainer="expLLE" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expLLE" data-explainer="expLLE" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expLLE"></div>
       <p class="lede" style="font-size:13px">Procurement lead time vs. the schedule window actually
         available before energization, per long-lead package — a negative buffer is the package
@@ -908,7 +908,7 @@
 
     <section id="interconnection-section">
       <h2>Interconnection Cost &amp; Schedule Exposure <span class="badge real">real 2026 industry data</span>
-        <button class="info-toggle" type="button" data-explainer="expInterconnection" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expInterconnection" data-explainer="expInterconnection" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expInterconnection"></div>
       <p class="lede" style="font-size:13px">Grid interconnection has become its own line-item risk
         — in dollars and in schedule — independent of how well construction itself is run. A
@@ -932,7 +932,7 @@
 
     <section id="cal-section">
       <h2>Control Account Ledger <span class="badge illustrative">illustrative rows, real structure</span>
-        <button class="info-toggle" type="button" data-explainer="exp1112" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp1112" data-explainer="exp1112" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp1112"></div>
       <p class="lede" style="font-size:13px">Drill-down from each WBS category above into its own
         BAC / % complete / earned value / actual cost — Cost Performance Index and Cost Variance
@@ -949,14 +949,14 @@
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Account health at a glance <span class="badge illustrative">illustrative rows, real CPI formula</span>
-          <button class="info-toggle" type="button" data-explainer="expStoplight" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expStoplight" data-explainer="expStoplight" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expStoplight"></div>
         <div id="cpiStoplightGrid" class="stoplight-grid"></div>
         <div id="stoplightDetail" class="src-note" style="min-height:1.4em">Click any tile for its detail.</div>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Which account is furthest off-plan? <span class="badge illustrative">illustrative rows, real CV formula</span>
-          <button class="info-toggle" type="button" data-explainer="expCvTornado" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expCvTornado" data-explainer="expCvTornado" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expCvTornado"></div>
         <div id="cvTornado" class="tornado"></div>
         <p class="src-note" id="cvTornadoDetail">Click any bar for its detail.</p>
@@ -977,7 +977,7 @@
     </details>
     <section id="drawdown-mc-section">
       <h2>Contingency Drawdown &amp; AACE RP 57R-09 Monte Carlo Band <span class="badge real">real method</span>
-        <button class="info-toggle" type="button" data-explainer="aace5709exp" aria-expanded="false" aria-label="What is AACE RP 57R-09?">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-aace5709exp" data-explainer="aace5709exp" aria-expanded="false" aria-label="What is AACE RP 57R-09?">i</button></h2>
       <div class="explainer" id="aace5709exp">Assigns Beta-PERT/Triangular/Log-Normal probability
         distributions (optimistic/most-likely/pessimistic bounds) to WBS cost and duration line
         items, then runs many simulated draws to produce a cumulative distribution curve — P50
@@ -989,7 +989,7 @@
       <div class="grid2">
         <div class="card">
           <h3>Drawdown ratio vs. % complete
-            <button class="info-toggle" type="button" data-explainer="exp03" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+            <button class="info-toggle" type="button" id="toggle-exp03" data-explainer="exp03" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
           <div class="explainer" id="exp03"></div>
           <div class="slider-row">
             <label for="pctComplete" style="font-size:12.5px; white-space:nowrap">% complete</label>
@@ -1013,12 +1013,12 @@
         </div>
         <div class="card">
           <h3>Monte Carlo completion cost (2,000 draws) <span class="badge illustrative">tri-point playground</span>
-            <button class="info-toggle" type="button" data-explainer="exp04" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+            <button class="info-toggle" type="button" id="toggle-exp04" data-explainer="exp04" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
           <div class="explainer" id="exp04"></div>
           <canvas id="mcCanvas" width="420" height="140" style="width:100%; height:140px;" role="img" aria-label="Monte Carlo simulated cost distribution histogram"></canvas>
           <div style="margin:10px 0 4px">
             <h4 style="font-size:12px; margin:0 0 4px; font-weight:600">Cumulative probability (S-curve) <span class="badge real">real method</span>
-              <button class="info-toggle" type="button" data-explainer="expScurve" aria-expanded="false" aria-label="Formula and methodology">i</button></h4>
+              <button class="info-toggle" type="button" id="toggle-expScurve" data-explainer="expScurve" aria-expanded="false" aria-label="Formula and methodology">i</button></h4>
             <div class="explainer" id="expScurve"></div>
             <div id="mcScurve"></div>
           </div>
@@ -1057,11 +1057,11 @@
 
     <section id="risk-register-section">
       <h2>Priced Risk Register <span class="badge illustrative">illustrative rows, real methodology</span>
-        <button class="info-toggle" type="button" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp05" data-explainer="exp05" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp05"></div>
       <div class="card">
         <h3>Probability × impact heat-map <span class="badge illustrative">illustrative rows, real bucketing practice</span>
-          <button class="info-toggle" type="button" data-explainer="expHeatmap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+          <button class="info-toggle" type="button" id="toggle-expHeatmap" data-explainer="expHeatmap" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
         <div class="explainer" id="expHeatmap"></div>
         <div id="riskHeatmap" class="heatmap"></div>
         <div id="heatmapDetail" class="src-note" style="min-height:1.4em">Click any bubble for its detail.</div>
@@ -1088,7 +1088,7 @@
 
     <section id="float-section">
       <h2>Schedule Float — a cost-risk input signal, not schedule ownership <span class="badge illustrative">illustrative trend</span>
-        <button class="info-toggle" type="button" data-explainer="exp14" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp14" data-explainer="exp14" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp14"></div>
       <p class="lede" style="font-size:13px">Float erosion feeds contingency and escalation risk
         the same way a leading indicator should — this dashboard <em>reads</em> float trend as one
@@ -1099,7 +1099,7 @@
         <div id="floatWarn" aria-live="polite"></div>
         <div style="margin-top:12px">
           <h3 style="font-size:13px; margin:0 0 4px">Float burn-down <span class="badge illustrative">illustrative readings, real erosion-rate math</span>
-            <button class="info-toggle" type="button" data-explainer="expFloatBurndown" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+            <button class="info-toggle" type="button" id="toggle-expFloatBurndown" data-explainer="expFloatBurndown" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
           <div class="explainer" id="expFloatBurndown"></div>
           <div id="floatBurndown"></div>
         </div>
@@ -1120,7 +1120,7 @@
 
     <section id="emv-section">
       <h2>Change Order Settlement Decision — Expected Monetary Value <span class="badge illustrative">illustrative dispute, real EMV method</span>
-        <button class="info-toggle" type="button" data-explainer="exp15" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp15" data-explainer="exp15" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp15"></div>
       <p class="lede" style="font-size:13px">Settle now vs. contest through dispute resolution —
         priced the same probability × impact way as the risk register above, compared against a
@@ -1137,7 +1137,7 @@
   <div class="tabpanel" id="panel-governance" role="tabpanel" aria-labelledby="tab-governance">
     <section>
       <h2>Consultant Deliverable Scorecard <span class="badge real">real AACE RP 18R-97 Class 1 tolerance</span>
-        <button class="info-toggle" type="button" data-explainer="exp16" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp16" data-explainer="exp16" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp16"></div>
       <p class="lede" style="font-size:13px">Pre-bid-estimate-vs-actual variance tracking for
         third-party cost consultants — generic methodology, never labeled as any specific vendor's
@@ -1158,7 +1158,7 @@
 
     <section>
       <h2>Data-Quality Reconciliation Health
-        <button class="info-toggle" type="button" data-explainer="exp17" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp17" data-explainer="exp17" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp17"></div>
       <p class="lede" style="font-size:13px">A generic "Field System vs. Corporate ERP" sync-lag
         health indicator.</p>
@@ -1185,7 +1185,7 @@
 
     <section id="productivity-section">
       <h2>Crew Productivity — Labor Productivity Factor <span class="badge illustrative">illustrative rows, real ratio</span>
-        <button class="info-toggle" type="button" data-explainer="exp18" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp18" data-explainer="exp18" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp18"></div>
       <p class="lede" style="font-size:13px">Earned direct-labor hours ÷ actual hours expended, by
         trade — a cost-management-owned productivity signal (it needs only earned/actual hours,
@@ -1205,7 +1205,7 @@
   <div class="tabpanel" id="panel-portfolio" role="tabpanel" aria-labelledby="tab-portfolio">
     <section>
       <h2>Multi-Region Cost Rollup <span class="badge illustrative">illustrative</span>
-        <button class="info-toggle" type="button" data-explainer="exp19" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp19" data-explainer="exp19" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp19"></div>
       <p class="lede" style="font-size:13px">Four regions — the same four a real global
         data-center platform typically operates across, used here only as realistic labels for an
@@ -1236,7 +1236,7 @@
     </section>
     <section id="fx-exposure-section">
       <h2>Cross-Border FX &amp; Regulatory-Regime Exposure <span class="badge real">real risk categories, illustrative hedge ratios</span>
-        <button class="info-toggle" type="button" data-explainer="expFxExposure" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expFxExposure" data-explainer="expFxExposure" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expFxExposure"></div>
       <p class="lede" style="font-size:13px">A genuine gap surfaced in this build's own 2026-08-27
         global-program-controls research: currency and regulatory-regime risk is real, formally
@@ -1260,7 +1260,7 @@
   <div class="tabpanel" id="panel-ramp" role="tabpanel" aria-labelledby="tab-ramp">
     <section id="ramp-lag-section">
       <h2>Tenant Power-Ramp Lag &amp; Reserve <span class="badge illustrative">illustrative program, real underlying phenomenon</span>
-        <button class="info-toggle" type="button" data-explainer="expRampLag" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expRampLag" data-explainer="expRampLag" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expRampLag"></div>
       <p class="lede" style="font-size:13px">Construction ending is not revenue starting — a signed
         lease still takes real time to ramp to its full contracted power draw, and every month of
@@ -1294,7 +1294,7 @@
 
     <section id="leased-metered-section">
       <h2>Leased vs. Metered Power Mix <span class="badge illustrative">illustrative split, real underlying distinction</span>
-        <button class="info-toggle" type="button" data-explainer="expLeasedMetered" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expLeasedMetered" data-explainer="expLeasedMetered" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expLeasedMetered"></div>
       <p class="lede" style="font-size:13px">Most hyperscale revenue comes from the reserved-capacity
         lease itself, not from what a tenant actually draws — a real distinction with direct
@@ -1315,7 +1315,7 @@
 
     <section id="sla-penalty-section">
       <h2>SLA Uptime &amp; Penalty Exposure <span class="badge real">real Uptime Institute tiers</span>
-        <button class="info-toggle" type="button" data-explainer="expSlaPenalty" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expSlaPenalty" data-explainer="expSlaPenalty" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expSlaPenalty"></div>
       <p class="lede" style="font-size:13px">Uptime shortfalls below a committed SLA tier convert
         directly into a real dollar penalty exposure — a cost-risk consequence of an operations
@@ -1341,7 +1341,7 @@
 
     <section id="revenue-yield-section">
       <h2>Revenue per MW &amp; Adjusted EBITDA Margin <span class="badge illustrative">illustrative figures, real benchmark range</span>
-        <button class="info-toggle" type="button" data-explainer="expRevenueYield" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expRevenueYield" data-explainer="expRevenueYield" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expRevenueYield"></div>
       <p class="lede" style="font-size:13px">Revenue per megawatt and stabilized adjusted EBITDA
         margin are the real, named metrics operators actually report — not the single blended
@@ -1370,7 +1370,7 @@
   <div class="tabpanel" id="panel-framework" role="tabpanel" aria-labelledby="tab-framework">
     <section>
       <h2>Gate 4 readiness — genuinely computed, not a static bar <span class="badge real">real inputs, illustrative reserve</span>
-        <button class="info-toggle" type="button" data-explainer="exp20" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-exp20" data-explainer="exp20" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="exp20"></div>
       <p class="lede" style="font-size:13px">Contingency Coverage Ratio = remaining contingency
         reserve ÷ total priced risk exposure (the same expected-value total from the Contingency
@@ -1485,7 +1485,7 @@
 
     <section id="sustainability-section">
       <h2>Sustainability &amp; Regulatory Compliance <span class="badge real">real benchmarks &amp; regulation, illustrative program figures</span>
-        <button class="info-toggle" type="button" data-explainer="expSustainability" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expSustainability" data-explainer="expSustainability" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
       <div class="explainer" id="expSustainability"></div>
       <p class="lede" style="font-size:13px">Added 2026-08-27 (global-program-controls research
         pass): sustainability metrics are real, standardized measures with a real compliance
@@ -1504,7 +1504,7 @@
 
     <section id="tech-maturity-section">
       <h2>Technology Maturity Ledger <span class="badge real">real, honesty-graded by evidence strength</span>
-        <button class="info-toggle" type="button" data-explainer="expTechMaturity" aria-expanded="false" aria-label="Methodology">i</button></h2>
+        <button class="info-toggle" type="button" id="toggle-expTechMaturity" data-explainer="expTechMaturity" aria-expanded="false" aria-label="Methodology">i</button></h2>
       <div class="explainer" id="expTechMaturity"></div>
       <p class="lede" style="font-size:13px">What's actually proven vs. still vendor-narrative, for
         the technologies this build's own 2026-08-27 research pass surveyed for cost/schedule
@@ -1740,6 +1740,21 @@
       // (brainstorm build, 2026-08-26); matches aria-orientation="vertical" on the tablist itself.
       if (e.key === "ArrowDown") { e.preventDefault(); tabButtons[(idx+1) % tabButtons.length].focus(); tabButtons[(idx+1) % tabButtons.length].click(); }
       if (e.key === "ArrowUp") { e.preventDefault(); var p=(idx-1+tabButtons.length)%tabButtons.length; tabButtons[p].focus(); tabButtons[p].click(); }
+      // Home/End (resolves a previously-stated limitation, /stress-test pass 2026-08-27): real
+      // WAI-ARIA APG tablist guidance is that Home/End jump to the first/last tab in one press,
+      // not one step at a time via 11 Up/Down presses -- this tablist had Up/Down only.
+      if (e.key === "Home") { e.preventDefault(); tabButtons[0].focus(); tabButtons[0].click(); }
+      if (e.key === "End") { e.preventDefault(); tabButtons[tabButtons.length-1].focus(); tabButtons[tabButtons.length-1].click(); }
+      // Focus trap, LAST-tab half (resolves a previously-stated limitation, /stress-test pass
+      // 2026-08-27) -- ONLY while the mobile drawer is genuinely acting as a modal overlay
+      // (sidebarOverlayOpen()); on desktop this sidebar is permanent chrome, not a dialog, so Tab
+      // must keep working normally there. sidebarCloseBtn comes first in the drawer's own real DOM
+      // order (verified against its markup), so the LAST tab wrapping forward completes the loop
+      // sidebarCloseBtn's own Shift+Tab handler (below) starts.
+      if (e.key === "Tab" && !e.shiftKey && idx === tabButtons.length - 1 && typeof sidebarOverlayOpen === "function" && sidebarOverlayOpen()) {
+        e.preventDefault();
+        if (sidebarCloseBtn) sidebarCloseBtn.focus();
+      }
     });
   });
 
@@ -1876,11 +1891,13 @@
   // -- same "open" class / aria-expanded the .info-toggle click delegation already uses, just
   // triggered by a deep-link instead of a click. Returns false (not a throw) on an unknown id, so
   // a stale/typo'd link degrades to "just the tab" rather than an error.
-  // Accepted limitation: this opens the explainer div directly by id, not via its paired
-  // .info-toggle button (which carries no id of its own, only a data-explainer attribute) -- so a
-  // deep-linked KPI's explainer visibly opens, but that button's own aria-expanded stays "false"
-  // until the user actually clicks it. Real but minor (only reachable via an exact deep-link),
-  // flagged rather than adding a querySelectorAll-based id-assignment pass for it.
+  // Resolved (/stress-test pass, 2026-08-27): previously opened the explainer div directly by id
+  // without touching its paired .info-toggle button, so a deep-linked (or Tour-driven) explainer
+  // visibly opened while that button's own aria-expanded stayed "false" until clicked -- a real,
+  // stated-but-unfixed accessibility gap. Every .info-toggle button now carries a real
+  // id="toggle-<explainer-id>" (added to the HTML itself, not synthesized here), so this can look
+  // the button up directly via getElementById -- no querySelectorAll/attribute-selector pass
+  // needed, and no test-harness stub changes required either.
   // Accepted test-harness limitation: `!target` below is real production code (a real browser's
   // getElementById returns null for an unknown id), but verify.cjs's own DOM stub auto-vivifies a
   // fresh element for ANY id on first lookup, so that branch is untestable through this sandbox --
@@ -1890,8 +1907,22 @@
     var target = document.getElementById(id);
     if (!target) return false;
     target.classList.add("open");
+    var pairedBtn = document.getElementById("toggle-" + id);
+    if (pairedBtn) pairedBtn.setAttribute("aria-expanded", "true");
     if (typeof target.scrollIntoView === "function") target.scrollIntoView({ behavior: "smooth", block: "center" });
     return true;
+  }
+  // openKpiAnchor()'s own inverse -- added for the Guided Tour (2026-08-27) to close whichever
+  // explainer a PREVIOUS tour step opened before opening the next one, so stepping through the
+  // tour highlights exactly one KPI at a time rather than accumulating open explainers. Not used
+  // by the deep-link path above, which never auto-closes anything the user opened by hand.
+  function closeKpiAnchor(id){
+    if (!id) return false;
+    var target = document.getElementById(id);
+    if (target) target.classList.remove("open");
+    var pairedBtn = document.getElementById("toggle-" + id);
+    if (pairedBtn) pairedBtn.setAttribute("aria-expanded", "false");
+    return !!target;
   }
 
   /* ---------- "Did you know?" one-time-per-tab toast ---------- */
@@ -2056,7 +2087,17 @@
   });
   if (sidebarBackdropEl) sidebarBackdropEl.addEventListener("click", closeSidebarOverlay);
   var sidebarCloseBtn = document.getElementById("sidebarClose");
-  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebarOverlay);
+  if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener("click", closeSidebarOverlay);
+    // Focus trap, FIRST-tab half -- the other end of the loop the last tab button's own Tab
+    // handler completes above. Only while the drawer is genuinely an open modal overlay.
+    sidebarCloseBtn.addEventListener("keydown", function(e){
+      if (e.key === "Tab" && e.shiftKey && sidebarOverlayOpen()) {
+        e.preventDefault();
+        tabButtons[tabButtons.length - 1].focus();
+      }
+    });
+  }
 
   /* ---------- global 1-9 tab-jump + "?" keyboard-shortcuts overlay ---------- */
   var shortcutsOverlay = document.getElementById("shortcutsOverlay");
@@ -2065,17 +2106,38 @@
   // (stress-test finding, 2026-08-26; the reverse direction was already safe since typing "?"
   // inside the palette's own input is gated by the existing `!typing` check elsewhere). Also
   // closes the mobile nav drawer if it's open, for the same reason, extended to a third overlay.
+  // Focus management + a real Tab-trap (resolves 2 previously-stated limitations, /stress-test
+  // pass 2026-08-27): this overlay never moved focus into itself on open, never returned it on
+  // close, and had zero focus-trap -- Tab could escape into the page behind it while "open."
+  // shortcutsCloseBtn is genuinely the ONLY focusable element inside (verified against its own
+  // markup), so trapping here just means Tab/Shift+Tab both keep focus on that one button, same
+  // shape as the palette's own single-real-tab-stop trap below (its result buttons are
+  // tabindex="-1" by design, a combobox/listbox pattern, not a second focusable element).
+  var shortcutsReturnFocusEl = null;
   function openShortcuts(){
     if (typeof paletteOpen === "function" && paletteOpen() && typeof closePalette === "function") closePalette();
     if (typeof sidebarOverlayOpen === "function" && sidebarOverlayOpen()) closeSidebarOverlay();
+    shortcutsReturnFocusEl = (typeof document !== "undefined" && document.activeElement) || null;
     shortcutsOverlay.hidden = false;
+    if (shortcutsCloseBtn && typeof shortcutsCloseBtn.focus === "function") shortcutsCloseBtn.focus();
   }
-  function closeShortcuts(){ shortcutsOverlay.hidden = true; }
+  function closeShortcuts(){
+    shortcutsOverlay.hidden = true;
+    if (shortcutsReturnFocusEl && typeof shortcutsReturnFocusEl.focus === "function") shortcutsReturnFocusEl.focus();
+    shortcutsReturnFocusEl = null;
+  }
   function shortcutsOpen(){ return !shortcutsOverlay.hidden; }
   var shortcutsBtn = document.getElementById("shortcutsBtn");
   if (shortcutsBtn) shortcutsBtn.addEventListener("click", openShortcuts);
   var shortcutsCloseBtn = document.getElementById("shortcutsCloseBtn");
-  if (shortcutsCloseBtn) shortcutsCloseBtn.addEventListener("click", closeShortcuts);
+  if (shortcutsCloseBtn) {
+    shortcutsCloseBtn.addEventListener("click", closeShortcuts);
+    shortcutsCloseBtn.addEventListener("keydown", function(e){
+      if (e.key !== "Tab" || !shortcutsOpen()) return;
+      e.preventDefault();
+      shortcutsCloseBtn.focus();
+    });
+  }
   shortcutsOverlay.addEventListener("click", function(e){ if (e.target === shortcutsOverlay) closeShortcuts(); });
 
   document.addEventListener("keydown", function(e){
@@ -4033,10 +4095,10 @@
   }
   var triageItems = renderTriage();
   // Click delegation for the triage list's "View on ___ →" jump buttons. Reuses the already-tested
-  // activateTab() function -- not a second navigation mechanism. (Accepted limitation: verify.cjs's
-  // DOM stub doesn't parse innerHTML into real clickable child nodes, so this specific delegation
-  // is verified by reading, the same category the explainer-toggle was in before it got a real stub;
-  // computeTriageItems()'s own logic is exposed and directly tested below instead.)
+  // activateTab() function -- not a second navigation mechanism. Resolved (/stress-test pass,
+  // 2026-08-27): previously only "verified by reading" since verify.cjs's DOM stub doesn't parse
+  // innerHTML into real clickable child nodes -- now fired for real via the same synthetic-stub
+  // technique (real classList + dataset) the .info-toggle delegation test already established.
   document.addEventListener("click", function(e){
     var btn = e.target.closest ? e.target.closest(".triage-jump") : null;
     if (!btn) return;
@@ -4293,32 +4355,38 @@
   }
 
   /* ---------- Reference tab: the 25-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
+  // `anchor` (added /stress-test pass, 2026-08-27): the explainer div id that actually explains
+  // THIS row's own KPI -- resolves the Guided Tour's own stated limitation (landing on a step only
+  // ever switched tabs, never scrolled to or highlighted the specific KPI). Matched by content, not
+  // by numeric guesswork -- several explainer ids are shared by 2 catalog rows (a real, pre-existing
+  // pairing: exp0206/exp0708/exp1112 each explain 2 KPIs in one div, per this file's own kpiExplainers
+  // comment), so the anchor is whichever shared id's own text actually covers that row's KPI.
   var kpiCatalog = [
-    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13" },
-    { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14" },
-    { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method" },
-    { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09" },
-    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 62R-11" },
-    { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11" },
-    { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97" },
-    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026" },
-    { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026" },
-    { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
-    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E" },
-    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E" },
-    { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—" },
-    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06 + DCMA 14-Point" },
-    { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design" },
-    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 18R-97 (Class 1, -10%/+15%)" },
-    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19 (threshold: program policy, cf. DoD IPMDAR 16-day cadence)" },
-    { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01" },
-    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"Turner & Townsend 2025-2026 (real $/W context, added 2026-08-26)" },
-    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + Build Inc. 2026 (real method, illustrative 12-30mo envelope)" },
-    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"illustrative assumption (corrected 2026-08-26; C&W doesn't report this split)" },
-    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix's real SLA credit structure" },
-    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Adj. EBITDA Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Equinix Q2 2026 earnings" },
-    { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08" },
-    { q:"How much of each region's forecast sits exposed to currency swings we haven't hedged?", kpi:"Cross-Border FX Exposure", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"real risk category (GIHub/BIS), illustrative hedge ratios -- added 2026-08-27" }
+    { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13", anchor:"exp01" },
+    { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14", anchor:"exp0206" },
+    { q:"Are we burning contingency faster than we're making physical progress?", kpi:"Contingency Drawdown Ratio", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"real method", anchor:"exp03" },
+    { q:"What's the real range of outcomes, not just a single-point estimate?", kpi:"Monte Carlo P50/P80/P90", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 57R-09", anchor:"exp04" },
+    { q:"If every identified risk hit tomorrow, what would it cost us?", kpi:"Total Priced Risk Exposure", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"AACE RP 62R-11", anchor:"exp05" },
+    { q:"Is our escalation assumption still realistic against the current market?", kpi:"Market Escalation Assumption", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 58R-10/68R-11", anchor:"exp0206" },
+    { q:"How mature/reliable is this estimate — can leadership rely on it?", kpi:"Cost Estimate Classification", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 17R-97", anchor:"exp0708" },
+    { q:"Where does the money actually go, and which lever moves the total most?", kpi:"Cost-Driver Split", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp0708" },
+    { q:"Are we pricing this site competitively against comparable global markets?", kpi:"Market $/W Benchmark", tab:"cost", tabLabel:"Cost", badge:"real", cite:"Turner & Townsend 2025-2026", anchor:"exp09" },
+    { q:"Is spend distributed the way the program was actually designed to spend?", kpi:"WBS Cost Allocation", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp10" },
+    { q:"Which specific account is burning more dollars than it's earning?", kpi:"Control-Account CPI", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112" },
+    { q:"Where exactly is the dollar gap between earned and actual, account by account?", kpi:"Control-Account CV", tab:"cost", tabLabel:"Cost", badge:"real", cite:"SAE/ANSI EIA-748-E", anchor:"exp1112" },
+    { q:"If scope or escalation moved X%, what happens before it actually happens?", kpi:"What-If Forecast Sensitivity", tab:"cost", tabLabel:"Cost", badge:"illustrative", cite:"—", anchor:"exp13" },
+    { q:"Is float disappearing fast enough to reassess cost risk before schedule flags it?", kpi:"Schedule Float Erosion Rate", tab:"contingency", tabLabel:"Contingency & Risk", badge:"real", cite:"AACE RP 49R-06 + DCMA 14-Point", anchor:"exp14" },
+    { q:"Is it cheaper to settle this dispute now, or fight it?", kpi:"Change-Order Settlement EMV", tab:"contingency", tabLabel:"Contingency & Risk", badge:"illustrative", cite:"real EMV method, uncited by design", anchor:"exp15" },
+    { q:"Is this third-party estimate holding up against what actually gets bid?", kpi:"Consultant Deliverable Variance", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 18R-97 (Class 1, -10%/+15%)", anchor:"exp16" },
+    { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19 (threshold: program policy, cf. DoD IPMDAR 16-day cadence)", anchor:"exp17" },
+    { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01", anchor:"exp18" },
+    { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"Turner & Townsend 2025-2026 (real $/W context, added 2026-08-26)", anchor:"exp19" },
+    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + Build Inc. 2026 (real method, illustrative 12-30mo envelope)", anchor:"expRampLag" },
+    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"illustrative assumption (corrected 2026-08-26; C&W doesn't report this split)", anchor:"expLeasedMetered" },
+    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix's real SLA credit structure", anchor:"expSlaPenalty" },
+    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Adj. EBITDA Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Equinix Q2 2026 earnings", anchor:"expRevenueYield" },
+    { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08", anchor:"exp20" },
+    { q:"How much of each region's forecast sits exposed to currency swings we haven't hedged?", kpi:"Cross-Border FX Exposure", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"real risk category (GIHub/BIS), illustrative hedge ratios -- added 2026-08-27", anchor:"expFxExposure" }
   ];
   function renderKpiCatalog(){
     var el = document.getElementById("kpiCatalogTable");
@@ -4341,12 +4409,20 @@
   var tourStepLabel = document.getElementById("tourStepLabel");
   var tourKpiName = document.getElementById("tourKpiName");
   var tourQuestion = document.getElementById("tourQuestion");
+  var tourOpenAnchorId = null;
   function renderTourStep(){
     var k = kpiCatalog[tourStep];
     tourStepLabel.textContent = "Step " + (tourStep + 1) + " of " + kpiCatalog.length;
     tourKpiName.textContent = k.kpi;
     tourQuestion.textContent = k.q;
     activateTab(k.tab);
+    // Resolves a previously-stated Guided Tour limitation (/stress-test pass, 2026-08-27):
+    // landing on a step only ever switched tabs, never scrolled to or highlighted the specific
+    // KPI it's about. Close whichever explainer THIS tour opened last (never one the user opened
+    // by hand before starting the tour), skip the close+reopen when 2 consecutive steps share one
+    // explainer div (rows 2/6, 7/8, and 11/12 each do, by design -- see kpiCatalog's own comment).
+    if (tourOpenAnchorId && tourOpenAnchorId !== k.anchor) closeKpiAnchor(tourOpenAnchorId);
+    if (k.anchor) { openKpiAnchor(k.anchor); tourOpenAnchorId = k.anchor; }
   }
   function startTour(){
     tourActive = true;
@@ -4357,6 +4433,7 @@
   function endTour(){
     tourActive = false;
     tourBanner.classList.remove("active");
+    if (tourOpenAnchorId) { closeKpiAnchor(tourOpenAnchorId); tourOpenAnchorId = null; }
   }
   function tourNext(){ tourStep = Math.min(tourStep + 1, kpiCatalog.length - 1); renderTourStep(); }
   function tourPrev(){ tourStep = Math.max(tourStep - 1, 0); renderTourStep(); }
@@ -4668,6 +4745,12 @@
     if (e.key === "ArrowDown") { if (e.preventDefault) e.preventDefault(); paletteSelectedIdx = Math.min(paletteSelectedIdx + 1, paletteResultsCache.length - 1); highlightPaletteSelection(); }
     else if (e.key === "ArrowUp") { if (e.preventDefault) e.preventDefault(); paletteSelectedIdx = Math.max(paletteSelectedIdx - 1, 0); highlightPaletteSelection(); }
     else if (e.key === "Enter") { if (e.preventDefault) e.preventDefault(); activatePaletteResult(paletteSelectedIdx); }
+    // Focus trap (resolves a previously-stated limitation, /stress-test pass 2026-08-27): every
+    // .palette-item result button is deliberately tabindex="-1" (a combobox/listbox pattern --
+    // Up/Down move a virtual aria-activedescendant selection, not real DOM focus), so this input
+    // is the ONLY real Tab-stop inside the palette. Tab/Shift+Tab both just keep focus here,
+    // instead of escaping into the page behind the overlay.
+    else if (e.key === "Tab" && paletteOpen()) { if (e.preventDefault) e.preventDefault(); paletteInputEl.focus(); }
   });
   paletteResultsEl.addEventListener("click", function(e){
     var btn = e.target.closest ? e.target.closest(".palette-item") : null;
@@ -5062,6 +5145,8 @@
     wireArrowKeyRowNav: wireArrowKeyRowNav, // #6 keyboard row-navigation
     tabFromLocationHash: tabFromLocationHash, // #7 deep-linkable KPI anchors
     openKpiAnchor: openKpiAnchor,
+    closeKpiAnchor: closeKpiAnchor,
+    getTourOpenAnchorId: function(){ return tourOpenAnchorId; },
     dataFreshnessLog: dataFreshnessLog,   // #8 data freshness audit view
     sortFreshnessLog: sortFreshnessLog,
     getDataFreshnessResult: function(){ return dataFreshnessResult; },
