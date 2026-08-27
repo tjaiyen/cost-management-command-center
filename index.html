@@ -74,6 +74,21 @@
   .icobtn:hover{border-color:rgb(var(--c-accent))}
   .sidebar-toggle{display:none}
 
+  /* Notification-center bell (brainstorm build, 2026-08-26): reads the same computeTriageItems()
+     the Attention & Triage tab already renders -- a header-visible summary, not a second alert
+     model that could drift from the original. */
+  .alert-bell{position:relative}
+  .bell-count{position:absolute; top:-6px; right:-6px; background:rgb(var(--c-danger)); color:#fff;
+    border-radius:999px; font-size:10.5px; line-height:1; padding:3px 5px; min-width:16px; text-align:center;
+    font-variant-numeric:tabular-nums}
+
+  /* Reading mode (brainstorm build, 2026-08-26): a third display mode alongside light/dark --
+     larger line-height/letter-spacing and a plainer system-font stack for readability, not a
+     color-scheme change (that's the existing theme toggle's job). Zero new font file -- system
+     fonts only, same off-Drive/zero-dependency posture as everything else on this page. */
+  :root[data-readmode="on"] body{font-size:15.5px; line-height:1.75; letter-spacing:0.01em}
+  :root[data-readmode="on"] .card, :root[data-readmode="on"] .kpi{line-height:1.7}
+
   /* sidebar (was a horizontal top rail through 2026-08-26 -- see README changelog). Sticky within
      its own column, independently scrollable if its content ever exceeds viewport height on a
      short screen; .tabbtn/.rail-group/data-cluster/visit-dot are all unchanged from the rail --
@@ -289,7 +304,10 @@
   .tab-drawer.open{display:block}
   .tab-drawer b{display:block; font-size:12.5px; margin-bottom:4px}
   .tab-drawer p{margin:0 0 4px; color:rgb(var(--c-text-secondary))}
-  .tab-drawer p:last-child{margin-bottom:0; font-style:italic}
+  .tab-drawer p.drawer-note{margin-bottom:0; font-style:italic}
+  /* margin-top only (no bottom-margin override) -- the note above it keeps its own spacing
+     regardless of whether this spark preview is present (brainstorm build, 2026-08-26) */
+  .tab-drawer #tabDrawerSpark{margin-top:6px}
   @media (max-width:720px){ .tab-drawer{display:none !important} }
 
   /* sticky in-tab section-anchor rail (Cost + Contingency & Risk -- this build's two biggest tabs) */
@@ -313,15 +331,30 @@
   .jump-breadcrumb button{background:none; border:none; cursor:pointer; font:600 12.5px/1.3 inherit; color:rgb(var(--c-accent))}
   .jump-breadcrumb #jumpBreadcrumbClose{color:rgb(var(--c-text-secondary)); font-size:16px; padding:0 4px}
 
-  /* Executive Command print brief -- keeps ONLY #panel-exec on the printed page, regardless of
-     which tab is active on screen when Print is invoked. #id beats .class specificity so this
-     wins over the .tabpanel{display:none} rule right above it. */
+  /* Print stylesheet -- keeps only the currently-active tab on the printed page (originally
+     Executive Command-only, hardcoded to #panel-exec; generalized to .tabpanel.active in the
+     10-feature brainstorm pass, 2026-08-26 -- comment corrected then too, independent-reviewer
+     finding: this comment still described the OLD #panel-exec-only behavior after the rule below
+     it had already been generalized). .active beats the bare .tabpanel{display:none} rule above
+     via normal CSS cascade (both are class selectors of equal specificity; .active is declared
+     later in source order). */
   @media print{
     header.top, .sidebar, .sidebar-backdrop, .disclaimer, footer.foot, .tabpanel{display:none !important}
-    #panel-exec{display:block !important}
-    #panel-exec section, #panel-exec .card{background:none !important; border:none !important; padding:0 !important}
-    #panel-exec *{color:#000 !important}
+    /* Generalized from a hardcoded #panel-exec (brainstorm build, 2026-08-26) -- ".active" is
+       whichever tab activateTab() last set, so Ctrl/Cmd+P (or the new #printBtn) now prints
+       ANY tab's current view, not just Executive Command specifically. */
+    .tabpanel.active{display:block !important}
+    .tabpanel.active section, .tabpanel.active .card{background:none !important; border:none !important; padding:0 !important}
+    .tabpanel.active *{color:#000 !important}
   }
+
+  /* Real-cited-range position chip (brainstorm build, 2026-08-26): turns the existing "illustrative,
+     sized inside the real cited range" PROSE into a visual position marker -- same underlying
+     citation, no new claim. rangeChipHTML() below sets --rc-pct inline per instance. */
+  .range-chip{display:inline-flex; align-items:center; gap:6px; margin:4px 0; font-size:11.5px; color:rgb(var(--c-text-secondary))}
+  .range-chip .rc-track{position:relative; width:110px; height:6px; background:rgb(var(--c-bg-card2)); border-radius:3px}
+  .range-chip .rc-dot{position:absolute; top:-3px; left:var(--rc-pct, 0%); width:10px; height:10px; margin-left:-5px;
+    border-radius:50%; background:rgb(var(--c-accent)); border:2px solid rgb(var(--c-bg-primary))}
 
   /* ===== Director-grade visual upgrades (brainstorm build): bullet/gauge/heatmap/ladder/
      stoplight/tornado -- each animates in on render, exposes its exact figure on hover, and
@@ -507,7 +540,10 @@
     </select>
     <button class="icobtn" id="paletteBtn" type="button" aria-haspopup="dialog">🔎 Search <kbd style="margin-left:4px">⌘K</kbd></button>
     <button class="icobtn" id="explainBtn" type="button" aria-pressed="false" title="Toggle plain-English explainer text">💡 Explain simply</button>
+    <button class="icobtn" id="readModeBtn" type="button" aria-pressed="false" title="Toggle a larger, higher-contrast reading mode">🔠 Reading mode</button>
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
+    <button class="icobtn alert-bell" id="alertBellBtn" type="button" title="Jump to Attention &amp; Triage" aria-label="0 items need attention">🔔<span class="bell-count" id="alertBellCount" hidden>0</span></button>
+    <button class="icobtn" id="printBtn" type="button" title="Print only the currently active tab">🖨 Print</button>
     <button class="icobtn" id="shortcutsBtn" type="button" aria-haspopup="dialog">⌨ Shortcuts</button>
   </div>
 </header>
@@ -703,6 +739,10 @@
           <div class="kpi"><div class="lbl">What-if forecast</div><div class="val tabular" id="wiForecast">—</div></div>
           <div class="kpi"><div class="lbl">Delta vs. current forecast</div><div class="val tabular" id="wiDelta">—</div></div>
         </div>
+        <div class="slider-row" style="margin-top:8px">
+          <button class="icobtn" id="wiHistoryBackBtn" type="button" disabled>↶ Undo last change</button>
+          <span class="src-note" id="wiHistoryLabel" style="margin:0">No changes yet this session.</span>
+        </div>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Which lever moves the total most? <span class="badge illustrative">illustrative ±10% swing, real forecast function</span>
@@ -806,6 +846,7 @@
         up as a bridge-step variance after the fact.</p>
       <div class="card">
         <div style="overflow-x:auto"><table id="lleTable"></table></div>
+        <button class="icobtn" id="lleDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
         <p class="src-note"><span class="badge real">real</span> Substation transformer lead times
           have stretched from roughly 140 weeks in 2023 to 160+ weeks in 2026 (power transformers
           averaging 128 weeks, generator step-up units 144 weeks per Wood Mackenzie's Q2 2025
@@ -856,6 +897,7 @@
         not a schedule baseline — this stays cost-management territory, not schedule integration.</p>
       <div class="card">
         <div style="overflow-x:auto"><table id="calTable"></table></div>
+        <button class="icobtn" id="calDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
         <p class="src-note" id="calDetail">Click any row for its own reconciliation.</p>
         <p class="src-note"><span class="badge illustrative">illustrative</span> % complete and
           AC/EV ratios per account are invented to make the drill-down legible; the BAC split
@@ -1140,6 +1182,7 @@
           development model, and a DOE-funded 2026 study ("Hidden Economic Consequences of Adapting
           to Fast-Ramping Datacenter Loads"). This program's own 18-month assumed ramp and its $42M
           reserve are <span class="badge illustrative">illustrative</span>.</p>
+        <div id="rampLagRangeChip"></div>
       </div>
     </section>
 
@@ -1157,6 +1200,7 @@
           (Cushman &amp; Wakefield, <i>Data Center Spotlight: Power and Lease Pricing Outlook</i>) — a
           real, published revenue-mix benchmark, not a stabilization-timeline target. This program's
           own mix is <span class="badge illustrative">illustrative</span>.</p>
+        <div id="leasedMeteredRangeChip"></div>
       </div>
     </section>
 
@@ -1194,6 +1238,7 @@
           roughly 50–55% (Digital Realty, Equinix Q1 2026 reporting). This program's own revenue and
           direct-cost figures are <span class="badge illustrative">illustrative</span>, sized to land
           inside that real range, not to invent a new one.</p>
+        <div id="marginRangeChip"></div>
       </div>
     </section>
   </div>
@@ -1304,7 +1349,7 @@
   <!-- ============================================================ REFERENCE ============================================================ -->
   <div class="tabpanel" id="panel-reference" role="tabpanel" aria-labelledby="tab-reference">
     <section>
-      <h2>The 20-KPI Catalog <span class="badge illustrative">20 questions, all answered by a real built visual</span></h2>
+      <h2>The 24-KPI Catalog <span class="badge illustrative">24 questions, all answered by a real built visual</span></h2>
       <p class="lede" style="font-size:13px">Every KPI on this dashboard, the operational question
         it actually answers, and a jump straight to the tab where it's computed live — not a
         separate spec document, a map of what's already running.</p>
@@ -1312,6 +1357,7 @@
         <div style="overflow-x:auto">
           <table id="kpiCatalogTable"></table>
         </div>
+        <button class="icobtn" id="kpiCatalogDownloadBtn" type="button" style="margin-top:8px">⬇ Download CSV</button>
       </div>
     </section>
     <section>
@@ -1325,6 +1371,7 @@
         </div>
         <div class="region-tabs" id="glossaryCatTabs"></div>
         <p class="src-note" id="glossaryCount"></p>
+        <button class="icobtn" id="glossaryDownloadBtn" type="button">⬇ Download CSV</button>
       </div>
     </section>
     <section>
@@ -1349,6 +1396,20 @@
       <h2>Industry vocabulary (JD-gap analysis, 2026-08-26)</h2>
       <div class="card">
         <dl id="vocabGlossary"></dl>
+      </div>
+    </section>
+    <section>
+      <h2>Data Freshness <span class="badge illustrative">audit view, real citations</span></h2>
+      <p class="lede" style="font-size:13px">Every real citation used anywhere on this dashboard,
+        aggregated with its own dated year where this build already states one — an audit view of
+        the citation discipline itself, not a separate claim. Sorted newest first; an AACE
+        Recommended Practice's year is its own real 2-digit edition-year suffix (e.g. "RP 57R-09" →
+        2009), the same convention AACE itself uses.</p>
+      <div class="card">
+        <div style="overflow-x:auto"><table id="freshnessTable"></table></div>
+        <p class="src-note">Entries with no year shown genuinely carry none in this build's own
+          source text — listed rather than silently dropped, so the audit stays honest about what
+          it doesn't know.</p>
       </div>
     </section>
   </div>
@@ -1433,6 +1494,34 @@
     try { localStorage.setItem("cmcc-theme", next); } catch(e){}
   });
 
+  /* ---------- reading-mode toggle (brainstorm build, 2026-08-26) ---------- */
+  // A third display mode alongside light/dark -- same persistence pattern as the theme toggle
+  // above, deliberately a SEPARATE attribute (data-readmode, not data-theme) so the two combine
+  // independently (dark + reading-mode, light + reading-mode, etc.) rather than one overwriting
+  // the other.
+  var readModeBtn = document.getElementById("readModeBtn");
+  function applyReadMode(v){
+    document.documentElement.setAttribute("data-readmode", v);
+    if (readModeBtn) readModeBtn.setAttribute("aria-pressed", v === "on" ? "true" : "false");
+  }
+  var storedReadMode = null;
+  try { storedReadMode = localStorage.getItem("cmcc-readmode"); } catch(e){}
+  applyReadMode(storedReadMode === "on" ? "on" : "off");
+  if (readModeBtn) readModeBtn.addEventListener("click", function(){
+    var next = document.documentElement.getAttribute("data-readmode") === "on" ? "off" : "on";
+    applyReadMode(next);
+    try { localStorage.setItem("cmcc-readmode", next); } catch(e){}
+  });
+
+  /* ---------- print-this-view button (brainstorm build, 2026-08-26) ---------- */
+  // The print stylesheet itself now targets ".tabpanel.active" generically (see @media print
+  // above) -- this button is just a discoverable affordance for the same window.print() that
+  // Ctrl/Cmd+P already triggers; no separate print logic.
+  var printBtn = document.getElementById("printBtn");
+  if (printBtn) printBtn.addEventListener("click", function(){
+    if (typeof window !== "undefined" && window.print) window.print();
+  });
+
   /* ---------- contextual explainer toggles (event delegation, works for any .info-toggle) ---------- */
   document.addEventListener("click", function(e){
     var btn = e.target.closest ? e.target.closest(".info-toggle") : null;
@@ -1442,6 +1531,11 @@
     var open = target.classList.contains("open");
     target.classList.toggle("open", !open);
     btn.setAttribute("aria-expanded", (!open).toString());
+    // Deep-linkable KPI anchors (brainstorm build, 2026-08-26): opening an explainer updates the
+    // URL to include it (replaceState, not push -- toggling an explainer isn't a "navigation" any
+    // more than the ordinary tab-history sync already treats it as), so the resulting URL is
+    // directly shareable/bookmarkable. Closing reverts to the tab-only hash.
+    if (typeof tabHistorySync === "function") tabHistorySync(currentTab, false, !open ? btn.dataset.explainer : null);
   });
 
   /* ---------- tab navigation ---------- */
@@ -1493,13 +1587,31 @@
     actions: { label:"Actions", q:"What's open, who owns it, and what's gone stale?", note:"A commercial action-item register with real staleness logic." },
     triage: { label:"Attention & Triage", q:"Out of everything on this dashboard, what actually needs a human right now?", note:"A cross-tab digest re-checking every alert already computed elsewhere." },
     data: { label:"Data Strategy", q:"How does scattered data actually become these numbers?", note:"Pipeline architecture, plus a free local DuckDB parity layer." },
-    reference: { label:"Reference", q:"What does this term mean, and which visual answers it?", note:"The 20-KPI catalog, plus a searchable glossary of every citation used." }
+    reference: { label:"Reference", q:"What does this term mean, and which visual answers it?", note:"The 24-KPI catalog, plus a searchable glossary of every citation used." }
+  };
+  // Mini-sparkline preview (brainstorm build, 2026-08-26): only for the 3 tabs that already have
+  // a REAL computed trend series elsewhere on this page (net-variance trend on Cost, float
+  // burn-down on Contingency & Risk, DQ sync-lag trend on Vendor & Governance) -- reusing that
+  // exact array via renderLineChart's own returned .values, not a fabricated series invented
+  // just to fill 9 more tabs' drawers. Referenced here before those vars are assigned further
+  // down the script -- safe, since these are hoisted `var`s in the same closure and this map's
+  // functions aren't CALLED until a real hover/focus happens, well after full script execution.
+  var TAB_DRAWER_SPARK = {
+    cost: function(){ return typeof netVarianceTrendResult !== "undefined" ? netVarianceTrendResult : null; },
+    contingency: function(){ return typeof floatBurndownResult !== "undefined" ? floatBurndownResult : null; },
+    governance: function(){ return typeof dqLagTrendResult !== "undefined" ? dqLagTrendResult : null; }
   };
   var tabDrawerEl = document.getElementById("tabDrawer");
   function showTabDrawer(btn){
     var info = TAB_INFO[btn.dataset.tab];
     if (!info || !tabDrawerEl) return;
-    tabDrawerEl.innerHTML = "<b>" + info.label + "</b><p>" + info.q + "</p><p>" + info.note + "</p>";
+    var sparkFn = TAB_DRAWER_SPARK[btn.dataset.tab];
+    var sparkResult = sparkFn ? sparkFn() : null;
+    tabDrawerEl.innerHTML = "<b>" + info.label + "</b><p>" + info.q + "</p><p class='drawer-note'>" + info.note + "</p>" +
+      (sparkResult && sparkResult.values ? "<div id='tabDrawerSpark' aria-hidden='true'></div>" : "");
+    if (sparkResult && sparkResult.values && typeof renderLineChart === "function") {
+      renderLineChart("tabDrawerSpark", sparkResult.values, { width: 180, height: 36, ariaLabel: info.label + " trend preview" });
+    }
     // getBoundingClientRect doesn't exist in this repo's Node-based verify.cjs sandbox (no layout
     // engine there) -- guarded the same way requestAnimationFrame is guarded elsewhere on this
     // page, so content-generation is still testable headlessly even though positioning isn't.
@@ -1567,18 +1679,44 @@
   // check, so this degrades to a no-op in verify.cjs's Node vm sandbox (which has no `history` or
   // `location`) without needing to touch that test harness at all -- same guard philosophy this
   // page already uses for requestAnimationFrame/localStorage.
-  function tabHistorySync(name, push){
+  // kpiAnchor (brainstorm build, 2026-08-26) is optional -- a real gap this closes: the hash could
+  // only ever deep-link to a TAB, never to one specific KPI's own explainer within it, so "look at
+  // this one number" meant "go to the Cost tab, then click Net Variance" instead of a single
+  // shareable URL. Encoded as a second "/"-separated hash segment, e.g. "#t-cost/exp0708".
+  function tabHistorySync(name, push, kpiAnchor){
     if (typeof history === "undefined") return;
-    var url = "#t-" + name;
+    var url = "#t-" + name + (kpiAnchor ? "/" + kpiAnchor : "");
+    var state = { cmccTab: name, cmccKpi: kpiAnchor || null };
     try {
-      if (push && history.pushState) history.pushState({ cmccTab: name }, "", url);
-      else if (history.replaceState) history.replaceState({ cmccTab: name }, "", url);
+      if (push && history.pushState) history.pushState(state, "", url);
+      else if (history.replaceState) history.replaceState(state, "", url);
     } catch(e){}
   }
   function tabFromLocationHash(){
     if (typeof location === "undefined") return null;
-    var m = (location.hash || "").match(/^#t-(.+)$/);
-    return m ? m[1] : null;
+    var m = (location.hash || "").match(/^#t-([^/]+)(?:\/(.+))?$/);
+    return m ? { tab: m[1], kpi: m[2] || null } : null;
+  }
+  // Opens a specific KPI's explainer directly (by its own div id, e.g. "exp0708" or "expRampLag")
+  // -- same "open" class / aria-expanded the .info-toggle click delegation already uses, just
+  // triggered by a deep-link instead of a click. Returns false (not a throw) on an unknown id, so
+  // a stale/typo'd link degrades to "just the tab" rather than an error.
+  // Accepted limitation: this opens the explainer div directly by id, not via its paired
+  // .info-toggle button (which carries no id of its own, only a data-explainer attribute) -- so a
+  // deep-linked KPI's explainer visibly opens, but that button's own aria-expanded stays "false"
+  // until the user actually clicks it. Real but minor (only reachable via an exact deep-link),
+  // flagged rather than adding a querySelectorAll-based id-assignment pass for it.
+  // Accepted test-harness limitation: `!target` below is real production code (a real browser's
+  // getElementById returns null for an unknown id), but verify.cjs's own DOM stub auto-vivifies a
+  // fresh element for ANY id on first lookup, so that branch is untestable through this sandbox --
+  // covered instead by the `!id` guard, which IS reachable here (a falsy id never reaches getElementById).
+  function openKpiAnchor(id){
+    if (!id) return false;
+    var target = document.getElementById(id);
+    if (!target) return false;
+    target.classList.add("open");
+    if (typeof target.scrollIntoView === "function") target.scrollIntoView({ behavior: "smooth", block: "center" });
+    return true;
   }
 
   /* ---------- "Did you know?" one-time-per-tab toast ---------- */
@@ -1625,7 +1763,13 @@
     if (toast) toast.classList.remove("show");
   });
 
-  function activateTab(name, pushHistory, suppressFactoid){
+  // kpiAnchor (independent-reviewer finding, 2026-08-26): a real bug the fresh-context review
+  // caught -- restoreInitialTab()/the popstate handler both called activateTab(name) FIRST, whose
+  // own internal tabHistorySync(name, ...) with no kpi immediately overwrote the very "#t-cost/
+  // exp0708" URL segment openKpiAnchor() was about to open, on every load AND every Back/Forward.
+  // Threading it through here (instead of relying on a second tabHistorySync call after the fact)
+  // means activateTab's own history sync is the one that writes the correct, final URL.
+  function activateTab(name, pushHistory, suppressFactoid, kpiAnchor){
     tabButtons.forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"); });
     document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
     var panel = document.getElementById("panel-" + name);
@@ -1633,7 +1777,7 @@
     currentTab = name;
     markVisited(name);
     persistSet("cmcc-lasttab", name);
-    tabHistorySync(name, !!pushHistory);
+    tabHistorySync(name, !!pushHistory, kpiAnchor);
     // Any tab switch invalidates a pending return breadcrumb -- the two jump-origin call sites
     // (below) explicitly re-show a fresh one immediately after calling this, so the net effect
     // for a real jump is hide-then-show (no visible flicker, synchronous), while an ordinary tab
@@ -1662,7 +1806,11 @@
     // simulating 5 consecutive cold loads with a real persisted "cmcc-lasttab": the factoid never
     // fired once).
     var fromHash = tabFromLocationHash();
-    if (fromHash && tabButtons.some(function(b){ return b.dataset.tab === fromHash; })) { activateTab(fromHash, false, fromHash === "overview"); return; }
+    if (fromHash && tabButtons.some(function(b){ return b.dataset.tab === fromHash.tab; })) {
+      activateTab(fromHash.tab, false, fromHash.tab === "overview", fromHash.kpi);
+      if (fromHash.kpi) openKpiAnchor(fromHash.kpi);
+      return;
+    }
     var lastTab = readPersisted("cmcc-lasttab");
     if (lastTab && tabButtons.some(function(b){ return b.dataset.tab === lastTab; })) { activateTab(lastTab, false, lastTab === "overview"); return; }
     activateTab("overview", false, true);
@@ -1671,8 +1819,13 @@
   // Back/forward button support -- guarded the same way as tabHistorySync above.
   if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
     window.addEventListener("popstate", function(e){
-      var name = (e && e.state && e.state.cmccTab) || tabFromLocationHash();
-      if (name && tabButtons.some(function(b){ return b.dataset.tab === name; })) activateTab(name);
+      var name = e && e.state && e.state.cmccTab;
+      var kpiAnchor = e && e.state ? e.state.cmccKpi : null;
+      if (!name) { var fromHash = tabFromLocationHash(); if (fromHash) { name = fromHash.tab; kpiAnchor = fromHash.kpi; } }
+      if (name && tabButtons.some(function(b){ return b.dataset.tab === name; })) {
+        activateTab(name, false, undefined, kpiAnchor);
+        if (kpiAnchor) openKpiAnchor(kpiAnchor);
+      }
     });
   }
 
@@ -2027,6 +2180,30 @@
       return { name: w.name, bac: bac, pctComplete: pc, ev: ev, ac: ac, cv: ev - ac, cpi: ac !== 0 ? ev / ac : 0 };
     });
   }
+  // Shared (brainstorm build, 2026-08-26): Up/Down moves focus between a row-id family
+  // (idPrefix + 0, idPrefix + 1, ...), CLAMPED at the first/last row (not wrapped -- this is a
+  // data table, not the sidebar's cyclic tablist). Index-based getElementById lookups, same
+  // pattern as the sidebar's own ArrowUp/ArrowDown handling above, so it stays testable through
+  // this repo's own elementsById DOM stub (no querySelectorAll dependency).
+  function wireArrowKeyRowNav(idPrefix, count){
+    for (var i = 0; i < count; i++) {
+      (function(i){
+        var el = document.getElementById(idPrefix + i);
+        if (!el) return;
+        el.addEventListener("keydown", function(e){
+          if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+          if (e.preventDefault) e.preventDefault();
+          var nextIdx = e.key === "ArrowDown" ? Math.min(i + 1, count - 1) : Math.max(i - 1, 0);
+          // Genuinely a no-op at the boundary -- caught by testing: without this check, the FIRST
+          // row's ArrowUp (and the LAST row's ArrowDown) redundantly called .focus() on the row
+          // ITSELF (Math.max/min clamp to the same index), not a true "nothing happens" stop.
+          if (nextIdx === i) return;
+          var next = document.getElementById(idPrefix + nextIdx);
+          if (next && next.focus) next.focus();
+        });
+      })(i);
+    }
+  }
   function renderControlAccounts(){
     var accounts = computeControlAccounts(bridgeResult.baseline, wbsData, controlAccountPctComplete, controlAccountAcEvRatio);
     var el = document.getElementById("calTable");
@@ -2050,6 +2227,7 @@
       row.addEventListener("click", show);
       row.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
+    wireArrowKeyRowNav("calRow", accounts.length);
     return accounts;
   }
   var controlAccounts = renderControlAccounts();
@@ -2249,9 +2427,53 @@
     document.getElementById("wiDelta").textContent = (delta >= 0 ? "+" : "") + fmt(delta);
     return lastWhatIf;
   }
-  wiScopeInput.addEventListener("input", renderWhatIf);
-  wiEscalationInput.addEventListener("input", renderWhatIf);
+  /* ---------- what-if slider history / undo (brainstorm build, 2026-08-26) ---------- */
+  // Extends this sandbox's own already-stated "non-destructive" promise: not just "resets when
+  // you leave," but "you can step back through what you actually tried," within THIS session
+  // only (not persisted -- an undo stack surviving a reload would be a stranger promise than the
+  // rest of this page's own localStorage keys make). Pure stack logic, no DOM, so it's directly
+  // testable apart from the button wiring.
+  function makeSliderHistory(maxEntries){
+    var stack = [];
+    return {
+      push: function(snapshot){ stack.push(snapshot); if (stack.length > maxEntries) stack.shift(); },
+      // Discards the current top (what's on the sliders right now) and returns whatever was
+      // before it -- null if there's nothing to go back to (0 or 1 entries).
+      back: function(){ if (stack.length <= 1) return null; stack.pop(); return stack[stack.length - 1]; },
+      size: function(){ return stack.length; }
+    };
+  }
+  var wiHistory = makeSliderHistory(5);
+  var wiHistoryBackBtn = document.getElementById("wiHistoryBackBtn");
+  var wiHistoryLabelEl = document.getElementById("wiHistoryLabel");
+  function updateWiHistoryUI(){
+    var canGoBack = wiHistory.size() > 1;
+    if (wiHistoryBackBtn) wiHistoryBackBtn.disabled = !canGoBack;
+    if (wiHistoryLabelEl) wiHistoryLabelEl.textContent = canGoBack
+      ? (wiHistory.size() - 1) + " change(s) this session — Undo steps back one at a time."
+      : "No changes yet this session.";
+  }
+  wiScopeInput.addEventListener("input", function(){
+    renderWhatIf();
+    wiHistory.push({ scope: parseInt(wiScopeInput.value, 10), escalation: parseInt(wiEscalationInput.value, 10) });
+    updateWiHistoryUI();
+  });
+  wiEscalationInput.addEventListener("input", function(){
+    renderWhatIf();
+    wiHistory.push({ scope: parseInt(wiScopeInput.value, 10), escalation: parseInt(wiEscalationInput.value, 10) });
+    updateWiHistoryUI();
+  });
+  if (wiHistoryBackBtn) wiHistoryBackBtn.addEventListener("click", function(){
+    var prev = wiHistory.back();
+    if (!prev) return;
+    wiScopeInput.value = prev.scope;
+    wiEscalationInput.value = prev.escalation;
+    renderWhatIf();
+    updateWiHistoryUI();
+  });
   renderWhatIf();
+  wiHistory.push({ scope: parseInt(wiScopeInput.value, 10), escalation: parseInt(wiEscalationInput.value, 10) });
+  updateWiHistoryUI();
 
   /* ================= CONTINGENCY TAB: priced risk register ================= */
   // category buckets Execution / Escalation / Regulatory & Community are kept separate and
@@ -2374,10 +2596,14 @@
   // ---- shared (Phase 2): a horizontal ranked bar chart. Caller pre-sorts `items` -- ranking logic
   // stays visible/testable at the call site, not hidden inside a shared renderer. ----
   // opts.onClick(item, index), if given, fires on a click OR an Enter/Space keydown on any row --
-  // added generically here (not per call site) so every one of this helper's 4 usages (region
-  // ranked bar, CV tornado, sensitivity tornado, LPF diverging bar) gets click-to-detail from one
-  // change, instead of retrofitting each render function separately (stress-test-adjacent finding:
-  // this shared helper was the one visualization pattern on the page with no drill-down at all).
+  // added generically here so BOTH of this helper's 2 usages (market-benchmark ranked bar, region
+  // ranked bar) get click-to-detail from one change (stress-test-adjacent finding: this shared
+  // helper was the one visualization pattern on the page with no drill-down at all). Correction,
+  // independent-reviewer finding 2026-08-26: an earlier version of this comment claimed "4 usages
+  // (...CV tornado, sensitivity tornado, LPF diverging bar)" -- those 3 render their own bars
+  // directly and were never wired through this shared function at all; they get their OWN
+  // click/keydown wiring at their own call sites instead (and, as of this same finding, their own
+  // own row-navigation wiring too -- see each render function directly).
   function renderRankedBar(containerId, items, opts){
     opts = opts || {};
     var el = document.getElementById(containerId);
@@ -2411,6 +2637,11 @@
         });
       });
     }
+    // Up/Down row navigation (brainstorm build, 2026-08-26) -- applies to both usages of this
+    // shared helper from one change, same reasoning as the click-to-detail wiring just above.
+    // (CV tornado / sensitivity tornado / LPF diverging bar get their own row-navigation call
+    // at their own render functions instead -- see the correction above.)
+    wireArrowKeyRowNav(containerId + "Bar", items.length);
     return items;
   }
 
@@ -2618,6 +2849,12 @@
       if (row) row.addEventListener("click", show);
       if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
+    // Keyboard row-nav (independent-reviewer finding, 2026-08-26): wireArrowKeyRowNav was
+    // originally wired only into the CONTROL-ACCOUNT ledger and the shared renderRankedBar()
+    // helper -- but this CV tornado (and sensitivity/LPF below) render their own bars directly,
+    // NOT through renderRankedBar(), so they'd silently gotten none. Same shape (idPrefix + index),
+    // so the same shared helper applies with zero new logic.
+    wireArrowKeyRowNav("cvBar", ranked.length);
     return ranked;
   }
 
@@ -2667,6 +2904,7 @@
       if (row) row.addEventListener("click", show);
       if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
+    wireArrowKeyRowNav("sensBar", scenarios.length);
     return scenarios;
   }
 
@@ -3042,6 +3280,7 @@
       if (row) row.addEventListener("click", show);
       if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
+    wireArrowKeyRowNav("lpfBar", ranked.length);
     return ranked;
   }
   var lpfDivergingBarResult = renderLpfDivergingBar();
@@ -3175,6 +3414,15 @@
       '<div class="alert-head"><span class="alert-shape">●</span> RAMP RESERVE ON TRACK</div>' +
       '<div class="alert-row">Unrecoverable OpEx incurred so far is within the underwritten reserve.</div>' };
   }
+  // Real-cited-range position chip (brainstorm build, 2026-08-26): turns "illustrative, sized
+  // inside the real cited range" PROSE into a visual marker -- pct is clamped to [0,100] so a
+  // value that (by construction) never falls outside its own cited range can't overflow the
+  // track even from a future edit; NOT a claim-strength change, same underlying citation.
+  function rangeChipHTML(low, high, value, unit){
+    var pct = high > low ? Math.max(0, Math.min(100, ((value - low) / (high - low)) * 100)) : 50;
+    return '<div class="range-chip"><span class="rc-track" style="--rc-pct:' + pct.toFixed(1) + '%"><span class="rc-dot"></span></span>' +
+      'This program: <b>' + value + unit + '</b> — real cited range ' + low + '–' + high + unit + '</div>';
+  }
   function renderRampKpis(){
     var status = computeRampReserveStatus(rampAssumptions.reserve, rampAssumptions.incurred);
     var el = document.getElementById("rampKpis");
@@ -3189,6 +3437,8 @@
       warnEl.className = content.className;
       warnEl.innerHTML = content.html;
     }
+    var chipEl = document.getElementById("rampLagRangeChip");
+    if (chipEl) chipEl.innerHTML = rangeChipHTML(rampAssumptions.realCitedLowMonths, rampAssumptions.realCitedHighMonths, rampAssumptions.assumedRampMonths, " mo");
     return status;
   }
   var rampStatus = renderRampKpis();
@@ -3223,6 +3473,10 @@
       '<div class="kpi"><div class="lbl">Real benchmark: metered pass-through</div><div class="val">' + leasedMeteredMix.realLowMeteredPct + '–' + leasedMeteredMix.realHighMeteredPct + '%</div><div class="sub">of total revenue</div></div>' +
       '<div class="kpi"><div class="lbl">This program\'s mix — leased</div><div class="val">' + leasedMeteredMix.thisProgramLeasedPct + '%</div></div>' +
       '<div class="kpi"><div class="lbl">This program\'s mix — metered</div><div class="val">' + leasedMeteredMix.thisProgramMeteredPct + '%</div></div>';
+    var chipEl = document.getElementById("leasedMeteredRangeChip");
+    if (chipEl) chipEl.innerHTML =
+      rangeChipHTML(leasedMeteredMix.realLowLeasedPct, leasedMeteredMix.realHighLeasedPct, leasedMeteredMix.thisProgramLeasedPct, "% leased") +
+      rangeChipHTML(leasedMeteredMix.realLowMeteredPct, leasedMeteredMix.realHighMeteredPct, leasedMeteredMix.thisProgramMeteredPct, "% metered");
   }
   renderLeasedMeteredKpis();
 
@@ -3292,6 +3546,8 @@
       '<div class="kpi"><div class="lbl">Revenue per MW</div><div class="val tabular">' + fmt(revenuePerMW) + '</div><div class="sub">per MW / year</div></div>' +
       '<div class="kpi"><div class="lbl">Gross margin</div><div class="val">' + marginPct.toFixed(1) + '%</div></div>' +
       '<div class="kpi"><div class="lbl">Real cited stabilized range</div><div class="val">50–55%</div></div>';
+    var chipEl = document.getElementById("marginRangeChip");
+    if (chipEl) chipEl.innerHTML = rangeChipHTML(50, 55, Math.round(marginPct * 10) / 10, "% margin");
     return { revenuePerMW: revenuePerMW, marginPct: marginPct };
   }
   var revenueYieldResult = renderRevenueYieldKpis();
@@ -3443,6 +3699,13 @@
     if (dq.level === "warn") items.push({ text: "Data-quality reconciliation lag over threshold", tab: "governance", tabLabel: "Vendor & Governance" });
     if (gateStatus.blocked) items.push({ text: "Gate 4 (Execution) blocked — contingency coverage " + gateStatus.ratio.toFixed(2) + "x", tab: "framework", tabLabel: "Operating Framework" });
     if (actionsSummary.staleCount > 0) items.push({ text: actionsSummary.staleCount + " stale commercial action item(s), open >14 days", tab: "actions", tabLabel: "Actions" });
+    // Commercial Ramp tab additions (brainstorm build, 2026-08-26) -- these 2 alert states existed
+    // (rampStatus.exhausted, slaResult.breach) but were never rolled into this cross-tab digest,
+    // so a reserve exhaustion or an SLA breach could sit unescalated outside its own tab. Read
+    // directly off the already-computed vars (same scope, assigned earlier in this closure), not
+    // a re-derivation.
+    if (rampStatus.exhausted) items.push({ text: "Commercial ramp reserve exhausted (" + fmt(rampStatus.remaining) + " remaining)", tab: "ramp", tabLabel: "Commercial Ramp" });
+    if (slaResult.breach) items.push({ text: "SLA breach — " + fmt(slaResult.penaltyExposure) + "/yr penalty exposure", tab: "ramp", tabLabel: "Commercial Ramp" });
     return items;
   }
   function renderTriage(){
@@ -3473,6 +3736,25 @@
     var fromTab = currentTab;
     activateTab(btn.dataset.jump);
     if (fromTab !== btn.dataset.jump) showJumpBreadcrumb(fromTab);
+  });
+
+  /* ---------- notification-center bell (brainstorm build, 2026-08-26) ---------- */
+  // Reads computeTriageItems() directly -- the SAME list Attention & Triage renders -- so the
+  // header count can never drift from that tab's own digest (no second alert model).
+  function renderAlertBell(){
+    var items = computeTriageItems();
+    var countEl = document.getElementById("alertBellCount");
+    var bellBtn = document.getElementById("alertBellBtn");
+    if (countEl) { countEl.textContent = String(items.length); countEl.hidden = items.length === 0; }
+    if (bellBtn) bellBtn.setAttribute("aria-label", items.length + (items.length === 1 ? " item needs" : " items need") + " attention");
+    return items;
+  }
+  var alertBellItems = renderAlertBell();
+  var alertBellBtn = document.getElementById("alertBellBtn");
+  if (alertBellBtn) alertBellBtn.addEventListener("click", function(){
+    var fromTab = currentTab;
+    activateTab("triage");
+    if (fromTab !== "triage") showJumpBreadcrumb(fromTab);
   });
 
   /* ---------- "return to origin tab" breadcrumb ---------- */
@@ -3788,6 +4070,125 @@
   renderGlossaryCatTabs();
   var visibleGlossaryItems = applyGlossaryFilter();
 
+  /* ================= CSV export (brainstorm build, 2026-08-26) ================= */
+  // Pure function: rows + column defs in, an RFC4180-ish CSV string out -- no DOM, testable
+  // directly. Quotes any field containing a comma/quote/newline, doubling embedded quotes.
+  function arrayToCSV(rows, columns){
+    function esc(v){
+      var s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    var header = columns.map(function(c){ return esc(c.label); }).join(",");
+    var lines = rows.map(function(r){
+      return columns.map(function(c){ return esc(typeof c.get === "function" ? c.get(r) : r[c.key]); }).join(",");
+    });
+    return [header].concat(lines).join("\r\n");
+  }
+  // DOM-touching half, kept separate from arrayToCSV so the formatting logic stays testable in
+  // verify.cjs's Node sandbox (no Blob/URL there) -- guarded the same way requestAnimationFrame/
+  // localStorage are guarded elsewhere on this page. Returns false (not a throw) when the
+  // download API isn't available, so a caller can still assert on the return value headlessly.
+  function downloadCSV(filename, csvText){
+    if (typeof document === "undefined" || typeof Blob === "undefined" || typeof URL === "undefined" || !URL.createObjectURL) return false;
+    var blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  }
+  // filename may be a plain string OR a function (evaluated at click time, not wiring time) --
+  // independent-reviewer finding, 2026-08-26: the control-account ledger's on-screen $ figures
+  // convert with the currency toggle (via fmt()), but its CSV export used raw, unconverted `key`
+  // lookups -- toggle to GBP, look at the table, download the CSV, and the numbers silently
+  // wouldn't match with nothing in the file to explain why. Fixed by formatting those columns
+  // through the same fmt() the table itself uses, and by naming the currency directly in the
+  // filename (evaluated at click time) so a re-download after a later toggle is self-documenting.
+  function wireCsvButton(btnId, getRows, columns, filename){
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener("click", function(){
+      var name = typeof filename === "function" ? filename() : filename;
+      downloadCSV(name, arrayToCSV(getRows(), columns));
+    });
+  }
+  wireCsvButton("calDownloadBtn", function(){ return controlAccounts; }, [
+    { label:"Control account", key:"name" }, { label:"BAC", get:function(a){ return fmt(a.bac); } },
+    { label:"% complete", get:function(a){ return Math.round(a.pctComplete * 100); } },
+    { label:"EV", get:function(a){ return fmt(a.ev); } }, { label:"AC", get:function(a){ return fmt(a.ac); } },
+    { label:"CV", get:function(a){ return fmt(a.cv); } },
+    { label:"CPI", get:function(a){ return a.cpi.toFixed(2); } }
+  ], function(){ return "control-account-ledger-" + currentCurrency + ".csv"; });
+  wireCsvButton("kpiCatalogDownloadBtn", function(){ return kpiCatalog; }, [
+    { label:"Question", key:"q" }, { label:"KPI", key:"kpi" }, { label:"Tab", key:"tabLabel" },
+    { label:"Badge", key:"badge" }, { label:"Citation", key:"cite" }
+  ], "kpi-catalog.csv");
+  wireCsvButton("lleDownloadBtn", function(){ return computeLLERisk(lleItems); }, [
+    { label:"Package", key:"name" }, { label:"Lead time (wk)", key:"leadWeeks" },
+    { label:"Available window (wk)", key:"availableWeeks" }, { label:"Buffer (wk)", key:"buffer" },
+    { label:"Real-cited", get:function(r){ return r.real ? "real" : "illustrative"; } },
+    { label:"At risk", get:function(r){ return r.atRisk ? "yes" : "no"; } }
+  ], "long-lead-equipment.csv");
+  wireCsvButton("glossaryDownloadBtn", function(){ return allGlossaryItems; }, [
+    { label:"Term", key:"term" }, { label:"Definition", key:"def" }, { label:"Category", key:"category" }
+  ], "glossary.csv");
+
+  /* ================= Data Freshness audit view (brainstorm build, 2026-08-26) ================= */
+  // Hand-authored, not scraped from the other glossary arrays -- every (source, year) pair here
+  // reuses a fact ALREADY stated verbatim elsewhere in this file (never a new citation). AACE
+  // Recommended Practice years are that practice's own real 2-digit edition-year suffix, a
+  // convention AACE itself uses (RP 57R-09 was published/revised in 2009), not this build's own
+  // invention. year: null means this build genuinely never stated a year for that source --
+  // listed honestly rather than silently dropped (see the section's own src-note).
+  var dataFreshnessLog = [
+    { source:"AACE RP 108R-19", citedFor:"Data-quality/field-vs-ERP reconciliation staleness", year:2019 },
+    { source:"AACE RP 65R-11", citedFor:"Expected-value contingency (complementary method)", year:2011 },
+    { source:"AACE RP 68R-11", citedFor:"Escalation estimating with Monte Carlo simulation", year:2011 },
+    { source:"AACE RP 86R-14", citedFor:"Variance analysis & reporting (ANSI/EIA-748 aligned)", year:2014 },
+    { source:"AACE RP 58R-10", citedFor:"Index-based escalation estimating", year:2010 },
+    { source:"AACE RP 57R-09", citedFor:"Monte Carlo contingency simulation", year:2009 },
+    { source:"AACE RP 44R-08", citedFor:"Expected-value contingency (base practice)", year:2008 },
+    { source:"AACE RP 40R-08", citedFor:"Risk-driver contingency estimating", year:2008 },
+    { source:"AACE RP 49R-06", citedFor:"Critical-path identification (float-erosion signal)", year:2006 },
+    { source:"AACE RP 22R-01", citedFor:"Direct labor productivity measurement", year:2001 },
+    { source:"AACE RP 17R-97", citedFor:"Cost estimate classification (Class 5-1)", year:1997 },
+    { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Market $/W benchmarks, escalation rate/outlook", year:2026 },
+    { source:"Archdesk", citedFor:"Data-center cost-driver split (electrical/cooling %)", year:2026 },
+    { source:"irecruit.co", citedFor:"Liquid-cooled vs. air-cooled $/MW, idle-equipment carrying cost", year:2026 },
+    { source:"Digital Realty / Equinix (Q1 2026 reporting)", citedFor:"Stabilized gross-margin range (50-55%)", year:2026 },
+    { source:"DOE-funded study (fast-ramping datacenter loads)", citedFor:"Tenant power-ramp lag", year:2026 },
+    { source:"RMI / Eckert Seamans / Data Center Knowledge", citedFor:"Interconnection cost share & wait time", year:2026 },
+    { source:"Cushman & Wakefield (Data Center Spotlight)", citedFor:"Leased vs. metered revenue mix", year:null },
+    { source:"Uptime Institute", citedFor:"Tier I-IV uptime/redundancy standards", year:null },
+    { source:"S&P Global Visible Alpha / Chronograph", citedFor:"Revenue-per-MW metric", year:null },
+    { source:"Adventures in CRE", citedFor:"Tenant power-ramp lag (data-center development model)", year:null },
+    { source:"RICS / ICMS", citedFor:"Cost-management reporting standard", year:null }
+  ];
+  // Pure function: log in, newest-year-first out (nulls last) -- a real sort, not a manually
+  // eyeballed order that could silently drift as entries are added.
+  function sortFreshnessLog(log){
+    return log.slice().sort(function(a, b){
+      if (a.year === null && b.year === null) return 0;
+      if (a.year === null) return 1;
+      if (b.year === null) return -1;
+      return b.year - a.year;
+    });
+  }
+  function renderDataFreshness(){
+    var el = document.getElementById("freshnessTable");
+    if (!el) return null;
+    var sorted = sortFreshnessLog(dataFreshnessLog);
+    var rows = sorted.map(function(f){
+      return "<tr><td>" + f.source + "</td><td>" + f.citedFor + "</td><td class='tabular'>" + (f.year === null ? "—" : f.year) + "</td></tr>";
+    }).join("");
+    el.innerHTML = "<thead><tr><th scope='col'>Source</th><th scope='col'>Cited for</th><th scope='col'>Year</th></tr></thead><tbody>" + rows + "</tbody>";
+    return sorted;
+  }
+  var dataFreshnessResult = renderDataFreshness();
+
   /* ================= COMMAND PALETTE (Ctrl/Cmd+K) -- jump to any tab, KPI, or glossary term ================= */
   // Pure function: builds the full searchable index from data this page already has (TAB_INFO,
   // kpiCatalog, allGlossaryItems) -- no separate, hand-duplicated content to drift out of sync.
@@ -3944,8 +4345,6 @@
     renderOverview();
     gateStatus = renderGateFramework();
     renderExecBrief();
-    triageItems = renderTriage();
-    guardsResult = renderGuards();
     renderBulletForecast();
     renderRiskHeatmap();
     renderCvTornado();
@@ -3961,6 +4360,14 @@
     rampDelayResult = renderRampDelaySlider();
     slaResult = renderSlaKpis();
     revenueYieldResult = renderRevenueYieldKpis();
+    // triageItems/guardsResult moved here (independent-reviewer finding, 2026-08-26): both
+    // previously ran BEFORE rampStatus/slaResult were reassigned above, in the same handler pass --
+    // a real ordering hazard (computeTriageItems() reads rampStatus.exhausted/slaResult.breach,
+    // and several GUARDS entries re-derive against them too), currently masked only because
+    // nothing in this handler mutates the underlying ramp/SLA assumptions themselves.
+    triageItems = renderTriage();
+    guardsResult = renderGuards();
+    alertBellItems = renderAlertBell();
   });
 
   /* ================= LIVE INTEGRITY GATE (GUARDS) -- runs in the browser, not just in verify.cjs =================
@@ -4013,7 +4420,10 @@
           "emvVerdict", "emvTwoBar", "consultantTable", "productivityTable", "lpfRankedBar",
           "regionDetail", "regionTabs", "riskCategoryKpis", "actionsKpis", "actionsTable",
           "triageList", "heatmapDetail", "stoplightDetail", "maturityDetail", "pipelineDiagram",
-          "rampKpis", "rampWarn", "leasedMeteredKpis", "slaKpis", "slaWarn", "revenueYieldKpis"];
+          "rampKpis", "rampWarn", "leasedMeteredKpis", "slaKpis", "slaWarn", "revenueYieldKpis",
+          // 10-feature UX/UI brainstorm pass, 2026-08-26 (independent-reviewer finding: this list
+          // wasn't extended when these 4 new innerHTML= targets were added)
+          "freshnessTable", "rampLagRangeChip", "leasedMeteredRangeChip", "marginRangeChip"];
         var text = ids.map(function(id){ var el = document.getElementById(id); return el ? el.innerHTML : ""; }).join(" ");
         var hit = bad.some(function(t){ return text.indexOf(t) !== -1; });
         return [!hit, hit ? "FOUND" : "clean"];
@@ -4237,7 +4647,21 @@
     revenueYieldAssumptions: revenueYieldAssumptions,
     computeRevenuePerMW: computeRevenuePerMW,
     computeGrossMarginPct: computeGrossMarginPct,
-    getRevenueYieldResult: function(){ return revenueYieldResult; }
+    getRevenueYieldResult: function(){ return revenueYieldResult; },
+    // 10-feature UX/UI brainstorm pass (2026-08-26)
+    arrayToCSV: arrayToCSV,               // #1 CSV export -- pure formatting half
+    downloadCSV: downloadCSV,             // #1 CSV export -- DOM half (returns false in this sandbox)
+    getAlertBellItems: function(){ return alertBellItems; }, // #2 notification bell
+    rangeChipHTML: rangeChipHTML,         // #3 real-cited-range position chip
+    getReadMode: function(){ return document.documentElement.getAttribute("data-readmode"); }, // #10
+    wireArrowKeyRowNav: wireArrowKeyRowNav, // #6 keyboard row-navigation
+    tabFromLocationHash: tabFromLocationHash, // #7 deep-linkable KPI anchors
+    openKpiAnchor: openKpiAnchor,
+    dataFreshnessLog: dataFreshnessLog,   // #8 data freshness audit view
+    sortFreshnessLog: sortFreshnessLog,
+    getDataFreshnessResult: function(){ return dataFreshnessResult; },
+    makeSliderHistory: makeSliderHistory, // #9 slider history/undo
+    getWiHistorySize: function(){ return wiHistory.size(); }
   };
 })();
 </script>

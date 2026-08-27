@@ -377,7 +377,7 @@ if (factoidsBlockMatch) {
 // Back/forward support must degrade safely -- no bare `history`/`location` reference outside a
 // typeof check (a bare reference would throw ReferenceError in verify.cjs's own Node sandbox,
 // which has neither global by default -- the guard is what keeps that sandbox from crashing).
-const tabHistorySyncMatch = indexHtml.match(/function tabHistorySync\(name, push\)\{([\s\S]*?)\n  \}/);
+const tabHistorySyncMatch = indexHtml.match(/function tabHistorySync\(name, push, kpiAnchor\)\{([\s\S]*?)\n  \}/);
 check(!!tabHistorySyncMatch && tabHistorySyncMatch[1].includes('typeof history === "undefined"'), "tabHistorySync() guards on typeof history before touching it, not a bare reference");
 const tabFromHashMatch = indexHtml.match(/function tabFromLocationHash\(\)\{([\s\S]*?)\n  \}/);
 check(!!tabFromHashMatch && tabFromHashMatch[1].includes('typeof location === "undefined"'), "tabFromLocationHash() guards on typeof location before touching it, not a bare reference");
@@ -407,6 +407,62 @@ check(indexHtml.includes('aria-orientation="vertical"'), "the tablist declares a
 check(!/ArrowLeft|ArrowRight/.test(indexHtml), "no leftover ArrowLeft/ArrowRight handling anywhere -- the sidebar is Down/Up only, not a stale mix of both");
 check(indexHtml.includes('header.top, .sidebar, .sidebar-backdrop, .disclaimer, footer.foot, .tabpanel{display:none !important}'),
   "the print stylesheet hides the sidebar AND its backdrop, not a stale reference to the old .tabrail");
+
+console.log("--- 10-feature UX/UI brainstorm pass (2026-08-26): structural checks ---");
+check(indexHtml.includes('.tabpanel.active{display:block !important}') && !indexHtml.includes('#panel-exec{display:block !important}'),
+  "print stylesheet targets ANY active tab (.tabpanel.active), not a hardcoded #panel-exec -- Ctrl/Cmd+P (and the new #printBtn) now print whichever tab is open");
+[
+  ["printBtn", "the print-this-view header button"],
+  ["readModeBtn", "the reading-mode toggle button"],
+  ["alertBellBtn", "the notification-center bell button"],
+  ["alertBellCount", "the bell's count badge span"],
+  ["calDownloadBtn", "the control-account ledger's CSV download button"],
+  ["kpiCatalogDownloadBtn", "the KPI catalog's CSV download button"],
+  ["lleDownloadBtn", "the LLE tracker's CSV download button"],
+  ["glossaryDownloadBtn", "the glossary's CSV download button"],
+  ["freshnessTable", "the Data Freshness audit table"],
+  ["rampLagRangeChip", "the ramp-lag range-position chip container"],
+  ["leasedMeteredRangeChip", "the leased/metered range-position chip container"],
+  ["marginRangeChip", "the gross-margin range-position chip container"],
+].forEach(([id, label]) => {
+  check(indexHtml.includes(`id="${id}"`), `${label} (#${id}) exists in the HTML`);
+});
+check(/function wireArrowKeyRowNav\(idPrefix, count\)\{/.test(indexHtml), "wireArrowKeyRowNav() is defined as a shared, reusable function (not duplicated per call site)");
+// 1 definition + 5 real call sites -- independent-reviewer finding, 2026-08-26: an earlier version
+// of this check used a loose ">=3" threshold with a label claiming "renderRankedBar's own 4
+// usages," which was simply false (renderRankedBar() itself is only called from 2 sites --
+// marketBenchmarkBar/regionRankedBar -- and the check would have passed just as trivially with
+// only those 2 wired). CV tornado/sensitivity tornado/LPF bar render their OWN bars directly, not
+// through renderRankedBar(), and had gotten no keyboard nav at all until this fix.
+check((indexHtml.match(/wireArrowKeyRowNav\(/g) || []).length === 6,
+  "wireArrowKeyRowNav() is called at exactly 5 real sites (control-account ledger, renderRankedBar's 2 usages, CV tornado, sensitivity tornado, LPF bar) + its own definition = 6 matches");
+check(/function arrayToCSV\(rows, columns\)\{/.test(indexHtml) && /function downloadCSV\(filename, csvText\)\{/.test(indexHtml),
+  "arrayToCSV/downloadCSV are split into a pure formatting half and a DOM half, matching this file's own established testability convention");
+check((indexHtml.match(/wireCsvButton\("/g) || []).length === 4, "wireCsvButton() is CALLED for exactly 4 tables (control-account ledger, KPI catalog, LLE tracker, glossary) -- 5 total incl. its own function definition");
+// Independent-reviewer finding, 2026-08-26: the control-account ledger's CSV export used raw
+// `key:"bac"` etc. (unconverted USD) while the on-screen table converts through fmt() on every
+// currency toggle -- toggle to GBP, download, and the numbers silently wouldn't match. Fixed by
+// routing those 4 columns through the same fmt() the table itself uses, and naming the currency in
+// the filename (evaluated at click time via a function, not a static string).
+const calCsvMatch = indexHtml.match(/wireCsvButton\("calDownloadBtn"[\s\S]*?\], function\(\)\{[\s\S]*?\}\);/);
+check(!!calCsvMatch, "found the control-account ledger's wireCsvButton() call to check structurally");
+if (calCsvMatch) {
+  const block = calCsvMatch[0];
+  check(/get:function\(a\)\{ return fmt\(a\.bac\); \}/.test(block) && /get:function\(a\)\{ return fmt\(a\.ev\); \}/.test(block) &&
+    /get:function\(a\)\{ return fmt\(a\.ac\); \}/.test(block) && /get:function\(a\)\{ return fmt\(a\.cv\); \}/.test(block),
+    "all 4 dollar columns (BAC/EV/AC/CV) route through fmt(), not a raw unconverted `key` lookup");
+  check(block.includes('currentCurrency + ".csv"'), "the filename embeds the currency code, evaluated at click time (a function, not a string captured once at page load)");
+}
+check(/function rangeChipHTML\(low, high, value, unit\)\{/.test(indexHtml), "rangeChipHTML() is a real shared pure function, not copy-pasted per call site");
+check((indexHtml.match(/rangeChipHTML\(/g) || []).length >= 5, "rangeChipHTML() is called for all 4 real-cited-range figures on the Commercial Ramp tab (ramp lag, leased%, metered%, margin), not just defined");
+check(/function makeSliderHistory\(maxEntries\)\{/.test(indexHtml), "makeSliderHistory() is a real shared factory function, exposed for direct testing");
+check(indexHtml.includes('id="wiHistoryBackBtn"') && indexHtml.includes('wiHistoryBackBtn.addEventListener("click"'),
+  "the what-if sandbox's Undo button is actually wired to a real click handler, not just present in markup");
+check(/function openKpiAnchor\(id\)\{/.test(indexHtml), "openKpiAnchor() (deep-linkable KPI anchors) is defined");
+check(indexHtml.includes("cmccKpi") && indexHtml.includes("e.state.cmccKpi"),
+  "the KPI anchor round-trips through real history.pushState/replaceState state (not just the URL hash), so Back/Forward restores it too");
+check(indexHtml.includes('var dataFreshnessLog = [') && (indexHtml.match(/year:\s*(\d{4}|null)/g) || []).length >= 15,
+  "dataFreshnessLog carries at least 15 entries, each with an explicit year or an honest null");
 
 console.log("");
 if (failures > 0) {

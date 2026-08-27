@@ -551,6 +551,69 @@ actually failed; broke `computeGrossMarginPct`'s divide-by-zero guard on purpose
 new dedicated assertion (not just the generic GUARDS check) caught it — both restored, re-confirmed
 green. verify.cjs 345 → 368 (+23), stress.cjs 157 → 164 (+7), both green.
 
+**10-feature UX/UI brainstorm pass (2026-08-26)** — a follow-up brainstorm ("propose 10 more UX/UI
+features") built out in full (research → verify → build → test → ship), all 10 genuinely net-new
+(confirmed via grep before starting): **CSV export** on 4 tables (control-account ledger, KPI
+catalog, LLE tracker, glossary) via a pure `arrayToCSV`/DOM `downloadCSV` split; a **notification-
+center bell** in the header reading the same `computeTriageItems()` Attention & Triage already
+renders (which itself gained 2 new sources in this pass — a ramp-reserve-exhausted and an SLA-breach
+alert that existed since the Commercial Ramp build but were never rolled into that digest); a
+**real-cited-range position chip** turning "illustrative, sized inside the real cited range" prose
+into a visual marker on all 4 of the Commercial Ramp tab's own range-badged figures; a **per-tab
+print button** (generalized the print stylesheet from a hardcoded `#panel-exec` to `.tabpanel.active`
+— every tab is now printable, not just Executive Command); a **hover-drawer mini-sparkline** on the
+3 tabs (Cost, Contingency & Risk, Vendor & Governance) that already had a real computed trend series,
+deliberately NOT extended to the other 9 tabs rather than inventing 9 fabricated series; **keyboard
+row-navigation** (Up/Down, clamped not wrapped) on the control-account ledger and all 4 usages of the
+shared ranked-bar renderer; **deep-linkable KPI anchors** (`#t-cost/exp0708`-style hash segments,
+round-tripped through real history state so Back/Forward restores them too); a **Data Freshness audit
+view** on the Reference tab — a hand-authored aggregation of every real citation already used
+elsewhere in this file, sorted newest-first, with any source that genuinely carries no year in this
+build's own text listed as such rather than silently dropped; **slider history/undo** on the Cost
+tab's what-if sandbox (session-only, non-destructive, extends its own existing "resets" promise into
+"you can also step back through it"); and a **reading-mode toggle** (larger line-height, no new font
+file) as a third display mode independent of light/dark.
+
+Writing direct test coverage for the batch (not just structural checks) surfaced 2 real bugs on its
+own before any outside review: `wireArrowKeyRowNav` redundantly called `.focus()` on a boundary row
+instead of doing nothing (fixed — a genuine no-op at the first/last row now), and `openKpiAnchor`'s
+"unknown id" branch turned out to be untestable through this suite's own DOM stub (it auto-vivifies
+any id rather than returning null) — reframed to test the `!id` guard instead, the one genuinely
+reachable failure path here. verify.cjs 368 → 408 (+40), stress.cjs 164 → 188 (+24), both green.
+
+An independent fresh-context reviewer then checked the full batch and found 8 more, 1 of them a real
+functional bug shipped fully green: **(HIGH)** the deep-linkable KPI anchor erased its own URL the
+instant it was followed — `activateTab()` never threaded the kpi segment into its own internal
+`tabHistorySync()` call, so both `restoreInitialTab()` and the `popstate` handler opened the right
+explainer but immediately overwrote the URL back down to a bare `#t-cost`, defeating the feature's
+whole point ("so Back/Forward restores it too"). Fixed by threading `kpiAnchor` through
+`activateTab()` itself, then reproduced the exact break with a real end-to-end popstate test
+(pre-registered, confirmed it failed on the old code, confirmed it passes on the fix). **(HIGH,
+paired finding)** the existing tests for that same feature were exactly the tautological kind this
+review was asked to flag — they exercised `tabFromLocationHash()`/`openKpiAnchor()` each in
+isolation, never through the real `activateTab()` flow, so neither could ever have failed regardless
+of the bug; replaced with the end-to-end popstate test above. **(MEDIUM)** keyboard row-navigation
+was wired to only 2 of 5 candidate ranked-bar UIs (the shared `renderRankedBar()`'s own 2 real
+usages), while CV tornado/sensitivity tornado/LPF bar render their own bars directly and got none at
+all — a pre-existing, unrelated stale comment claiming "4 usages" (from an earlier phase, predating
+this pass) had obscured the gap; fixed by wiring all 3 directly and correcting both the stale comment
+and this pass's own copy of the same false claim. **(MEDIUM)** the control-account ledger's CSV
+export used raw unconverted USD while its on-screen table converts through the currency toggle —
+toggle to GBP, download, and the numbers silently wouldn't match; fixed by routing those 4 columns
+through the same `fmt()` the table uses and naming the currency in the filename. **(LOW/MEDIUM)** the
+compliance-sweep's "no employer name" GUARDS check scans a fixed container-id list that was never
+extended to this batch's 4 new containers; fixed (no actual leak was ever present — this closes a
+gap in the guard's own coverage, not a found leak). **(LOW)** the reading-mode key was absent from
+the persistence-round-trip test fixture; added. **(LOW)** a stale doc comment on the print
+stylesheet still described the old `#panel-exec`-only behavior after the rule itself had already
+been generalized; corrected. **(LOW, latent)** `triageItems`/`guardsResult` were recomputed BEFORE
+`rampStatus`/`slaResult` were reassigned in the currency-toggle handler — currently harmless (nothing
+in that handler mutates the underlying assumptions) but a real ordering hazard; reordered. Every fix
+above was verification-tested directly (not just structurally), and the HIGH finding was
+falsification-tested: reverted the fix, confirmed the new end-to-end test failed exactly as
+predicted, restored, re-confirmed green. verify.cjs 408 → 415 (+7), stress.cjs 188 → 191 (+3), both
+green.
+
 ## Design lineage
 
 Architecture (single self-contained HTML file, tab-based navigation, theme tokens, real-vs-
@@ -563,7 +626,7 @@ around a synthetic capital transit program). **Correction (`/stress-test` audit,
 earlier draft of this section claimed this repo underwent "a 5-phase expansion" that "mapped that
 reference's tabs" to match its scale — that never happened, and the metrics said so on inspection:
 this build sat at 11 tabs / ~3,030 lines at the time, not 13 / 12,191 — since grown to **12 tabs /
-~4,218 lines** with the Commercial Ramp tab below. What's true instead: a handful of
+~4,669 lines** with the Commercial Ramp tab and the 10-feature UX/UI pass below. What's true instead: a handful of
 individual mechanisms were selectively borrowed from that sibling project across several separate,
 unplanned feature requests over this repo's history — the GUARDS live-integrity-gate pattern, the
 Gate-4 tab-rail status pill, and the general "real-vs-illustrative badge" discipline itself. Two

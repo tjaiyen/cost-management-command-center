@@ -909,11 +909,14 @@ assertEqual(noStale.staleCount, 0, "actionAgingSummary: a closed item's age neve
 
 console.log("--- Phase 3: Attention & Triage (cross-tab digest, independent re-derivation) ---");
 // With this build's real default state -- drawdown WARN (1.94x), Gate 4 BLOCKED (0.47x coverage),
-// 1 stale action -- and DQ health OK (9-day lag < 14-day threshold) -- triage must surface exactly
-// 3 items, not 4, and DQ must NOT be one of them.
-assertEqual(state.triageItems.length, 3, "triage surfaces exactly 3 items with this build's real default state");
+// 1 stale action, an SLA breach (99.97% actual < 99.995% committed Tier IV) -- and DQ health OK
+// (9-day lag < 14-day threshold) + the ramp reserve NOT exhausted -- triage must surface exactly
+// 4 items, not 3 or 5, and DQ must NOT be one of them. (Commercial Ramp's 2 alert states were
+// rolled into this digest in the brainstorm UX pass, 2026-08-26 -- SLA breach is real-default-on,
+// ramp-reserve-exhausted is not.)
+assertEqual(state.triageItems.length, 4, "triage surfaces exactly 4 items with this build's real default state");
 const triageTabs = state.triageItems.map((t) => t.tab).sort().join(",");
-assertStrEqual(triageTabs, "actions,contingency,framework", "triage items are exactly contingency+framework+actions -- governance (DQ) correctly absent since DQ is OK by default");
+assertStrEqual(triageTabs, "actions,contingency,framework,ramp", "triage items are exactly contingency+framework+actions+ramp(SLA breach) -- governance (DQ) correctly absent since DQ is OK by default");
 // computeTriageItems reads live DOM/module state rather than taking parameters (it deliberately
 // re-checks the same alert functions already tested above, not a second implementation) -- confirm
 // it's genuinely exposed for direct inspection rather than only reachable through renderTriage().
@@ -1521,6 +1524,164 @@ console.log("--- Browser back/forward support: real history.pushState (direct ta
   if (overviewBtn) overviewBtn.fire("click"); // reset back to Overview
 }
 
+console.log("--- 10-feature UX/UI brainstorm pass (2026-08-26): CSV export ---");
+const csvRows = [{ a: "Plain", b: 1 }, { a: "Has, comma", b: 2 }, { a: 'Has "quote"', b: 3 }, { a: "Has\nnewline", b: 4 }];
+const csvCols = [{ label: "A", key: "a" }, { label: "B", key: "b" }];
+const csvOut = state.arrayToCSV(csvRows, csvCols);
+const csvLines = csvOut.split("\r\n");
+assertEqual(csvLines.length, 5, "arrayToCSV: header + 4 data rows = 5 lines, not fewer (a naive split would undercount an embedded newline)");
+assertStrEqual(csvLines[0], "A,B", "arrayToCSV: header row matches the column labels exactly");
+assertStrEqual(csvLines[2], '"Has, comma",2', "arrayToCSV: a field containing a comma is quoted");
+assertStrEqual(csvLines[3], '"Has ""quote""",3', "arrayToCSV: an embedded quote is doubled, not left unescaped");
+assertStrEqual(state.downloadCSV("test.csv", "a,b"), false, "downloadCSV() degrades to a clean `false` (not a throw) in this sandbox, which has no real Blob/URL");
+
+console.log("--- 10-feature UX/UI brainstorm pass: notification bell (reads the SAME computeTriageItems() Triage renders) ---");
+assertEqual(state.getAlertBellItems().length, state.triageItems.length, "the header bell's item count matches Attention & Triage's own item count exactly -- one alert model, not two");
+assertStrEqual(elementsById["alertBellCount"].hidden, false, "the bell's count badge is visible when this build's real default state has active alerts (4, per the Triage section above)");
+
+console.log("--- 10-feature UX/UI brainstorm pass: range-position chip (pure function) ---");
+assertStrEqual(state.rangeChipHTML(12, 30, 12, " mo").indexOf("--rc-pct:0.0%") !== -1, true, "rangeChipHTML: a value at the low end of the range positions at 0%");
+assertStrEqual(state.rangeChipHTML(12, 30, 30, " mo").indexOf("--rc-pct:100.0%") !== -1, true, "rangeChipHTML: a value at the high end of the range positions at 100%");
+assertStrEqual(state.rangeChipHTML(0, 100, 50, "%").indexOf("--rc-pct:50.0%") !== -1, true, "rangeChipHTML: a value at the exact midpoint positions at 50%");
+assertStrEqual(state.rangeChipHTML(0, 100, 150, "%").indexOf("--rc-pct:100.0%") !== -1, true, "rangeChipHTML: a value ABOVE the range clamps to 100%, doesn't overflow the track");
+assertStrEqual(state.rangeChipHTML(0, 100, -50, "%").indexOf("--rc-pct:0.0%") !== -1, true, "rangeChipHTML: a value BELOW the range clamps to 0%, doesn't underflow the track");
+
+console.log("--- 10-feature UX/UI brainstorm pass: reading-mode toggle (third display mode, independent of light/dark) ---");
+assertStrEqual(state.getReadMode(), "off", "reading mode starts 'off', matching this build's real default (no persisted preference in this sandbox run)");
+if (elementsById["readModeBtn"]) {
+  elementsById["readModeBtn"].fire("click");
+  assertStrEqual(state.getReadMode(), "on", "clicking the reading-mode toggle switches it on");
+  assertStrEqual(elementsById["readModeBtn"].getAttribute("aria-pressed"), "true", "the toggle's own aria-pressed reflects its new state");
+  elementsById["readModeBtn"].fire("click");
+  assertStrEqual(state.getReadMode(), "off", "clicking again switches it back off");
+} else {
+  failures++; console.error("FAIL: #readModeBtn not found in the DOM stub");
+}
+
+console.log("--- 10-feature UX/UI brainstorm pass: keyboard row-navigation (Up/Down between table rows, CLAMPED not wrapped) ---");
+if (elementsById["calRow0"] && elementsById["calRow1"]) {
+  // >= 1, not === 1: renderControlAccounts() re-runs on every currency toggle exercised earlier
+  // in this same suite, and this sandbox's persistent-by-id stub (unlike a real browser's
+  // innerHTML-driven element teardown) keeps every prior run's listeners registered too -- a
+  // known test-harness artifact, not evidence of a real duplicate-wiring bug in production.
+  let row1FocusCalls = 0;
+  elementsById["calRow1"].focus = () => { row1FocusCalls++; };
+  elementsById["calRow0"].fire("keydown", { key: "ArrowDown", preventDefault: noop });
+  assertStrEqual(row1FocusCalls >= 1, true, "ArrowDown on control-account row 0 moves focus to row 1 (via wireArrowKeyRowNav, index-based getElementById -- not querySelectorAll)");
+  // This one IS exactly 0, regardless of stacked listeners: the nextIdx===i early-return means
+  // NONE of the (possibly many) stacked instances ever call .focus() at the boundary.
+  let row0FocusCalls = 0;
+  elementsById["calRow0"].focus = () => { row0FocusCalls++; };
+  elementsById["calRow0"].fire("keydown", { key: "ArrowUp", preventDefault: noop });
+  assertEqual(row0FocusCalls, 0, "ArrowUp on the FIRST row is CLAMPED (a genuine no-op, caught by testing: an earlier version redundantly re-focused the row on itself instead of doing nothing)");
+} else {
+  failures++; console.error("FAIL: calRow0/calRow1 not found in the DOM stub -- control-account ledger not rendered?");
+}
+// Independent-reviewer finding, 2026-08-26: CV tornado / sensitivity tornado / LPF bar render
+// their OWN bars directly (not through the shared renderRankedBar()), and had gotten NO keyboard
+// nav at all until this fix -- confirming each of the 3 directly, not just via a source-text count.
+[["cvBar", "CV tornado"], ["sensBar", "sensitivity tornado"], ["lpfBar", "LPF diverging bar"]].forEach(([prefix, label]) => {
+  if (elementsById[prefix + "0"] && elementsById[prefix + "1"]) {
+    let calls = 0;
+    elementsById[prefix + "1"].focus = () => { calls++; };
+    elementsById[prefix + "0"].fire("keydown", { key: "ArrowDown", preventDefault: noop });
+    assertStrEqual(calls >= 1, true, `ArrowDown on the ${label}'s first bar moves focus to the second (previously had no keyboard row-nav at all)`);
+  } else {
+    failures++; console.error(`FAIL: ${prefix}0/${prefix}1 not found in the DOM stub -- ${label} not rendered?`);
+  }
+});
+
+console.log("--- 10-feature UX/UI brainstorm pass: deep-linkable KPI anchors ---");
+{
+  const savedHash = mockHash;
+  mockHash = "#t-cost/exp0708";
+  const parsed1 = state.tabFromLocationHash();
+  assertStrEqual(parsed1 && parsed1.tab, "cost", "tabFromLocationHash() parses the tab segment from a KPI-anchored hash");
+  assertStrEqual(parsed1 && parsed1.kpi, "exp0708", "tabFromLocationHash() parses the KPI-anchor segment (the part after '/')");
+  mockHash = "#t-overview";
+  const parsed2 = state.tabFromLocationHash();
+  assertStrEqual(parsed2 && parsed2.tab, "overview", "tabFromLocationHash() still parses a tab-only hash correctly (no '/' present)");
+  assertStrEqual(parsed2 && parsed2.kpi, null, "tabFromLocationHash() reports a null kpi (not undefined, not an empty string) when no anchor segment is present");
+  mockHash = savedHash;
+}
+{
+  const kpiTarget = elementsById["exp01"];
+  assertStrEqual(kpiTarget.classList.contains("open"), false, "sanity check: exp01's explainer starts closed before the deep-link probe");
+  const opened = state.openKpiAnchor("exp01");
+  assertStrEqual(opened, true, "openKpiAnchor() returns true when the target explainer div exists");
+  assertStrEqual(kpiTarget.classList.contains("open"), true, "openKpiAnchor() opens the target explainer div directly, by id");
+  // Tests the `!id` guard specifically, not `!target` -- this sandbox's own getElementById
+  // auto-vivifies a fresh stub for ANY id (unlike a real browser, which returns null for an
+  // unknown one), so the `!target` branch is genuinely untestable through this harness; a falsy
+  // id never reaches getElementById at all, so THIS branch is real and reachable here.
+  assertStrEqual(state.openKpiAnchor(null), false, "openKpiAnchor() returns false (not a throw) for a falsy id -- a missing deep-link anchor degrades cleanly");
+  kpiTarget.classList.remove("open"); // restore, so this probe doesn't leak into later assertions
+}
+{
+  // End-to-end, through the REAL popstate handler -- not tabFromLocationHash()/openKpiAnchor() in
+  // isolation (independent-reviewer finding, 2026-08-26: those two unit tests above both passed
+  // even though the real flow was broken). Pre-registered expectation: after a popstate carrying
+  // a kpi anchor, the explainer opens AND the URL/history state still carries that same anchor --
+  // NOT silently dropped by activateTab's own internal tabHistorySync call. The bug this catches:
+  // activateTab(name) previously called tabHistorySync(name, ...) with no kpi argument at all,
+  // which replaceState'd the URL back down to "#t-cost" the instant the tab activated, erasing the
+  // very anchor openKpiAnchor() was about to open -- confirmed by reproducing it first (mockHash
+  // came back as "#t-cost", not "#t-cost/expDrawdownAnchor"), then fixed by threading kpiAnchor
+  // through activateTab() itself.
+  const expTarget = elementsById["exp03"]; // a real explainer id already used elsewhere on the Cost tab
+  expTarget.classList.remove("open"); // sanity: start closed, independent of any earlier probe
+  const savedHash2 = mockHash;
+  fireWindowEvent("popstate", { state: { cmccTab: "cost", cmccKpi: "exp03" } });
+  assertStrEqual(state.getCurrentTab(), "cost", "a popstate carrying a kpi anchor still activates the right TAB");
+  assertStrEqual(expTarget.classList.contains("open"), true, "...and genuinely opens that KPI's own explainer div");
+  assertStrEqual(mockHash, "#t-cost/exp03", "...and the URL hash still carries the kpi anchor afterward -- NOT silently rewritten back down to a bare '#t-cost' by activateTab's own history sync");
+  mockHash = savedHash2;
+  expTarget.classList.remove("open"); // restore
+}
+
+console.log("--- 10-feature UX/UI brainstorm pass: Data Freshness audit view ---");
+assertStrEqual(Array.isArray(state.dataFreshnessLog) && state.dataFreshnessLog.length > 0, true, "dataFreshnessLog is a real, non-empty array");
+const freshSorted = state.sortFreshnessLog(state.dataFreshnessLog);
+let freshOrderOk = true;
+let sawNull = false;
+for (let i = 0; i < freshSorted.length; i++) {
+  if (freshSorted[i].year === null) { sawNull = true; continue; }
+  if (sawNull) { freshOrderOk = false; break; } // a real year appearing AFTER a null -- nulls must sort last
+  if (i > 0 && freshSorted[i - 1].year !== null && freshSorted[i].year > freshSorted[i - 1].year) { freshOrderOk = false; break; }
+}
+assertStrEqual(freshOrderOk, true, "sortFreshnessLog: real years sort newest-first, and every null-year entry sorts after every dated one");
+assertStrEqual(state.getDataFreshnessResult().length, state.dataFreshnessLog.length, "renderDataFreshness() rendered every log entry, not a truncated subset");
+
+console.log("--- 10-feature UX/UI brainstorm pass: slider history/undo (pure stack logic) ---");
+const testHist = state.makeSliderHistory(3);
+assertEqual(testHist.size(), 0, "a fresh history stack starts empty");
+testHist.push({ v: 1 }); testHist.push({ v: 2 }); testHist.push({ v: 3 });
+assertEqual(testHist.size(), 3, "pushing 3 entries onto a max-3 stack keeps all 3");
+testHist.push({ v: 4 });
+assertEqual(testHist.size(), 3, "pushing a 4th entry onto a max-3 stack evicts the oldest, not grows unbounded");
+const back1 = testHist.back();
+assertStrEqual(JSON.stringify(back1), JSON.stringify({ v: 3 }), "back() discards the current top (v:4) and returns what was before it (v:3)");
+assertEqual(testHist.size(), 2, "back() actually shrinks the stack by one (it's an undo, not a peek)");
+const emptyHist = state.makeSliderHistory(5);
+assertStrEqual(emptyHist.back(), null, "back() on an empty stack returns null, not a throw");
+emptyHist.push({ v: 1 });
+assertStrEqual(emptyHist.back(), null, "back() with only 1 entry (nothing to go back TO) returns null rather than discarding the only entry");
+assertEqual(state.getWiHistorySize(), 1, "the live what-if sandbox's own history stack starts with exactly 1 entry (the initial slider position), on this build's real default state");
+if (elementsById["wiScope"]) {
+  elementsById["wiScope"].value = "10";
+  elementsById["wiScope"].fire("input");
+  assertEqual(state.getWiHistorySize(), 2, "dragging the scope slider pushes a new entry onto the live history stack");
+  if (elementsById["wiHistoryBackBtn"]) {
+    elementsById["wiHistoryBackBtn"].fire("click");
+    assertEqual(state.getWiHistorySize(), 1, "clicking Undo pops the live stack back down by one");
+    assertStrEqual(String(elementsById["wiScope"].value), "4", "Undo actually restores the slider's own prior value (this build's real default, 4%), not just the internal stack");
+  } else {
+    failures++; console.error("FAIL: #wiHistoryBackBtn not found in the DOM stub");
+  }
+} else {
+  failures++; console.error("FAIL: #wiScope not found in the DOM stub");
+}
+
 console.log("--- Persistence round-trip: a REAL simulated reload restores every persisted key (stress-test finding, 2026-08-26 -- the old localStorage stub was a total no-op, so this build's headline 'full persistence' claim was never actually exercised by this suite) ---");
 {
   // Explicit, deterministic values written directly to the shared backing store -- NOT whatever
@@ -1535,6 +1696,7 @@ console.log("--- Persistence round-trip: a REAL simulated reload restores every 
   localStorageBackingStore["cmcc-visited"] = "overview,cost";
   localStorageBackingStore["cmcc-factoids-seen"] = "overview";
   localStorageBackingStore["cmcc-region"] = "EMEA";
+  localStorageBackingStore["cmcc-readmode"] = "on"; // independent-reviewer finding, 2026-08-26: this key existed but wasn't in this fixture
 
   // A genuinely fresh DOM + sandbox (mirrors the minimal stub set built at the top of this file),
   // sharing ONLY localStorageStub (the same backing store) with the first run above -- a real
@@ -1606,6 +1768,7 @@ console.log("--- Persistence round-trip: a REAL simulated reload restores every 
     assertStrEqual(!!state2.visitedTabs.overview && !!state2.visitedTabs.cost, true, "a fresh load restores the persisted visited-tabs set");
     assertStrEqual(!!state2.getShownFactoids().overview, true, "a fresh load restores the persisted shown-factoids set");
     assertStrEqual(state2.getActiveRegion(), "EMEA", "a fresh load restores the persisted active region (the exact gap an independent reviewer found: this key was previously claimed as persisted but never actually was)");
+    assertStrEqual(documentStub2.documentElement.getAttribute("data-readmode"), "on", "a fresh load restores the persisted reading-mode preference (independent-reviewer finding, 2026-08-26: this key existed since the 10-feature brainstorm pass but was never exercised by this fixture)");
     // Factoid-suppression scoping (independent-reviewer finding): the cold-load suppression must
     // apply ONLY when the restored tab is Overview -- this fixture's persisted last-tab is
     // "contingency" (not Overview), and contingency's factoid was NOT in the persisted seen-set,
