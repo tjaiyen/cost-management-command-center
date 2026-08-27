@@ -584,6 +584,13 @@ assertEqual(state.treemapResult.total, state.bridge.baseline, "treemap's total B
 assertEqual(state.treemapResult.blocks.length, state.controlAccounts.length, "one treemap block per control account");
 const treemapPctSum = state.treemapResult.blocks.reduce((s, b) => s + b.pct, 0);
 assertEqual(treemapPctSum, 100, "treemap block percentages sum to 100", 0.01);
+// Visual-inspection finding (2026-08-27): the smallest real block (Site & Utilities, 12% of BAC)
+// hard-clipped its account name with no text-overflow:ellipsis on a narrow container -- fixed by
+// giving the name its own .tb-name class, scoped CSS ellipsis rule. Confirm the render actually
+// emits that class (not just that the CSS rule exists, which stress.cjs checks separately).
+const treemapHtml = elementsById["costDriverTreemap"].innerHTML;
+const tbNameCount = (treemapHtml.match(/class="tb-name"/g) || []).length;
+assertEqual(tbNameCount, state.controlAccounts.length, "every rendered treemap block's account-name div carries the tb-name class the ellipsis CSS rule targets");
 
 console.log("--- Phase 2 director-grade visuals: Market $/W ranked bar ---");
 assertEqual(state.marketBenchmarkResult.length, 5, "5 real market benchmarks ranked");

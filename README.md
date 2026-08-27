@@ -895,3 +895,50 @@ as "resolved."
 
 index.html 5,074 → 5,159 (+85), verify.cjs 1,904 → 2,045 (+141), stress.cjs unchanged at 524. Both
 suites green.
+
+**Comprehensive visual inspection, 2026-08-27** — asked to check every tab for text sized and
+contained appropriately. A live screenshot pass was the right tool, but agent-browser (the only
+browser available this session) is domain-gated to job-board sites and refused the live URL
+outright; scoping `tjaiyen.github.io` into both its config files fixed the *next* session (the
+running MCP process had the old allowlist cached in memory and won't reload until it restarts,
+which isn't triggerable mid-session) — so this pass did a structural CSS/JS audit instead, the
+same fallback the header narrow-viewport hardening pass (2026-08-26) already established for the
+identical blocker. Found and fixed 2 real issues, both falsification-tested:
+
+- **Cost-Driver Treemap block labels hard-clipped with no ellipsis.** `.treemap-block` sets
+  `overflow:hidden; white-space:nowrap` directly on the account-name text with no
+  `text-overflow:ellipsis` — the smallest real block (Site & Utilities, 12% of BAC) would clip
+  mid-word on a narrow container with no visual sign anything was cut off (its `title=""` attribute
+  is a hover-only fallback that doesn't help touch users). Fixed: the name now renders in its own
+  `.tb-name` div with a real ellipsis rule; `max-width:100%` is required because the block's own
+  `align-items:center` makes children shrink-wrap rather than stretch, so ellipsis had nothing to
+  overflow against without it.
+- **2 of 9 slider-row labels possibly wider than their own declared width.** `.slider-row` labels
+  carry inline `white-space:nowrap` + a fixed `width`, sized for the shortest labels ("Optimistic"
+  at 90px) — "Explore an escalation swing" and "Explore an additional ramp delay" (both `width:170px`)
+  were flagged by this pass's own character-count-times-flat-average-width estimate as running past
+  their box, with zero `flex-wrap` on the row and no page-level `overflow-x:hidden` safety net
+  anywhere in this file to catch it. An independent reviewer's own per-letter (not flat-average)
+  estimate found this likely overstated — plausibly not an overflow at all for the first string,
+  and only marginal for the second — and pointed out both labels are each the ONLY label in their
+  own standalone `.slider-row` (confirmed: no sibling needing width-alignment). Simplified
+  accordingly per this project's own Simplicity First discipline: rather than keep a defensive
+  720px-breakpoint `!important` override, just dropped the unproven fixed `width`/`nowrap` from
+  those two labels' own inline styles, at every viewport — the minimal fix, not the safest-looking
+  one. Neither of this pass's own width estimates is a real measurement; treat the original
+  "overflow" framing as a prompted-but-unconfirmed concern, not a verified defect.
+
+Checked and cleared, no fix needed: KPI-tile dollar values (`.kpi .val`) have no `white-space`
+override, so a long figure wraps onto a second line rather than clipping — cosmetically imperfect
+in the worst case, never illegible; every other `overflow:hidden` usage in the file backs a
+progress-bar/gauge *track*, not visible text; badge spans (even a 62-character one) sit inside
+`<h2>`s with no nowrap/width constraint, so they wrap freely; region/tab-rail/glossary text has no
+single unbroken word long enough to defeat normal wrapping. An independent reviewer re-ran this
+entire sweep from scratch (own math on the treemap width/percentages, own per-letter width
+estimate, a fresh independent search for the same overflow/clip pattern elsewhere in the file) and
+confirmed the treemap fix as genuinely necessary and correctly implemented, found no additional
+missed cases, and confirmed both agent-browser config edits are scoped to the single literal domain
+`tjaiyen.github.io`, not a wildcard.
+
+index.html 5,159 → 5,166 (+7), verify.cjs 2,045 → 2,052 (+7), stress.cjs 524 → 544 (+20). Both
+suites green.

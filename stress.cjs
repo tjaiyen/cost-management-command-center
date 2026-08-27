@@ -514,6 +514,26 @@ check(!!narrowHeaderMatch, "found the header narrow-viewport rule (720px breakpo
 check(!/\.navlinks\{display:none\}/.test(indexHtml), "navlinks is NEVER hidden outright at any breakpoint -- it shrinks instead, so 'Role fit brief' (ada-fit.html) stays reachable (the footer does NOT independently link that page -- confirmed by grep before this rule shipped, not assumed)");
 check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role fit brief link itself still exists in the header nav (nothing silently removed it)");
 
+console.log("--- Comprehensive visual inspection (2026-08-27): text-overflow/layout-boundary findings ---");
+// Same tooling gap as the header check above (agent-browser blocked on this domain, resolved
+// mid-session by scoping it in -- see README -- but the running MCP process had the old config
+// cached and won't reload until restart); structural checks over the real CSS/JS instead of a
+// screenshot, same as the header pass already established.
+check(/\.treemap-block \.tb-name\{max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap/.test(indexHtml),
+  "the treemap block's account-name label has a real text-overflow:ellipsis rule (previously hard-clipped mid-word on the smallest block, Site & Utilities at 12%, with no ellipsis and no visible sign anything was cut off)");
+check(indexHtml.includes('<div class="tb-name">'),
+  "the treemap render actually wraps each account name in the .tb-name div the CSS rule targets, not just declaring the rule with nothing using it");
+// An independent reviewer's own letter-width estimate (more careful than this pass's flat
+// per-character average) found the original "overflows 170px" claim likely overstated -- possibly
+// wrong-signed for one of the two strings. Simplified per B28 (Simplicity First) rather than kept
+// as a defensive media-query override: both labels are each the ONLY label in their own
+// standalone .slider-row (no sibling needing width-alignment), so the minimal fix is just letting
+// them size to content at every viewport, not a 720px-scoped !important override.
+check(indexHtml.includes('<label for="regionAdjust" style="font-size:12.5px">Explore an escalation swing</label>'),
+  "the region-adjust slider's label no longer carries a fixed width/nowrap it wasn't proven to need (simplified after an independent reviewer's own estimate contradicted the original overflow-magnitude claim)");
+check(indexHtml.includes('<label for="rampDelaySlider" style="font-size:12.5px">Explore an additional ramp delay</label>'),
+  "the ramp-delay slider's label no longer carries a fixed width/nowrap either, same simplification");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

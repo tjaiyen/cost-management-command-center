@@ -456,6 +456,13 @@
   .treemap-block{display:flex; flex-direction:column; align-items:center; justify-content:center;
     color:#fff; font-size:11px; text-align:center; cursor:pointer; width:0; overflow:hidden;
     white-space:nowrap; transition:width 700ms cubic-bezier(.2,.8,.2,1)}
+  /* Visual-inspection finding (2026-08-27): the block itself already clips overflow, but the
+     account-name label had no text-overflow:ellipsis -- the smallest real block (Site & Utilities,
+     12% of BAC) hard-clips mid-word on a narrow container with zero visual sign text was cut off
+     (the title="" attribute is a hover-only fallback, no help on touch). max-width:100% is needed
+     because .treemap-block's own align-items:center makes children shrink-wrap rather than stretch,
+     so text-overflow can't engage without an explicit width to overflow against. */
+  .treemap-block .tb-name{max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 3px}
   .treemap-block .tb-val{font-weight:700; font-size:13px}
 
   .twobar{display:flex; gap:16px; margin:14px 0; align-items:flex-end; height:120px}
@@ -1227,7 +1234,7 @@
         <div class="region-tabs" id="regionTabs" style="margin-top:16px"></div>
         <div id="regionDetail"></div>
         <div class="slider-row" style="margin-top:14px">
-          <label for="regionAdjust" style="font-size:12.5px; white-space:nowrap; width:170px">Explore an escalation swing</label>
+          <label for="regionAdjust" style="font-size:12.5px">Explore an escalation swing</label>
           <input type="range" id="regionAdjust" min="-15" max="15" value="0" />
           <span class="tabular" id="regionAdjustVal">0%</span>
         </div>
@@ -1270,7 +1277,7 @@
         <div class="kpis" id="rampKpis"></div>
         <div id="rampWarn" aria-live="polite"></div>
         <div class="slider-row" style="margin-top:14px">
-          <label for="rampDelaySlider" style="font-size:12.5px; white-space:nowrap; width:170px">Explore an additional ramp delay</label>
+          <label for="rampDelaySlider" style="font-size:12.5px">Explore an additional ramp delay</label>
           <input type="range" id="rampDelaySlider" min="0" max="12" value="0" />
           <span class="tabular" id="rampDelaySliderVal">+0 mo</span>
         </div>
@@ -3211,7 +3218,7 @@
       var pct = (a.bac / total) * 100;
       return '<div class="treemap-block" id="treemapBlock' + i + '" style="background:rgb(var(--c-' + TREEMAP_COLORS[i % TREEMAP_COLORS.length] + '))" ' +
         'tabindex="0" title="' + a.name + ': ' + fmt(a.bac) + ' (' + pct.toFixed(0) + '% of total BAC)">' +
-        '<div>' + a.name + '</div><div class="tb-val">' + pct.toFixed(0) + '%</div></div>';
+        '<div class="tb-name">' + a.name + '</div><div class="tb-val">' + pct.toFixed(0) + '%</div></div>';
     }).join("");
     runOnFrame(function(){
       controlAccounts.forEach(function(a, i){
