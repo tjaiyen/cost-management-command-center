@@ -158,7 +158,9 @@ console.log("--- Tab-drawer click-dismiss fix: structural regression guard ---")
 check(/function hideTabDrawer\(\)\{ clearTimeout\(tabDrawerTimer\)/.test(indexHtml),
   "hideTabDrawer() clears the pending hover-open timer, not just the 'open' class");
 const clickHandlerMatch = indexHtml.match(/btn\.addEventListener\("click", function\(\)\{([\s\S]*?)\n    \}\);/);
-check(!!clickHandlerMatch && clickHandlerMatch[1].includes("activateTab(btn.dataset.tab)") && clickHandlerMatch[1].includes("hideTabDrawer()"),
+// Matches activateTab(btn.dataset.tab followed by either an immediate ")" or ", true)" -- the
+// UX/nav upgrade pass added a second pushHistory argument to this exact call (2026-08-26).
+check(!!clickHandlerMatch && /activateTab\(btn\.dataset\.tab(,\s*true)?\)/.test(clickHandlerMatch[1]) && clickHandlerMatch[1].includes("hideTabDrawer()"),
   "the tab button's click handler calls both activateTab() and hideTabDrawer()");
 
 console.log("--- Proactive-framework build (Ada market-challenges doc): structural checks ---");
@@ -340,6 +342,45 @@ console.log("--- ada-fit.html: self-referential rows hedge consistently (indepen
 // "Match" without the same "illustrates the claim, isn't the proof" hedge every other
 // self-referential row in this file uses -- a real tonal inconsistency, now fixed.
 check(/they illustrate the claim, they aren't themselves the proof of prior experience/.test(adaFitHtml), "the KPI-views row's dashboard reference is hedged the same way as every other self-referential row in the file");
+
+console.log("--- UX/nav upgrade pass (brainstorm build, 2026-08-26): structural checks ---");
+// Every tabbtn carries a data-cluster attribute -- count must match the real 11-tab rail exactly,
+// not a partial retrofit that silently left some tabs untinted.
+const clusterAttrCount = (indexHtml.match(/class="tabbtn" role="tab" data-tab="\w+" data-cluster="\w+"/g) || []).length;
+check(clusterAttrCount === 11, "all 11 tab buttons carry a data-cluster attribute", `found ${clusterAttrCount}`);
+[
+  ["paletteOverlay", "command palette overlay"],
+  ["paletteInput", "command palette search input"],
+  ["paletteResults", "command palette results list"],
+  ["factoidToast", "'Did you know?' toast container"],
+  ["factoidText", "'Did you know?' toast text span"],
+  ["tourProgress", "exploration progress indicator"],
+  ["regionAdjust", "region what-if slider"],
+  ["cvTornadoDetail", "CV tornado click-to-detail target"],
+  ["sensitivityDetail", "sensitivity tornado click-to-detail target"],
+  ["lpfDetail", "LPF bar click-to-detail target"],
+  ["calDetail", "control-account row click-to-detail target"],
+].forEach(([id, label]) => {
+  check(indexHtml.includes(`id="${id}"`), `${label} (#${id}) exists in the HTML`);
+});
+check(indexHtml.includes('id="explainBtn"') && indexHtml.includes('id="paletteBtn"'), "the header carries both new toggle buttons (explain-simply, search palette)");
+// Every TAB_FACTOIDS key must name a real tab -- a typo'd key would silently never fire.
+const factoidsBlockMatch = indexHtml.match(/var TAB_FACTOIDS = \{([\s\S]*?)\n  \};/);
+check(!!factoidsBlockMatch, "found the TAB_FACTOIDS block to check structurally");
+if (factoidsBlockMatch) {
+  const factoidKeys = [...factoidsBlockMatch[1].matchAll(/^\s*(\w+):/gm)].map((m) => m[1]);
+  const knownTabs = ["overview", "exec", "cost", "contingency", "governance", "portfolio", "framework", "actions", "triage", "data", "reference"];
+  const badKeys = factoidKeys.filter((k) => !knownTabs.includes(k));
+  check(factoidKeys.length === 11, "TAB_FACTOIDS has exactly 11 entries, one per real tab", `found ${factoidKeys.length}`);
+  check(badKeys.length === 0, "every TAB_FACTOIDS key names a real tab, none typo'd", JSON.stringify(badKeys));
+}
+// Back/forward support must degrade safely -- no bare `history`/`location` reference outside a
+// typeof check (a bare reference would throw ReferenceError in verify.cjs's own Node sandbox,
+// which has neither global by default -- the guard is what keeps that sandbox from crashing).
+const tabHistorySyncMatch = indexHtml.match(/function tabHistorySync\(name, push\)\{([\s\S]*?)\n  \}/);
+check(!!tabHistorySyncMatch && tabHistorySyncMatch[1].includes('typeof history === "undefined"'), "tabHistorySync() guards on typeof history before touching it, not a bare reference");
+const tabFromHashMatch = indexHtml.match(/function tabFromLocationHash\(\)\{([\s\S]*?)\n  \}/);
+check(!!tabFromHashMatch && tabFromHashMatch[1].includes('typeof location === "undefined"'), "tabFromLocationHash() guards on typeof location before touching it, not a bare reference");
 
 console.log("");
 if (failures > 0) {

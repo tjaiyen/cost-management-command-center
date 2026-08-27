@@ -145,7 +145,17 @@ const documentStub = {
     if (sel === ".tabpanel") return Object.keys(elementsById).filter((k) => k.startsWith("panel-")).map((k) => elementsById[k]);
     return [];
   },
-  documentElement: { setAttribute(){}, getAttribute(){ return null; } },
+  // Real attribute storage (not a no-op) -- needed to actually test the theme toggle, which reads
+  // its own current state back via getAttribute("data-theme"). A prior version of this stub always
+  // returned null regardless of what was "set," which would have made a real toggle look like a
+  // permanent no-op to any test that checked it (none did, until this pass).
+  documentElement: (() => {
+    const attrs = {};
+    return {
+      setAttribute(name, value){ attrs[name] = String(value); },
+      getAttribute(name){ return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null; },
+    };
+  })(),
   addEventListener(type, handler){
     (documentHandlers[type] = documentHandlers[type] || []).push(handler);
     if (type === "click") documentClickHandlers.push(handler);
@@ -200,6 +210,13 @@ elementsById["shortcutsOverlay"] = shortcutsOverlayStub;
 const jumpBreadcrumbStub = makeElementStub(); jumpBreadcrumbStub.hidden = true;
 elementsById["jumpBreadcrumb"] = jumpBreadcrumbStub;
 
+// UX/nav upgrade pass: same `hidden`-attribute pre-seed requirement for the new command palette
+// overlay, and the region what-if slider's own declared value="0" default.
+const paletteOverlayStub = makeElementStub(); paletteOverlayStub.hidden = true;
+elementsById["paletteOverlay"] = paletteOverlayStub;
+const regionAdjustStub = makeElementStub(); regionAdjustStub.value = "0";
+elementsById["regionAdjust"] = regionAdjustStub;
+
 // Info-toggle button stub -- real enough to test the explainer-toggle click delegation.
 // The page's own handler does: e.target.closest(".info-toggle") then reads btn.dataset.explainer.
 const infoToggleBtnStub = withProperties(makeElementStub());
@@ -216,10 +233,24 @@ elementsById["aace5709exp"] = withProperties(makeElementStub()); // the explaine
 
 const localStorageStub = { getItem(){ return null; }, setItem(){} };
 
+// Minimal history/location mock -- gives the browser-back/forward feature REAL exercise instead
+// of a stated-but-untested limitation. Counting push/replace separately (not just the resulting
+// hash) is what lets a later assertion tell "a direct tab click pushed" apart from "an internal
+// jump replaced," which is the actual behavior distinction that feature depends on.
+let mockHash = "";
+let mockPushCount = 0, mockReplaceCount = 0;
+const mockHistory = {
+  pushState(hstate, title, url){ mockPushCount++; mockHash = url; },
+  replaceState(hstate, title, url){ mockReplaceCount++; mockHash = url; },
+};
+const mockLocation = { get hash(){ return mockHash; } };
+
 const sandbox = {
   document: documentStub,
   window: {},
   localStorage: localStorageStub,
+  history: mockHistory,
+  location: mockLocation,
   getComputedStyle: () => ({ getPropertyValue: () => "6 182 212" }),
   console,
   Math,
@@ -255,6 +286,18 @@ if (!state) {
   console.error("FAIL: window.__CMCC_STATE__ was not set — page script did not complete");
   process.exit(1);
 }
+
+// Captured immediately, before any of the many later tests below click a tab of their own and
+// change these -- this is the ONLY point where "what did initial page load itself do" can still
+// be distinguished from "what did a later test's click do."
+const initialHash = mockHash;
+const initialReplaceCount = mockReplaceCount;
+const initialPushCount = mockPushCount;
+// The cold-load restoreInitialTab() call must NOT show a factoid toast for the starting tab --
+// it would compete with the "New here? Take the tour" card already on Overview. Captured here,
+// before any later test's own click could legitimately trigger Overview's factoid for real.
+const initialShownFactoids = Object.assign({}, state.getShownFactoids());
+const initialFactoidToastShowing = documentStub.getElementById("factoidToast").classList.contains("show");
 
 console.log("--- Budget Bridge ---");
 // Independent re-derivation: baseline 1,750,000,000 + 106,000,000 + 33,687,500 + 208,000 - 125,000,000
@@ -1047,6 +1090,185 @@ assertEqual(realBadgeNoCitation, 0, "every 'real'-badged KPI row carries an actu
 assertEqual(unknownTab, 0, "every KPI row's jump target is one of the 11 real tabs, not a typo'd data-tab value");
 const kpiNames = state.kpiCatalog.map((k) => k.kpi);
 assertEqual(new Set(kpiNames).size, kpiNames.length, "no duplicate KPI names in the catalog");
+
+console.log("--- UX/nav upgrade pass (brainstorm build, 2026-08-26): theme toggle (pre-existing, previously untested) ---");
+{
+  const themeBtnEl = elementsById["themeBtn"];
+  if (!themeBtnEl) { failures++; console.error("FAIL: #themeBtn was never registered by the page script"); }
+  else {
+    const before = documentStub.documentElement.getAttribute("data-theme");
+    themeBtnEl.fire("click");
+    const after = documentStub.documentElement.getAttribute("data-theme");
+    assertStrEqual(after === "dark" || after === "light", true, "clicking the theme toggle sets a real 'dark' or 'light' data-theme value");
+    assertStrEqual(after !== before, true, "clicking the theme toggle actually flips the value, not a no-op");
+    assertStrEqual(themeBtnEl.getAttribute("aria-pressed"), after === "dark" ? "true" : "false", "the toggle's own aria-pressed reflects its new state");
+    themeBtnEl.fire("click"); // toggle back so it can't affect anything below
+  }
+}
+
+console.log("--- Exploration progress: visited-tab tracking + the 'Did you know?' one-time factoid toast (both wired through the same activateTab() call, tested together) ---");
+{
+  assertStrEqual(!!initialShownFactoids.overview, false, "cold page load suppresses Overview's own factoid toast (it would compete with the 'Take the tour' card)");
+  assertStrEqual(initialFactoidToastShowing, false, "the factoid toast is not showing immediately after cold page load");
+  assertStrEqual(!!state.visitedTabs.actions, false, "the 'actions' tab is not yet marked visited (pre-registered: never clicked earlier in this run)");
+  assertStrEqual(!!state.getShownFactoids().actions, false, "the 'actions' tab factoid has not been shown yet either");
+  const actionsBtn = lastTabButtonStubs.find((b) => b.dataset.tab === "actions");
+  if (!actionsBtn) { failures++; console.error("FAIL: could not find the actions tab button stub"); }
+  else {
+    actionsBtn.fire("click");
+    assertStrEqual(state.visitedTabs.actions, true, "clicking actions marks it visited in the shared visitedTabs object");
+    assertStrEqual(actionsBtn.classList.contains("visited"), true, "the clicked tab button gains the .visited class");
+    const progressEl = elementsById["tourProgress"];
+    assertStrEqual(progressEl.textContent.indexOf(" of 11 explored") !== -1, true, "the progress indicator reports 'N of 11 explored'");
+    assertStrEqual(elementsById["factoidToast"].classList.contains("show"), true, "visiting a tab for the first time shows its 'Did you know?' toast");
+    assertStrEqual(elementsById["factoidText"].textContent, state.TAB_FACTOIDS.actions, "the toast shows that tab's own real factoid text, not a placeholder");
+    assertStrEqual(state.getShownFactoids().actions, true, "the factoid is now marked shown, so it won't repeat");
+    elementsById["factoidClose"].fire("click");
+    assertStrEqual(elementsById["factoidToast"].classList.contains("show"), false, "the close button dismisses the toast");
+    if (overviewBtn) overviewBtn.fire("click");
+    actionsBtn.fire("click");
+    assertStrEqual(elementsById["factoidToast"].classList.contains("show"), false, "revisiting the same tab a second time does not re-show its already-seen factoid");
+    if (overviewBtn) overviewBtn.fire("click");
+  }
+}
+
+console.log('--- "Explain it simply" toggle: technical vs. plain-English explainer text ---');
+{
+  assertEqual(Object.keys(state.kpiExplainersSimple).length, Object.keys(state.kpiExplainers).length, "every technical explainer has a matching plain-English simple version, none silently missing");
+  assertStrEqual(state.getExplainMode(), "technical", "explain mode starts 'technical', matching this build's real default");
+  const explainBtnEl = elementsById["explainBtn"];
+  if (!explainBtnEl) { failures++; console.error("FAIL: #explainBtn was never registered"); }
+  else {
+    explainBtnEl.fire("click");
+    assertStrEqual(state.getExplainMode(), "simple", "clicking the toggle switches to simple mode");
+    assertStrEqual(explainBtnEl.getAttribute("aria-pressed"), "true", "the toggle reflects its own on-state via aria-pressed");
+    assertStrEqual(elementsById["exp01"].textContent, state.kpiExplainersSimple.exp01, "exp01's rendered text actually switches to the simple version, not just the internal mode flag");
+    explainBtnEl.fire("click");
+    assertStrEqual(state.getExplainMode(), "technical", "clicking again switches back to technical mode");
+    assertStrEqual(elementsById["exp01"].textContent, state.kpiExplainers.exp01, "exp01's rendered text switches back to the technical version");
+  }
+}
+
+console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM open/close/keyboard nav ---");
+{
+  const emptyQueryResults = state.paletteSearch("", state.paletteIndex);
+  assertStrEqual(emptyQueryResults.length > 0 && emptyQueryResults.length <= 8, true, "an empty query returns a short non-empty browse list, not everything or nothing");
+  const mcResults = state.paletteSearch("monte carlo", state.paletteIndex);
+  assertStrEqual(mcResults.some((r) => r.label.toLowerCase().indexOf("monte carlo") !== -1), true, "searching 'monte carlo' finds the real Monte Carlo KPI catalog row");
+  const nonsenseResults = state.paletteSearch("zzz-no-such-zzz", state.paletteIndex);
+  assertEqual(nonsenseResults.length, 0, "a nonsense query correctly returns zero results, not a fallback to everything");
+  const kindsPresent = new Set(state.paletteIndex.map((it) => it.kind));
+  assertStrEqual(kindsPresent.has("Tab") && kindsPresent.has("KPI") && kindsPresent.has("Glossary"), true, "the palette index covers all 3 real sources (tabs, KPIs, glossary terms), not just one");
+
+  const paletteBtnEl = elementsById["paletteBtn"];
+  const paletteInputEl = elementsById["paletteInput"];
+  if (!paletteBtnEl || !paletteInputEl) { failures++; console.error("FAIL: palette button/input were never registered"); }
+  else {
+    assertStrEqual(elementsById["paletteOverlay"].hidden, true, "the palette starts hidden, matching its real HTML default");
+    paletteBtnEl.fire("click");
+    assertStrEqual(elementsById["paletteOverlay"].hidden, false, "clicking the search button opens the palette");
+    paletteInputEl.value = "cost";
+    paletteInputEl.fire("input");
+    assertStrEqual(elementsById["paletteResults"].innerHTML.indexOf("Cost") !== -1, true, "typing 'cost' renders at least one real matching result");
+    paletteInputEl.fire("keydown", { key: "Enter" });
+    assertStrEqual(elementsById["paletteOverlay"].hidden, true, "pressing Enter on a result closes the palette");
+    assertStrEqual(state.getCurrentTab(), "cost", "pressing Enter actually navigated to the top matching result's own tab");
+  }
+  // The global Ctrl/Cmd+K handler, not just the header button.
+  documentStub.fire("keydown", { key: "k", metaKey: true, target: {} });
+  assertStrEqual(elementsById["paletteOverlay"].hidden, false, "Cmd+K opens the palette via the global keydown handler");
+  documentStub.fire("keydown", { key: "Escape", target: {} });
+  assertStrEqual(elementsById["paletteOverlay"].hidden, true, "Escape closes the palette (checked before the shortcuts overlay in the same handler)");
+  if (overviewBtn) overviewBtn.fire("click"); // reset to Overview in case a palette jump landed elsewhere
+}
+
+console.log("--- Drill-down click-to-detail: CV tornado / sensitivity tornado / LPF bar / Control Account Ledger (previously the one visualization pattern on this page with no drill-down at all) ---");
+{
+  const cvBar0 = elementsById["cvBar0"];
+  if (!cvBar0) { failures++; console.error("FAIL: could not find cvBar0 to click-test"); }
+  else {
+    cvBar0.fire("click");
+    const t = elementsById["cvTornadoDetail"].innerHTML;
+    assertStrEqual(t.indexOf("CV") !== -1 && t.indexOf("CPI") !== -1, true, "clicking a CV tornado bar shows a real CV/CPI reconciliation, not the placeholder text");
+  }
+  const sensBar0 = elementsById["sensBar0"];
+  if (!sensBar0) { failures++; console.error("FAIL: could not find sensBar0 to click-test"); }
+  else {
+    sensBar0.fire("click");
+    const t = elementsById["sensitivityDetail"].innerHTML;
+    assertStrEqual(t.indexOf("vs. the current forecast") !== -1, true, "clicking a sensitivity tornado bar shows a real scenario detail, not the placeholder text");
+  }
+  const lpfBar0 = elementsById["lpfBar0"];
+  if (!lpfBar0) { failures++; console.error("FAIL: could not find lpfBar0 to click-test"); }
+  else {
+    lpfBar0.fire("click");
+    const t = elementsById["lpfDetail"].innerHTML;
+    assertStrEqual(t.indexOf("LPF") !== -1 && t.indexOf("benchmark") !== -1, true, "clicking an LPF bar shows a real productivity detail, not the placeholder text");
+  }
+  const calRow0 = elementsById["calRow0"];
+  if (!calRow0) { failures++; console.error("FAIL: could not find calRow0 to click-test"); }
+  else {
+    calRow0.fire("click");
+    const t = elementsById["calDetail"].innerHTML;
+    assertStrEqual(t.indexOf("BAC") !== -1 && t.indexOf("CPI") !== -1, true, "clicking a control-account row shows a real BAC/EV/AC/CPI reconciliation, not the placeholder text");
+  }
+  // Keyboard activation (Enter), not just a mouse click -- proves the drill-down is keyboard-accessible.
+  const cvBar1 = elementsById["cvBar1"];
+  if (cvBar1) {
+    elementsById["cvTornadoDetail"].innerHTML = "reset-marker";
+    cvBar1.fire("keydown", { key: "Enter" });
+    assertStrEqual(elementsById["cvTornadoDetail"].innerHTML !== "reset-marker", true, "an Enter keypress on a CV tornado bar also triggers its detail (keyboard-accessible, not mouse-only)");
+  }
+}
+
+console.log("--- Region ranked-bar click switches the active region (previously view-only) + region what-if slider ---");
+{
+  const regionRow0 = elementsById["regionRankedBarRow0"];
+  if (!regionRow0) { failures++; console.error("FAIL: could not find regionRankedBarRow0 to click-test"); }
+  else {
+    regionRow0.fire("click");
+    assertStrEqual(state.getActiveRegion(), "APAC", "clicking the top-ranked region bar (APAC, the largest variance% at this build's real numbers) switches the active region to it");
+  }
+  assertEqual(state.computeRegionWhatIf(1000000, 10), 1100000, "computeRegionWhatIf: a +10% swing on 1,000,000 is 1,100,000");
+  assertEqual(state.computeRegionWhatIf(1000000, -10), 900000, "computeRegionWhatIf: a -10% swing on 1,000,000 is 900,000");
+  assertEqual(state.computeRegionWhatIf(1000000, 0), 1000000, "computeRegionWhatIf: a 0% swing is a no-op");
+  assertEqual(state.getRegionAdjustResult().pct, 0, "the region-adjust slider starts at 0%, matching its declared HTML default and this build's reset-on-switch behavior");
+  const regionAdjustEl = elementsById["regionAdjust"];
+  if (!regionAdjustEl) { failures++; console.error("FAIL: #regionAdjust was never registered"); }
+  else {
+    regionAdjustEl.value = "10";
+    regionAdjustEl.fire("input");
+    assertEqual(state.getRegionAdjustResult().pct, 10, "dragging the slider to +10% updates the live result");
+    const activeForecast = state.regions.find((r) => r.code === state.getActiveRegion()).forecast;
+    const expectedAdjusted = state.computeRegionWhatIf(activeForecast, 10);
+    assertEqual(state.getRegionAdjustResult().adjusted, expectedAdjusted, "the adjusted forecast independently re-derives from the active region's real forecast");
+  }
+  const regionRow3 = elementsById["regionRankedBarRow3"];
+  if (!regionRow3) { failures++; console.error("FAIL: could not find regionRankedBarRow3 to click-test"); }
+  else {
+    regionRow3.fire("click");
+    assertStrEqual(state.getActiveRegion(), "NA", "clicking the bottom-ranked region bar (NA, the smallest variance%) switches to it, as pre-registered from the real ranking order");
+    assertEqual(state.getRegionAdjustResult().pct, 0, "switching regions resets the what-if slider back to 0%, per its own stated promise");
+  }
+}
+
+console.log("--- Browser back/forward support: real history.pushState (direct tab click) vs .replaceState (internal jump) ---");
+{
+  assertStrEqual(initialHash, "#t-overview", "the page's own initial restoreInitialTab() call replaceState'd the URL hash to the real starting tab");
+  assertEqual(initialReplaceCount, 1, "the very first load performs exactly one replaceState call, not a push (a fresh load is not a user-driven navigation)");
+  assertEqual(initialPushCount, 0, "the very first load never pushes a history entry");
+  const costTabBtn = lastTabButtonStubs.find((b) => b.dataset.tab === "cost");
+  const pushBefore = mockPushCount;
+  costTabBtn.fire("click");
+  assertEqual(mockPushCount, pushBefore + 1, "a direct top-level tab click PUSHES a new history entry");
+  assertStrEqual(mockHash, "#t-cost", "the URL hash updates to the newly clicked tab");
+  if (overviewBtn) overviewBtn.fire("click"); // back to a known tab (this also pushes -- not what's measured next)
+  const pushBefore2 = mockPushCount, replaceBefore2 = mockReplaceCount;
+  documentStub.fire("click", { target: fakeJumpBtn }); // overview -> cost via a .triage-jump (internal cross-reference, not a direct tab click)
+  assertEqual(mockPushCount, pushBefore2, "an internal .triage-jump does NOT push a new history entry");
+  assertEqual(mockReplaceCount, replaceBefore2 + 1, "an internal .triage-jump replaces the current history entry instead");
+  if (overviewBtn) overviewBtn.fire("click"); // reset back to Overview
+}
 
 console.log("");
 if (failures > 0) {

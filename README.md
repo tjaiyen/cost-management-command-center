@@ -15,10 +15,10 @@ pipeline is the one piece with a real dependency — see Verification below.)
 ## What's on each tab
 
 - **Overview** — a rolled-up KPI board reading live off the other tabs' own computed state (not a
-  separately-typed summary), plus a "Signal / Model / Govern" framing, a jump pill on every KPI
-  tile straight to its source tab, a **forecast bullet chart** (baseline vs. current forecast vs.
-  Monte Carlo P90 worst-case on one animated bar, click-through to Cost), and the entry point for
-  the guided 20-stop Tour.
+  separately-typed summary, now with a first-paint count-up animation on its 4 headline tiles), plus
+  a "Signal / Model / Govern" framing, a jump pill on every KPI tile straight to its source tab, a
+  **forecast bullet chart** (baseline vs. current forecast vs. Monte Carlo P90 worst-case on one
+  animated bar, click-through to Cost), and the entry point for the guided 20-stop Tour.
 - **Executive Command** — a "90 seconds" board-status brief, reading live off Overview/Cost/
   Contingency/Operating Framework state. Has its own print stylesheet (⌘/Ctrl+P) that keeps only
   this brief on the printed page.
@@ -40,8 +40,9 @@ pipeline is the one piece with a real dependency — see Verification below.)
   2028), an **Interconnection Cost & Schedule Exposure** card (grid interconnection's real, cited
   30–37%-of-budget cost share and up-to-12-year data-center-scale wait, compared against this
   program's own assumed development schedule), and a control-account drill-down ledger
-  (BAC/EV/AC/CV/CPI per account) paired with a **CPI stoplight grid** and a **CV tornado chart**
-  ranking accounts by how far off-plan they are.
+  (BAC/EV/AC/CV/CPI per account, now click-to-detail per row) paired with a **CPI stoplight grid**
+  and a **CV tornado chart** ranking accounts by how far off-plan they are (also now click-to-detail,
+  same as the sensitivity tornado below).
 - **Contingency & Risk** — the contingency-drawdown early-warning slider (now paired with a **live
   banded gauge** that tracks the sliders in real time), a real, re-runnable triangular-distribution
   Monte Carlo simulation (**AACE International RP 57R-09**) with a live Beta-PERT tri-point
@@ -60,7 +61,9 @@ pipeline is the one piece with a real dependency — see Verification below.)
   **diverging bar** ranked against the 1.0 benchmark.
 - **Portfolio** — a multi-region cost rollup (North America / Asia-Pacific / Europe / Latin
   America — the same four regions a real data-center platform actually operates in, used here only
-  as realistic labels), now with **all 4 regions ranked on one bar** above the one-at-a-time tabs.
+  as realistic labels), with **all 4 regions ranked on one bar** above the one-at-a-time tabs
+  (clicking a ranked bar now switches the active region below it), plus a **non-destructive
+  escalation-swing what-if slider** scoped to whichever region is active.
 - **Operating Framework** — a genuinely *computed* Gate 4 (Contingency Coverage Ratio = remaining
   reserve ÷ total priced risk EV; currently BLOCKED on this build's own real numbers, not a bar
   someone set to "pending"), now paired with a **live radial-style gauge**, plus the illustrative
@@ -193,8 +196,8 @@ legible, marked `illustrative` throughout.
    (added with the interconnection tracker, from a 20-item real industry/company research pass)
    the $ exposure re-derivation against the real cited 30–37% range and both the at-risk and
    cleared schedule-verdict branches.
-   **243 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 243) as of the last run. Exists because this repo was
+   **297 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 297) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -236,8 +239,8 @@ legible, marked `illustrative` throughout.
    Also (added with the interconnection tracker) that its render targets, explainer, and
    currency-toggle re-render all actually exist, and that the LLE section's upgraded generator
    citation states the real range rather than a bare claim.
-   **132 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 132) as of the last
+   **150 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 150) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -360,6 +363,46 @@ real $208K driver against the Monte Carlo band now always lands "at or below P50
 slider position, since $208K is under 1% of the new $1.75B baseline — the note now says this
 explicitly rather than leaving 3 of its 4 narrative branches silently unreachable.
 verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now expects 15 GUARDS entries, no new check needed), both green.
+
+**UX/navigation upgrade pass, 2026-08-26** — a full brainstorm-then-build round covering
+interactivity, navigation, and onboarding, none of it adding an external dependency:
+
+- **Command palette (⌘K)** — fuzzy-jumps to any of the 11 tabs, the 20-KPI catalog, or the full
+  glossary from one search box, wired through the existing global keyboard-shortcut handler.
+- **Per-cluster tab-rail tinting + exploration progress** — the tab rail's existing 5 groups
+  (Executive/Cost & Risk/Governance & Portfolio/Actions/Reference) now carry their own accent color
+  on their active tab, and a small dot-per-tab tracker plus a live "N of 11 explored" count
+  (persisted across visits, same as the theme toggle already did).
+- **"Explain it simply" toggle** — a plain-English one-liner alternate for all 30 formula/
+  methodology explainers, so a non-technical reader isn't blocked by AACE RP codes to get the point.
+- **Click-to-drill-down, extended everywhere it was missing** — the CV tornado, sensitivity
+  tornado, LPF diverging bar, and Control Account Ledger rows gained the same click/keyboard
+  detail-panel pattern the risk heat-map and WBS bars already had; the region ranked bar now
+  switches the active region on click instead of being view-only.
+- **Region what-if slider** — a non-destructive escalation-swing explorer scoped to whichever
+  region is active, resetting to 0% on region switch.
+- **KPI count-up animation** on Overview's 4 headline tiles (first paint only, not a jitter on
+  every later re-render).
+- **"Did you know?" toast** — a one-time-per-tab callout surfacing a real cited fact or an
+  accurate description of the tab's own mechanism (never a new, uncited claim).
+- **Tab-switch fade-in, browser back/forward support, and full state persistence** (last tab,
+  currency, active region, explain-mode, visited tabs, factoids seen) — all via the same
+  `localStorage` pattern the theme toggle already established, and a URL hash kept in sync via
+  `history.pushState`/`.replaceState` (direct tab clicks push, internal cross-references replace).
+- Dark mode was **already built and shipped** before this pass (a `#themeBtn` toggle with its own
+  `localStorage` persistence) — surfaced here only because it went untested until this round added
+  the first real coverage for it.
+
+A same-session self-review (no separate reviewer this round) caught 2 real bugs before shipping:
+the region what-if slider's exposed result was a stale first-load snapshot because its own input
+listener never reassigned the variable it read from (found by the new verify.cjs test itself
+failing, not by inspection); and the browser-history feature had zero real coverage until this pass
+added a minimal `location`/`history` mock to verify.cjs's own Node sandbox, closing what would
+otherwise have been a stated-but-untested limitation. A third real bug surfaced by this same
+self-review after the first pass looked complete: the factoid toast fired immediately on a cold
+page load, competing with the "New here? Take the tour" card already on Overview -- suppressed for
+that one initial call only, with its own falsification-tested regression guard. verify.cjs
+243 → 297 (+54), stress.cjs 132 → 150 (+18), both green.
 
 ## Design lineage
 
