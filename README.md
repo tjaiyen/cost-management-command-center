@@ -196,8 +196,8 @@ legible, marked `illustrative` throughout.
    (added with the interconnection tracker, from a 20-item real industry/company research pass)
    the $ exposure re-derivation against the real cited 30–37% range and both the at-risk and
    cleared schedule-verdict branches.
-   **317 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 317) as of the last run. Exists because this repo was
+   **347 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 347) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -239,8 +239,8 @@ legible, marked `illustrative` throughout.
    Also (added with the interconnection tracker) that its render targets, explainer, and
    currency-toggle re-render all actually exist, and that the LLE section's upgraded generator
    citation states the real range rather than a bare claim.
-   **151 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 151) as of the last
+   **160 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 160) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -449,6 +449,59 @@ Every fix above has its own falsification-tested regression guard (the fix was t
 reverted, confirmed the new test failed, restored, re-confirmed green) -- not just a fresh assertion
 that happened to pass once. verify.cjs 297 → 317 (+20), stress.cjs 150 → 151 (+1, one check's
 regex needed updating for an intentional code change rather than a new check), both green.
+
+**Navigation relocated from a horizontal top rail to a left sidebar, 2026-08-26** -- the same 11
+tabs and 5 groups (Executive / Cost & Risk / Governance & Portfolio / Actions / Reference), same
+`activateTab()`/keyboard-nav/command-palette logic underneath, just a different layout convention:
+group labels get full-length text instead of fighting for space in one horizontal row, and the
+active-tab indicator moves from an underline to a left-border-plus-tint (the same per-cluster
+accent colors carry over unchanged). The page shell widens from 1080px to 1352px to add the
+sidebar column alongside the same content width, not instead of it. Below 860px the sidebar
+collapses to a hamburger-triggered slide-in overlay, reusing the same backdrop-click-to-close +
+Escape-to-close pattern already established by the command palette and shortcuts overlay -- now a
+3-way mutual exclusion, not a 2-way one. Keyboard nav changes from Left/Right to Down/Up
+(`aria-orientation="vertical"` on the tablist), and the tab hover-preview drawer now opens to the
+right of the sidebar instead of below the button.
+
+A same-session self-review plus an independent fresh-context reviewer found and fixed 8 real
+issues before shipping, most severe first:
+
+- **The open mobile drawer visually covered its own hamburger toggle button** (the drawer's
+  z-index sits above the sticky header it opened from) -- the expected "tap it again to close"
+  gesture was dead via mouse, even though Escape/backdrop-click still worked. Added a close button
+  inside the drawer itself, in the top padding the drawer already reserved for exactly this.
+- **A 721-860px squeeze zone**: the persistent 224px sidebar and the 2/3-column KPI grids used two
+  different breakpoints (860px vs. 720px), so in the gap between them a 3-column grid computed to
+  ~141px-wide columns before ever collapsing to one column -- a real content-density regression at
+  a common tablet viewport, not just cosmetic. Aligned both to the same 860px breakpoint.
+- **Opening the mobile drawer always focused the first tab (Overview)**, regardless of which tab
+  was actually active -- real WAI-ARIA APG guidance is that a tablist receiving focus should land
+  on its already-selected tab. Fixed to focus whichever tab is genuinely active.
+- **8px of unclaimed slack** in the sidebar+content flex row at very wide viewports (a round
+  1360px shell width left 8px neither the sidebar nor the content column claimed, since `.wrap`
+  lost its old `margin:0 auto` self-centering the moment it became a flex child). Tightened the
+  shell to the exact width the content needs (1352px), removing the slack instead of re-adding a
+  centering rule to paper over it.
+- **A dead CSS selector unmasked, not introduced, by this refactor**: `.rail-group:first-child`
+  never matched anything, because the progress caption (`#tourProgress`) was always the sidebar's
+  real first child -- inherited unchanged from the horizontal-rail days, just now visible since
+  this refactor touched that exact rule's other property. Replaced with a real
+  `.tour-progress + .rail-group` adjacent-sibling selector.
+- **The new hamburger button's own accessible label never changed** between its open and closed
+  states (permanently "Open navigation" even while open). Now flips to "Close navigation" and back.
+- **No leftover `.tabrail`/`.tabrail-fade` scaffolding** was left behind as dead code -- confirmed
+  removed, and `stress.cjs` now carries a permanent regression guard against it reappearing.
+- **The 3-way overlay mutual exclusion** (palette / shortcuts / mobile drawer) needed completing in
+  both directions -- opening any one of the three now closes whichever of the other two was open.
+
+**Accepted limitations, stated rather than silently dropped** (both pre-existing across all three
+overlays -- shortcuts, palette, and now the mobile drawer -- not introduced by this refactor, and
+out of scope for a navigation relocation specifically): none of the three overlays trap focus (Tab
+can still cycle out into page content behind an open overlay), and the vertical tablist has no
+Home/End key support to jump to the first/last tab (only Up/Down, one at a time). Both are real
+gaps, flagged for a future accessibility-focused pass rather than folded into this one.
+
+verify.cjs 317 → 347 (+30), stress.cjs 151 → 160 (+9), both green.
 
 ## Design lineage
 

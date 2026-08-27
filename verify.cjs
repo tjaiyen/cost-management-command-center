@@ -1007,6 +1007,133 @@ assertStrEqual(lastTabButtonStubs[2].dataset.tab, "cost", "the 3rd tab in real D
 assertStrEqual(lastTabButtonStubs[2].getAttribute("aria-selected"), "true", "pressing '3' (not typing) jumps straight to the 3rd tab (Cost)");
 overviewBtn.fire("click"); // reset back to Overview for later assertions
 
+console.log("--- Sidebar arrow-key navigation (Down/Up, relocated from a horizontal rail's Left/Right -- previously untested at all, in either direction) ---");
+// The tabbtn keydown handler calls e.preventDefault() unconditionally (unlike the palette's own
+// guarded `if (e.preventDefault)` version), so these fixtures need a real (stub) preventDefault.
+const noop = () => {};
+overviewBtn.fire("keydown", { key: "ArrowDown", preventDefault: noop });
+assertStrEqual(lastTabButtonStubs[1].getAttribute("aria-selected"), "true", "ArrowDown on the 1st tab (Overview) moves selection to the 2nd (Executive Command)");
+lastTabButtonStubs[1].fire("keydown", { key: "ArrowUp", preventDefault: noop });
+assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "ArrowUp from the 2nd tab returns selection to the 1st (Overview)");
+// Wrap-around at both ends -- the modulo arithmetic behind this was also never exercised.
+overviewBtn.fire("keydown", { key: "ArrowUp", preventDefault: noop });
+assertStrEqual(lastTabButtonStubs[lastTabButtonStubs.length - 1].getAttribute("aria-selected"), "true", "ArrowUp from the 1st tab wraps around to the LAST tab (Reference), not a dead stop");
+lastTabButtonStubs[lastTabButtonStubs.length - 1].fire("keydown", { key: "ArrowDown", preventDefault: noop });
+assertStrEqual(overviewBtn.getAttribute("aria-selected"), "true", "ArrowDown from the last tab wraps back around to the 1st (Overview)");
+
+console.log("--- Mobile sidebar overlay (hamburger toggle): open/close via button, backdrop click, Escape, and auto-close after selecting a tab ---");
+{
+  const sidebarToggleBtnEl = elementsById["sidebarToggle"];
+  const sidebarBackdropElTest = elementsById["sidebarBackdrop"];
+  const sidebarElTest = elementsById["sidebar"];
+  if (!sidebarToggleBtnEl || !sidebarBackdropElTest || !sidebarElTest) {
+    failures++; console.error("FAIL: one or more sidebar-overlay elements were never registered");
+  } else {
+    assertStrEqual(sidebarElTest.classList.contains("open"), false, "the sidebar overlay starts closed, matching its real default (no .open class in the HTML)");
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), true, "clicking the hamburger opens the sidebar overlay");
+    assertStrEqual(sidebarBackdropElTest.classList.contains("open"), true, "...and shows its backdrop");
+    assertStrEqual(sidebarToggleBtnEl.getAttribute("aria-expanded"), "true", "...and the toggle button's own aria-expanded reflects the open state");
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), false, "clicking the hamburger again closes it");
+    assertStrEqual(sidebarToggleBtnEl.getAttribute("aria-expanded"), "false", "...and aria-expanded flips back too");
+
+    sidebarToggleBtnEl.fire("click");
+    sidebarBackdropElTest.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), false, "clicking the backdrop closes the sidebar overlay");
+
+    sidebarToggleBtnEl.fire("click");
+    documentStub.fire("keydown", { key: "Escape", target: {} });
+    assertStrEqual(sidebarElTest.classList.contains("open"), false, "pressing Escape closes the sidebar overlay too (same priority chain as the palette/shortcuts overlays)");
+
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), true, "sanity check: the overlay is genuinely open before the next assertion");
+    overviewBtn.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), false, "selecting a tab while the mobile overlay is open automatically closes it (harmless no-op on desktop, since .open has no CSS effect there)");
+
+    // Label + focus management (self-review finding): the button's own accessible name must flip
+    // with its state (not stay permanently "Open navigation"), and focus should move into the
+    // drawer on open, then back to the toggle on close -- only when the drawer was genuinely open
+    // (an ordinary desktop tab click, which also calls closeSidebarOverlay(), must NOT steal focus
+    // back to the toggle button every time).
+    let overviewFocusCalls = 0;
+    const realOverviewFocus = overviewBtn.focus.bind(overviewBtn);
+    overviewBtn.focus = () => { overviewFocusCalls++; realOverviewFocus(); };
+    let toggleFocusCalls = 0;
+    const realToggleFocus = sidebarToggleBtnEl.focus.bind(sidebarToggleBtnEl);
+    sidebarToggleBtnEl.focus = () => { toggleFocusCalls++; realToggleFocus(); };
+
+    assertStrEqual(sidebarToggleBtnEl.getAttribute("aria-label"), "Open navigation", "the toggle button's label starts as 'Open navigation', matching its real closed default");
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarToggleBtnEl.getAttribute("aria-label"), "Close navigation", "opening the drawer flips the label to 'Close navigation', not a permanently-stale 'Open'");
+    // Overview happens to be the active tab at this point in the suite, so this only proves focus
+    // lands SOMEWHERE real -- the dedicated "focuses whichever tab is actually active" test below
+    // (with a DIFFERENT tab made active first) is what actually proves the real fix.
+    assertEqual(overviewFocusCalls, 1, "opening the drawer moves focus to a real tab button, not leaving it stranded on the toggle");
+    overviewBtn.fire("click"); // select a tab from the open drawer
+    assertStrEqual(sidebarToggleBtnEl.getAttribute("aria-label"), "Open navigation", "closing the drawer (via tab selection) flips the label back");
+    assertEqual(toggleFocusCalls, 1, "closing a GENUINELY-open drawer returns focus to the toggle button");
+
+    toggleFocusCalls = 0;
+    overviewBtn.fire("click"); // an ORDINARY desktop tab click -- closeSidebarOverlay() still fires, but the drawer was never open
+    assertEqual(toggleFocusCalls, 0, "an ordinary tab click (drawer never open) does NOT steal focus back to the toggle button -- ordinary desktop navigation is unaffected by mobile-only focus management");
+
+    // 3-way mutual exclusion (palette / shortcuts / mobile nav drawer) -- completes the pairwise
+    // palette<->shortcuts exclusion an earlier stress-test round already fixed.
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), true, "sanity check: the drawer is open before testing cross-overlay exclusion");
+    const paletteBtnElForSidebarTest = elementsById["paletteBtn"];
+    if (paletteBtnElForSidebarTest) {
+      paletteBtnElForSidebarTest.fire("click");
+      assertStrEqual(elementsById["paletteOverlay"].hidden, false, "opening the palette while the drawer is open still opens the palette");
+      assertStrEqual(sidebarElTest.classList.contains("open"), false, "...and closes the mobile nav drawer (3rd overlay added to the existing pairwise exclusion)");
+      documentStub.fire("keydown", { key: "Escape", target: {} }); // close the palette again
+    }
+    sidebarToggleBtnEl.fire("click");
+    assertStrEqual(sidebarElTest.classList.contains("open"), true, "sanity check: the drawer is open again before testing the other direction");
+    const shortcutsBtnElForSidebarTest = elementsById["shortcutsBtn"];
+    if (shortcutsBtnElForSidebarTest) {
+      shortcutsBtnElForSidebarTest.fire("click");
+      assertStrEqual(elementsById["shortcutsOverlay"].hidden, false, "opening shortcuts while the drawer is open still opens shortcuts");
+      assertStrEqual(sidebarElTest.classList.contains("open"), false, "...and closes the mobile nav drawer too");
+      documentStub.fire("keydown", { key: "Escape", target: {} }); // close shortcuts again
+    }
+
+    // Independent-reviewer finding: opening the drawer previously ALWAYS focused tabButtons[0]
+    // (Overview), regardless of which tab was actually active -- real WAI-ARIA APG guidance is
+    // that a tablist receiving focus should land on its already-selected tab. Prove the real fix
+    // by making a DIFFERENT tab active first.
+    const costTabBtn = lastTabButtonStubs.find((b) => b.dataset.tab === "cost");
+    if (costTabBtn) {
+      costTabBtn.fire("click");
+      let costFocusCalls = 0;
+      const realCostFocus = costTabBtn.focus.bind(costTabBtn);
+      costTabBtn.focus = () => { costFocusCalls++; realCostFocus(); };
+      const overviewFocusCallsBefore = overviewFocusCalls; // snapshot -- earlier tests in this
+      // same block already reopened the drawer with Overview active several times, so an absolute
+      // count here would be order-dependent; comparing before/after this ONE action is what
+      // actually isolates it.
+      sidebarToggleBtnEl.fire("click");
+      assertEqual(costFocusCalls, 1, "opening the drawer while Cost is the active tab focuses COST, not always Overview (the exact regression an independent reviewer found)");
+      assertEqual(overviewFocusCalls, overviewFocusCallsBefore, "...and does NOT also (re-)focus Overview -- its own focus-call count is unchanged by this action");
+      sidebarToggleBtnEl.fire("click"); // close via the toggle -- already proven this path works above
+      overviewBtn.fire("click"); // reset to Overview for later assertions
+    }
+
+    // The in-drawer close button (also an independent-reviewer finding: the open drawer's own
+    // z-index sits above the sticky header, visually covering the hamburger toggle that opened it
+    // -- the expected "tap it again to close" gesture was dead via mouse).
+    const sidebarCloseBtnEl = elementsById["sidebarClose"];
+    if (!sidebarCloseBtnEl) { failures++; console.error("FAIL: #sidebarClose was never registered"); }
+    else {
+      sidebarToggleBtnEl.fire("click");
+      assertStrEqual(sidebarElTest.classList.contains("open"), true, "sanity check: the drawer is open before testing its own close button");
+      sidebarCloseBtnEl.fire("click");
+      assertStrEqual(sidebarElTest.classList.contains("open"), false, "the in-drawer close button closes the overlay -- a real close affordance that doesn't depend on reaching the (now-covered) hamburger button");
+    }
+  }
+}
+
 console.log("--- Tab hover/focus-preview mini-drawer (actually firing focus/blur) ---");
 const costTabBtnForDrawer = lastTabButtonStubs.find((b) => b.dataset.tab === "cost");
 if (!costTabBtnForDrawer) {

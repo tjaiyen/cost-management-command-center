@@ -389,6 +389,25 @@ const regionBtnHandlerMatch = indexHtml.match(/activeRegion = r\.code;\n([\s\S]*
 check(!!regionBtnHandlerMatch && regionBtnHandlerMatch[1].includes("resetRegionAdjust()") && regionBtnHandlerMatch[1].includes('persistSet("cmcc-region"'),
   "the region-tab button's click handler also calls resetRegionAdjust() AND persists the switch, not just the ranked-bar's onClick path (verify.cjs can only exercise the latter directly)");
 
+console.log("--- Sidebar relocation (brainstorm build, 2026-08-26): structural checks ---");
+// The old horizontal-rail scaffolding (.tabrail/.tabrail-wrap/.tabrail-fade) must be fully gone,
+// not left behind as dead CSS/HTML once the sidebar replaced it -- a permanent regression guard,
+// not just a one-time grep during the refactor itself.
+check(!/tabrail/.test(indexHtml), "no leftover 'tabrail' reference anywhere (the old horizontal-rail scaffolding was fully removed, not left as dead code)");
+[
+  ["app-shell", "the sidebar+content flex shell"],
+  ["sidebar", "the sidebar nav itself"],
+  ["sidebarBackdrop", "the mobile-overlay backdrop"],
+  ["sidebarToggle", "the hamburger toggle button"],
+  ["sidebarClose", "the in-drawer close button (independent-reviewer finding: the open drawer covers the hamburger toggle, so it needs its own close control)"],
+].forEach(([id, label]) => {
+  check(indexHtml.includes(`id="${id}"`) || indexHtml.includes(`class="${id}"`), `${label} (${id}) exists in the HTML`);
+});
+check(indexHtml.includes('aria-orientation="vertical"'), "the tablist declares aria-orientation=\"vertical\", matching its real Down/Up (not Left/Right) keyboard behavior");
+check(!/ArrowLeft|ArrowRight/.test(indexHtml), "no leftover ArrowLeft/ArrowRight handling anywhere -- the sidebar is Down/Up only, not a stale mix of both");
+check(indexHtml.includes('header.top, .sidebar, .sidebar-backdrop, .disclaimer, footer.foot, .tabpanel{display:none !important}'),
+  "the print stylesheet hides the sidebar AND its backdrop, not a stale reference to the old .tabrail");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

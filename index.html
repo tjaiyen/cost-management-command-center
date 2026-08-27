@@ -50,11 +50,20 @@
   /* bottom padding widened from 64 to 92px -- a real Playwright inspection found the fixed
      return-breadcrumb pill (bottom:20px, ~40px tall) slightly overlapping the last line of
      footer-adjacent text on shorter tabs; this gives it clearance without moving the pill itself */
-  .wrap{max-width:1080px; margin:0 auto; padding:0 20px 92px}
+  .wrap{max-width:1080px; padding:0 20px 92px; flex:1; min-width:0}
+
+  /* relocated from a horizontal top rail to a left sidebar (brainstorm build, 2026-08-26) -- the
+     shell widens (1080 -> 1360) to add the sidebar column alongside the SAME content width, not
+     instead of it, so the reading-width column doesn't get squeezed. */
+  /* 1352, not a round 1360 -- an independent-reviewer finding: 1360 left 8px of unclaimed slack in
+     the flex row (sidebar 224 + gap 8 + wrap's own 1080 cap + 40 padding = 1352 exactly), which
+     meant .wrap silently lost the self-centering `margin:0 auto` used to guarantee on very wide
+     viewports. Sized to exactly consume the space, not centered with leftover slack. */
+  .app-shell{max-width:1352px; margin:0 auto; padding:0 20px; display:flex; gap:8px; align-items:flex-start}
 
   header.top{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
     background:rgb(var(--c-bg-primary) / 0.9); border-bottom:1px solid rgb(var(--c-text-secondary) / 0.15);}
-  header.top .bar{max-width:1080px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  header.top .bar{max-width:1352px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
   .brand{font-weight:700; font-size:14px; display:flex; gap:9px; align-items:center}
   .dot{width:9px; height:9px; border-radius:50%; background:rgb(var(--c-accent)); flex:none}
   .navlinks{display:flex; gap:14px; font-size:13px}
@@ -63,26 +72,54 @@
   .icobtn{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary) / 0.25);
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px}
   .icobtn:hover{border-color:rgb(var(--c-accent))}
+  .sidebar-toggle{display:none}
 
-  /* tab rail */
-  /* the rail measurably overflows its own visible width once every altitude-group label + tab is
-     in (1859px of content vs ~1080px visible, confirmed via a real Playwright measurement) --
-     this fade is the "there's more, scroll me" affordance that was missing, not a fix to the
-     overflow itself (a horizontally-scrolling tab rail is an accepted, standard pattern) */
-  .tabrail-wrap{position:relative}
-  .tabrail-fade{position:absolute; top:0; right:0; bottom:0; width:28px; pointer-events:none;
-    background:linear-gradient(to right, rgb(var(--c-bg-primary) / 0), rgb(var(--c-bg-primary)))}
-  .tabrail{display:flex; gap:4px; overflow-x:auto; padding:10px 20px 0; max-width:1080px; margin:0 auto}
-  .tabbtn{background:none; border:none; border-bottom:2px solid transparent; color:rgb(var(--c-text-secondary));
-    padding:8px 12px; font-size:13px; cursor:pointer; white-space:nowrap; font-family:inherit}
-  .tabbtn:hover{color:rgb(var(--c-text-primary))}
-  .tabbtn[aria-selected="true"]{color:rgb(var(--c-accent)); border-bottom-color:rgb(var(--c-accent)); font-weight:600}
+  /* sidebar (was a horizontal top rail through 2026-08-26 -- see README changelog). Sticky within
+     its own column, independently scrollable if its content ever exceeds viewport height on a
+     short screen; .tabbtn/.rail-group/data-cluster/visit-dot are all unchanged from the rail --
+     only their layout direction and active-state affordance (left border, not underline) changed,
+     so activateTab()/keyboard nav/the command palette needed zero logic changes to keep working. */
+  .sidebar{width:224px; flex:none; align-self:flex-start; position:sticky; top:57px;
+    max-height:calc(100vh - 57px); overflow-y:auto; display:flex; flex-direction:column;
+    padding:14px 8px 20px 0; border-right:1px solid rgb(var(--c-text-secondary) / 0.15)}
+  .tabbtn{display:flex; align-items:center; width:100%; text-align:left; background:none;
+    border:none; border-left:3px solid transparent; color:rgb(var(--c-text-secondary));
+    padding:9px 10px; font-size:13px; cursor:pointer; font-family:inherit; border-radius:0 8px 8px 0}
+  .tabbtn:hover{color:rgb(var(--c-text-primary)); background:rgb(var(--c-text-secondary)/0.07)}
+  .tabbtn[aria-selected="true"]{color:rgb(var(--c-accent)); border-left-color:rgb(var(--c-accent));
+    background:rgb(var(--c-accent)/0.1); font-weight:600}
   /* altitude-group divider labels -- purely decorative for sighted users (aria-hidden; the
      tablist's own flat semantics are unaffected, .tabbtn is still the only thing querySelectorAll
      picks up) */
-  .rail-group{font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-    color:rgb(var(--c-text-secondary)/0.55); align-self:center; padding:0 6px 0 10px; white-space:nowrap}
-  .rail-group:first-child{padding-left:0}
+  .rail-group{display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:rgb(var(--c-text-secondary)/0.55); padding:14px 10px 6px 2px}
+  /* NOT :first-child -- #tourProgress is the sidebar's actual first child (pre-existing since the
+     horizontal-rail days), so :first-child never matched any .rail-group at all; this targets the
+     real first one directly instead (independent-reviewer finding, 2026-08-26). */
+  .tour-progress + .rail-group{padding-top:2px}
+
+  /* mobile: the sidebar becomes a slide-in overlay behind a hamburger toggle, same backdrop-
+     click-to-close pattern already used by the command palette/shortcuts overlays -- not a
+     fourth, different overlay mechanism. */
+  .sidebar-backdrop{display:none}
+  .sidebar-close{display:none}
+  @media (max-width:860px){
+    .app-shell{display:block; padding:0 20px}
+    .sidebar-toggle{display:inline-flex}
+    .sidebar{position:fixed; top:0; left:0; bottom:0; width:270px; max-height:none; z-index:90;
+      transform:translateX(-100%); transition:transform .22s ease; background:rgb(var(--c-bg-primary));
+      box-shadow:6px 0 24px rgb(0 0 0/0.3); border-right:none; padding:60px 10px 20px}
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-backdrop.open{display:block; position:fixed; inset:0; z-index:89; background:rgb(0 0 0/0.45)}
+    /* an independent-reviewer finding: the open drawer's own z-index (90) sits above the sticky
+       header (20), so it visually covers the hamburger button that opened it -- the expected
+       "tap the hamburger again to close" gesture was dead via mouse (Escape/backdrop-click still
+       worked, but that's not the affordance a sighted mouse user reaches for first). A close
+       control INSIDE the drawer itself, in the padding this drawer already reserved at its top, is
+       the fix -- not chasing z-index numbers to keep the outside button reachable through an
+       opaque panel that's deliberately meant to cover the page. */
+    .sidebar-close{display:block; position:absolute; top:14px; right:14px; font-size:12px}
+  }
 
   /* live tab-rail status pill (e.g. "Gate 4 blocked" on Operating Framework) -- hidden entirely
      when the gate clears, so it's never noise for the common case */
@@ -106,7 +143,13 @@
   .card + .card{margin-top:16px}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
   .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
-  @media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  /* Aligned to the sidebar's own 860px collapse breakpoint, not 720px (independent-reviewer
+     finding, 2026-08-26): in the 721-860px gap the persistent 224px sidebar was still competing
+     for width against a 2/3-column grid, squeezing columns down to ~140px before the mobile
+     single-column layout ever kicked in -- a real content-density regression at a common tablet
+     viewport, not just cosmetic. One shared breakpoint means grids only go multi-column once the
+     sidebar has actually freed up the space a multi-column layout needs. */
+  @media (max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
 
   .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0}
   .kpi{background:rgb(var(--c-bg-card2)); border-radius:10px; padding:12px 14px}
@@ -274,7 +317,7 @@
      which tab is active on screen when Print is invoked. #id beats .class specificity so this
      wins over the .tabpanel{display:none} rule right above it. */
   @media print{
-    header.top, .tabrail, .disclaimer, footer.foot, .tabpanel{display:none !important}
+    header.top, .sidebar, .sidebar-backdrop, .disclaimer, footer.foot, .tabpanel{display:none !important}
     #panel-exec{display:block !important}
     #panel-exec section, #panel-exec .card{background:none !important; border:none !important; padding:0 !important}
     #panel-exec *{color:#000 !important}
@@ -375,14 +418,14 @@
      everywhere. Executive and Reference deliberately keep the default accent (they're the "home"
      and "look things up" clusters, not risk-toned) -- only Cost & Risk (amber), Governance &
      Portfolio (green), and Actions (purple) get a distinct hue. */
-  .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(217 119 6); border-bottom-color:rgb(217 119 6)}
-  .tabbtn[data-cluster="governance"][aria-selected="true"]{color:rgb(var(--c-success)); border-bottom-color:rgb(var(--c-success))}
-  .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(124 58 237); border-bottom-color:rgb(124 58 237)}
-  :root[data-theme="light"] .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(161 98 7); border-bottom-color:rgb(161 98 7)}
-  :root[data-theme="light"] .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(91 33 182); border-bottom-color:rgb(91 33 182)}
+  .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(217 119 6); border-left-color:rgb(217 119 6); background:rgb(217 119 6/0.1)}
+  .tabbtn[data-cluster="governance"][aria-selected="true"]{color:rgb(var(--c-success)); border-left-color:rgb(var(--c-success)); background:rgb(var(--c-success)/0.1)}
+  .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(124 58 237); border-left-color:rgb(124 58 237); background:rgb(124 58 237/0.1)}
+  :root[data-theme="light"] .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(161 98 7); border-left-color:rgb(161 98 7)}
+  :root[data-theme="light"] .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(91 33 182); border-left-color:rgb(91 33 182)}
   @media (prefers-color-scheme: light){
-    :root:not([data-theme="dark"]) .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(161 98 7); border-bottom-color:rgb(161 98 7)}
-    :root:not([data-theme="dark"]) .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(91 33 182); border-bottom-color:rgb(91 33 182)}
+    :root:not([data-theme="dark"]) .tabbtn[data-cluster="costrisk"][aria-selected="true"]{color:rgb(161 98 7); border-left-color:rgb(161 98 7)}
+    :root:not([data-theme="dark"]) .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(91 33 182); border-left-color:rgb(91 33 182)}
   }
 
   /* visited-tab progress dot -- genuinely hollow (border only, transparent center) when unvisited,
@@ -390,11 +433,14 @@
      stress-test finding: an earlier version claimed "filled/hollow" in this very comment but only
      ever changed background color, leaving both states identically filled circles). The visible
      dot is still decorative for screen readers (aria-hidden, unaffected by this) -- the actual
-     screen-reader signal is the aria-label markVisited() sets on the button itself. */
-  .tabbtn .visit-dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px;
-    vertical-align:middle; background:transparent; border:1.4px solid rgb(var(--c-text-secondary)/0.45)}
+     screen-reader signal is the aria-label markVisited() sets on the button itself. Pushed to the
+     row's far right via margin-left:auto -- unaffected by the rail's horizontal->vertical move,
+     since a flex row's trailing-auto-margin behavior is the same regardless of the row's own
+     width or what container it sits in. */
+  .tabbtn .visit-dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:auto;
+    vertical-align:middle; background:transparent; border:1.4px solid rgb(var(--c-text-secondary)/0.45); flex:none}
   .tabbtn.visited .visit-dot{background:rgb(var(--c-success)); border-color:rgb(var(--c-success))}
-  .tour-progress{font-size:11px; color:rgb(var(--c-text-secondary)); margin-left:auto; white-space:nowrap}
+  .tour-progress{display:block; font-size:11px; color:rgb(var(--c-text-secondary)); white-space:nowrap; padding:0 10px 10px 2px}
 
   /* tab-switch entrance animation -- re-triggers naturally because .tabpanel goes from
      display:none to display:block on activation (an element with no prior box has no running
@@ -447,6 +493,7 @@
 
 <header class="top">
   <div class="bar">
+    <button class="icobtn sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Open navigation">☰</button>
     <span class="brand"><span class="dot"></span>Cost Management Command Center</span>
     <div class="navlinks">
       <a href="ada-fit.html">Role fit brief</a>
@@ -463,8 +510,13 @@
     <button class="icobtn" id="themeBtn" type="button" aria-pressed="false">Toggle theme</button>
     <button class="icobtn" id="shortcutsBtn" type="button" aria-haspopup="dialog">⌨ Shortcuts</button>
   </div>
-  <div class="tabrail-wrap">
-  <nav class="tabrail" id="tabrail" role="tablist" aria-label="Command center sections">
+</header>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar" role="tablist" aria-label="Command center sections" aria-orientation="vertical">
+    <button class="icobtn sidebar-close" id="sidebarClose" type="button" aria-label="Close navigation">✕ Close</button>
     <span class="tour-progress" id="tourProgress" aria-live="polite"></span>
     <span class="rail-group" aria-hidden="true">Executive</span>
     <button class="tabbtn" role="tab" data-tab="overview" data-cluster="executive" aria-selected="true">Overview<span class="visit-dot" aria-hidden="true"></span></button>
@@ -483,9 +535,6 @@
     <button class="tabbtn" role="tab" data-tab="data" data-cluster="reference" aria-selected="false">Data Strategy<span class="visit-dot" aria-hidden="true"></span></button>
     <button class="tabbtn" role="tab" data-tab="reference" data-cluster="reference" aria-selected="false">Reference<span class="visit-dot" aria-hidden="true"></span></button>
   </nav>
-  <div class="tabrail-fade" aria-hidden="true"></div>
-  </div>
-</header>
 
 <div class="wrap" id="main-content">
   <h1>Who's actually watching the contingency reserve?</h1>
@@ -1227,6 +1276,7 @@
       Command Center</a> (the full-scale version of this same discipline).</p>
   </footer>
 </div>
+</div>
 
 <div class="tab-drawer" id="tabDrawer" role="tooltip"></div>
 
@@ -1241,7 +1291,7 @@
     <dl class="shortcuts-list">
       <div><dt><kbd>⌘</kbd><kbd>K</kbd></dt><dd>Open the search palette — jump to any tab, KPI, or glossary term</dd></div>
       <div><dt><kbd>1</kbd>–<kbd>9</kbd></dt><dd>Jump straight to that numbered tab</dd></div>
-      <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move focus one tab left/right (while a tab is focused)</dd></div>
+      <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move focus one tab up/down (while a tab is focused)</dd></div>
       <div><dt><kbd>?</kbd></dt><dd>Open/close this shortcuts overlay</dd></div>
       <div><dt><kbd>Esc</kbd></dt><dd>Close this overlay, or exit the guided Tour</dd></div>
     </dl>
@@ -1318,6 +1368,11 @@
     btn.setAttribute("aria-controls", "panel-" + btn.dataset.tab);
     btn.addEventListener("click", function(){
       activateTab(btn.dataset.tab, true);
+      // Closing the mobile overlay after a real navigation is a harmless no-op on desktop -- the
+      // .open class has zero visual effect there (the media query that gives it meaning only
+      // applies below the mobile breakpoint), so this doesn't need its own "are we on mobile?"
+      // check.
+      if (typeof closeSidebarOverlay === "function") closeSidebarOverlay();
       // A mouse click also focuses the button, and focus alone (no hover delay) opens this same
       // button's preview drawer -- confirmed live via a real Playwright inspection: the drawer is
       // position:fixed, so left open it stays pinned over the page content at every scroll
@@ -1327,8 +1382,10 @@
     });
     btn.addEventListener("keydown", function(e){
       var idx = tabButtons.indexOf(btn);
-      if (e.key === "ArrowRight") { e.preventDefault(); tabButtons[(idx+1) % tabButtons.length].focus(); tabButtons[(idx+1) % tabButtons.length].click(); }
-      if (e.key === "ArrowLeft") { e.preventDefault(); var p=(idx-1+tabButtons.length)%tabButtons.length; tabButtons[p].focus(); tabButtons[p].click(); }
+      // Down/Up, not Left/Right -- the rail moved from a horizontal top bar to a vertical sidebar
+      // (brainstorm build, 2026-08-26); matches aria-orientation="vertical" on the tablist itself.
+      if (e.key === "ArrowDown") { e.preventDefault(); tabButtons[(idx+1) % tabButtons.length].focus(); tabButtons[(idx+1) % tabButtons.length].click(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); var p=(idx-1+tabButtons.length)%tabButtons.length; tabButtons[p].focus(); tabButtons[p].click(); }
     });
   });
 
@@ -1360,10 +1417,13 @@
     // getBoundingClientRect doesn't exist in this repo's Node-based verify.cjs sandbox (no layout
     // engine there) -- guarded the same way requestAnimationFrame is guarded elsewhere on this
     // page, so content-generation is still testable headlessly even though positioning isn't.
+    // Opens to the RIGHT of the button now, not below it -- the rail moved from a horizontal top
+    // bar to a vertical sidebar (brainstorm build, 2026-08-26), and "below" would run the drawer
+    // straight into the next tab underneath it.
     if (typeof btn.getBoundingClientRect === "function") {
       var rect = btn.getBoundingClientRect();
-      tabDrawerEl.style.left = Math.round(rect.left) + "px";
-      tabDrawerEl.style.top = Math.round(rect.bottom + 8) + "px";
+      tabDrawerEl.style.left = Math.round(rect.right + 8) + "px";
+      tabDrawerEl.style.top = Math.round(rect.top) + "px";
     }
     tabDrawerEl.classList.add("open");
   }
@@ -1529,14 +1589,70 @@
     });
   }
 
+  /* ---------- mobile sidebar overlay (hamburger toggle) ---------- */
+  // Same backdrop-click-to-close + Escape-to-close pattern already established by the command
+  // palette/shortcuts overlays, not a fourth distinct overlay mechanism -- only the "always in the
+  // layout, toggled via a CSS class" mechanic differs (needed here so the slide-in transform can
+  // actually animate, which display:none/[hidden] can't).
+  var sidebarEl = document.getElementById("sidebar");
+  var sidebarBackdropEl = document.getElementById("sidebarBackdrop");
+  var sidebarToggleBtn = document.getElementById("sidebarToggle");
+  function sidebarOverlayOpen(){ return sidebarEl.classList.contains("open"); }
+  function openSidebarOverlay(){
+    // Same 3-way mutual-exclusion as openPalette()/openShortcuts() -- completes the set.
+    if (typeof paletteOpen === "function" && paletteOpen() && typeof closePalette === "function") closePalette();
+    if (typeof shortcutsOpen === "function" && shortcutsOpen() && typeof closeShortcuts === "function") closeShortcuts();
+    sidebarEl.classList.add("open");
+    if (sidebarBackdropEl) sidebarBackdropEl.classList.add("open");
+    if (sidebarToggleBtn) {
+      sidebarToggleBtn.setAttribute("aria-expanded", "true");
+      // The label itself needs to flip too, not just aria-expanded -- a permanently-"Open
+      // navigation" label would tell a screen-reader user the drawer is still closed even while
+      // it's open (self-review finding, 2026-08-26).
+      sidebarToggleBtn.setAttribute("aria-label", "Close navigation");
+    }
+    // Move focus INTO the drawer on open -- the CURRENTLY-SELECTED tab, not always the first one
+    // (independent-reviewer finding, 2026-08-26: real WAI-ARIA APG tabs guidance is that a tablist
+    // receiving focus should land on its already-selected tab; a user on, say, Contingency & Risk
+    // who opens the drawer should stay oriented there, not get dropped back onto Overview every
+    // time). Same reasoning as the command palette's own focus management otherwise -- a keyboard
+    // user who just opened this shouldn't still be sitting on the button that opened it.
+    var activeTabBtn = tabButtons.filter(function(b){ return b.getAttribute("aria-selected") === "true"; })[0] || tabButtons[0];
+    if (activeTabBtn && typeof activeTabBtn.focus === "function") activeTabBtn.focus();
+  }
+  function closeSidebarOverlay(){
+    // Checked BEFORE removing the class -- only return focus if the overlay was genuinely open
+    // (this function also fires as a harmless no-op after every ordinary desktop tab click, where
+    // there's no drawer-opened focus to return from).
+    var wasOpen = sidebarOverlayOpen();
+    sidebarEl.classList.remove("open");
+    if (sidebarBackdropEl) sidebarBackdropEl.classList.remove("open");
+    if (sidebarToggleBtn) {
+      sidebarToggleBtn.setAttribute("aria-expanded", "false");
+      sidebarToggleBtn.setAttribute("aria-label", "Open navigation");
+      // Return focus to the toggle button -- same focus-return discipline as the palette. Matters
+      // most on mobile: a user who just picked a tab from the open drawer has focus sitting on a
+      // button that's about to slide off-canvas; returning it to the toggle avoids stranding it.
+      if (wasOpen && typeof sidebarToggleBtn.focus === "function") sidebarToggleBtn.focus();
+    }
+  }
+  if (sidebarToggleBtn) sidebarToggleBtn.addEventListener("click", function(){
+    sidebarOverlayOpen() ? closeSidebarOverlay() : openSidebarOverlay();
+  });
+  if (sidebarBackdropEl) sidebarBackdropEl.addEventListener("click", closeSidebarOverlay);
+  var sidebarCloseBtn = document.getElementById("sidebarClose");
+  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebarOverlay);
+
   /* ---------- global 1-9 tab-jump + "?" keyboard-shortcuts overlay ---------- */
   var shortcutsOverlay = document.getElementById("shortcutsOverlay");
   // Closes the palette first if it's open -- otherwise pressing "?" (or clicking the Shortcuts
   // button) while the palette is open leaves BOTH modal-style overlays open simultaneously
   // (stress-test finding, 2026-08-26; the reverse direction was already safe since typing "?"
-  // inside the palette's own input is gated by the existing `!typing` check elsewhere).
+  // inside the palette's own input is gated by the existing `!typing` check elsewhere). Also
+  // closes the mobile nav drawer if it's open, for the same reason, extended to a third overlay.
   function openShortcuts(){
     if (typeof paletteOpen === "function" && paletteOpen() && typeof closePalette === "function") closePalette();
+    if (typeof sidebarOverlayOpen === "function" && sidebarOverlayOpen()) closeSidebarOverlay();
     shortcutsOverlay.hidden = false;
   }
   function closeShortcuts(){ shortcutsOverlay.hidden = true; }
@@ -1561,7 +1677,8 @@
     if (e.key === "?" && !typing) { e.preventDefault ? e.preventDefault() : null; shortcutsOpen() ? closeShortcuts() : openShortcuts(); return; }
     if (e.key === "Escape") {
       if (typeof paletteOpen === "function" && paletteOpen()) { closePalette(); return; }
-      if (shortcutsOpen()) closeShortcuts();
+      if (shortcutsOpen()) { closeShortcuts(); return; }
+      if (typeof sidebarOverlayOpen === "function" && sidebarOverlayOpen()) { closeSidebarOverlay(); return; }
       return;
     }
     if (!typing && e.key >= "1" && e.key <= "9") {
@@ -3490,8 +3607,9 @@
   // for exactly the audience most likely to use a command palette in the first place.
   var paletteReturnFocusEl = null;
   function openPalette(){
-    // Same mutual-exclusion as openShortcuts() above, other direction.
+    // Same mutual-exclusion as openShortcuts() above, other direction (plus the mobile nav drawer).
     if (typeof shortcutsOpen === "function" && shortcutsOpen() && typeof closeShortcuts === "function") closeShortcuts();
+    if (typeof sidebarOverlayOpen === "function" && sidebarOverlayOpen()) closeSidebarOverlay();
     paletteReturnFocusEl = (typeof document !== "undefined" && document.activeElement) || null;
     paletteOverlayEl.hidden = false;
     paletteInputEl.value = "";
