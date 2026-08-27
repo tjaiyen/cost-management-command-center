@@ -640,6 +640,25 @@ catches it, restored, re-confirmed green): the CSV bell/triage-jump focus-manage
 the reviewer's own independent falsification pass) `rangeChipHTML`'s clamp and `makeSliderHistory`'s
 eviction guard. verify.cjs 415 → 417 (+2), stress.cjs 191 → 193 (+2), both green.
 
+**Closing the mobile-header limitation (2026-08-26)** — asked to fix it directly rather than leave it
+stated. Getting a real screenshot required adding `tjaiyen.github.io` to `agent-browser`'s domain
+allowlist (scoped to job-board domains for an unrelated pipeline in a different repo); with TJ's
+go-ahead, added it to that project's local `agent-browser.json`, which had **no effect** — the config
+actually enforced at runtime turned out to be the GLOBAL `~/.agent-browser/config.json`, contradicting
+that project's own documented precedence (`~/.agent-browser/config.json < ./agent-browser.json <
+...`). A local `file://` open was independently confirmed blocked too (no hostname to match against
+the allowlist — fails closed, by design). Reverted the project-local edit (confirmed clean, no
+diff) rather than escalate to editing the global, cross-project file without a separate go-ahead.
+Pivoted to removing the underlying risk instead of visually confirming it: the header's `.bar` already
+had `flex-wrap` (no overflow bug, confirmed by CSS analysis), but a real narrow-viewport rule now makes
+it provably shorter by construction — every `.icobtn` tightens up and `.navlinks` shrinks at ≤720px
+(reusing the existing breakpoint already used for `.tab-drawer`/`.factoid-toast`). An earlier draft of
+this same rule hid `.navlinks` outright; caught before shipping that this would have stranded "Role fit
+brief" (`ada-fit.html`) on mobile entirely, since the footer links this project's sibling/portfolio
+pages but never independently links that one — confirmed by grep, not assumed. Falsification-tested
+(temporarily hid `.navlinks` again, confirmed the new stress.cjs guard fails, restored, re-confirmed
+green). verify.cjs unchanged at 417, stress.cjs 193 → 196 (+3), both green.
+
 ## Design lineage
 
 Architecture (single self-contained HTML file, tab-based navigation, theme tokens, real-vs-
@@ -652,7 +671,7 @@ around a synthetic capital transit program). **Correction (`/stress-test` audit,
 earlier draft of this section claimed this repo underwent "a 5-phase expansion" that "mapped that
 reference's tabs" to match its scale — that never happened, and the metrics said so on inspection:
 this build sat at 11 tabs / ~3,030 lines at the time, not 13 / 12,191 — since grown to **12 tabs /
-~4,684 lines** with the Commercial Ramp tab and the 10-feature UX/UI pass below. What's true instead: a handful of
+~4,700 lines** with the Commercial Ramp tab and the 10-feature UX/UI pass below. What's true instead: a handful of
 individual mechanisms were selectively borrowed from that sibling project across several separate,
 unplanned feature requests over this repo's history — the GUARDS live-integrity-gate pattern, the
 Gate-4 tab-rail status pill, and the general "real-vs-illustrative badge" discipline itself. Two

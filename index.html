@@ -72,6 +72,22 @@
   .icobtn{background:rgb(var(--c-bg-card)); border:1px solid rgb(var(--c-text-secondary) / 0.25);
     color:rgb(var(--c-text-primary)); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px}
   .icobtn:hover{border-color:rgb(var(--c-accent))}
+  /* Header narrow-viewport hardening (stress-test follow-up, 2026-08-26): the header's own .bar
+     already had flex-wrap (so 7 .icobtns + the currency select + 2 nav links + the brand cannot
+     overflow horizontally on a phone -- confirmed by CSS analysis; a live visual check was blocked
+     by this session's own tooling, see README), but an UN-hardened row still wraps to several
+     stacked lines above the fold at ~375px. This makes the row provably shorter by construction,
+     not just "confirmed not broken" -- every .icobtn tightens up, and .navlinks shrinks rather than
+     hiding: an earlier version of this rule hid .navlinks outright, which would have stranded the
+     "Role fit brief" link (ada-fit.html) entirely on mobile -- the footer links this page's own
+     portfolio/sibling-project pages but NOT ada-fit.html, caught before shipping by checking that
+     claim instead of assuming it. Reuses the existing 720px breakpoint already used for
+     .tab-drawer/.factoid-toast above. */
+  @media (max-width:720px){
+    .navlinks{gap:8px; font-size:11.5px}
+    .icobtn{padding:5px 8px; font-size:12px}
+    header.top .bar{gap:8px}
+  }
   .sidebar-toggle{display:none}
 
   /* Notification-center bell (brainstorm build, 2026-08-26): reads the same computeTriageItems()

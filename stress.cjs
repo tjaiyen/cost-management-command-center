@@ -474,6 +474,15 @@ check(indexHtml.includes("cmccKpi") && indexHtml.includes("e.state.cmccKpi"),
 check(indexHtml.includes('var dataFreshnessLog = [') && (indexHtml.match(/year:\s*(\d{4}|null)/g) || []).length >= 15,
   "dataFreshnessLog carries at least 15 entries, each with an explicit year or an honest null");
 
+console.log("--- Header narrow-viewport hardening (stress-test follow-up, 2026-08-26) ---");
+// A live visual check was blocked by this session's own tooling (agent-browser's domain allowlist
+// fails closed on both localhost and file:// -- confirmed empirically, see README); this makes the
+// header row provably shorter by construction at <=720px instead, via structural checks.
+const narrowHeaderMatch = indexHtml.match(/@media \(max-width:720px\)\{\s*\.navlinks\{gap:8px; font-size:11\.5px\}\s*\.icobtn\{padding:5px 8px; font-size:12px\}\s*header\.top \.bar\{gap:8px\}\s*\}/);
+check(!!narrowHeaderMatch, "found the header narrow-viewport rule (720px breakpoint, reusing the existing .tab-drawer/.factoid-toast breakpoint)");
+check(!/\.navlinks\{display:none\}/.test(indexHtml), "navlinks is NEVER hidden outright at any breakpoint -- it shrinks instead, so 'Role fit brief' (ada-fit.html) stays reachable (the footer does NOT independently link that page -- confirmed by grep before this rule shipped, not assumed)");
+check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role fit brief link itself still exists in the header nav (nothing silently removed it)");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");
