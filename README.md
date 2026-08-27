@@ -942,3 +942,65 @@ missed cases, and confirmed both agent-browser config edits are scoped to the si
 
 index.html 5,159 → 5,166 (+7), verify.cjs 2,045 → 2,052 (+7), stress.cjs 524 → 544 (+20). Both
 suites green.
+
+**Full-scope construction cost breakdown, 2026-08-27** — asked to research the complete data-center
+construction cost breakdown (site civil, building, utilities, electrical, all equipment) and
+integrate it into the dashboard. Ran 2 independent research agents in parallel (site/civil/
+structural; MEP/electrical/mechanical equipment) — both, working separately, converged on the SAME
+finding: the only primary-source-verified, complete breakdown available is Turner &amp; Townsend's
+own *Data Centre Construction Cost Index 2025-2026* cost-trends page (fetched directly by both
+agents, not a secondary summary), which reports **4 categories summing to exactly 100%** for both
+cooling archetypes — Electrical 54%/48% (air/liquid-cooled), Mechanical 22%/33%, Core/shell &amp;
+architectural 14%/9%, GC/GRs &amp; GC fees 10%/10%. This build previously showed only 2 of these 4
+(Electrical + Mechanical), leaving 13–30% of total cost unaccounted for — a real, now-closed gap,
+using the exact same source already cited elsewhere in this file.
+
+Both agents also independently confirmed the SAME negative finding, worth stating as plainly as the
+positive one: no primary source (T&amp;T, JLL, CBRE, Cushman &amp; Wakefield, Uptime Institute, 7x24
+Exchange, DCD) decomposes any of those 4 categories any further — no real % for site civil vs.
+structural vs. envelope, no real % for generators vs. UPS vs. switchgear, no real % for chillers vs.
+CRAH vs. cooling towers, no real % for fire protection or physical security as their own line items.
+One agent independently traced a commonly-repeated "shell/civil/soft costs 18–25%" figure (attributed
+across several SEO/aggregator sites to Turner &amp; Townsend or Cushman &amp; Wakefield) back to
+axis-intelligence.com's own page, which admits it's a self-described derived calculation — explicitly
+NOT used here. Vendor-sourced fire-protection ($8–25/sq ft) and physical-security ($20–40/sq ft)
+figures were found but left out of the real/illustrative breakdown rather than laundered in as
+equivalent to the T&amp;T figures, since they're real vendor pricing pages, not independent research.
+
+Built as a new "Full scope cost breakdown, by trade" card (Cost tab): the 4 real category headers
+(badge real, cited to T&amp;T, with both this program's real $ and both cooling archetypes' %
+shown), each with an illustrative sub-trade breakdown beneath it (badge illustrative — e.g.
+Electrical splits into Switchgear &amp; transformers/Generators &amp; fuel systems/UPS systems/PDUs
+&amp; distribution) — every sub-trade % is this program's own allocation within its real parent
+category, stated as such, never presented as a second real figure. Two independent multiplies
+(baseline × real category %, then category $ × illustrative sub-trade %) rather than one figure
+derived from the other, so each level is independently checkable — proven by 2 raw-literal
+re-derivation tests (not a second call to the same function) plus a new GUARDS entry recomputing the
+4 real percentages from scratch. The existing WBS Cost Allocation / control-account ledger / EVM
+math is untouched — this is new, additive reference content, not a replacement for the structure
+those computations depend on.
+
+A caught-by-testing finding along the way: pre-registering the currency-toggle-refresh check up
+front this time (rather than finding it as a stress-test gap after the fact, the FX-exposure pattern
+from an earlier pass) surfaced a real bug on the first try — a hardcoded "$" in the new table's own
+column header text (not a currency-formatted value) made a naive "no $ left after converting to GBP"
+check fail even though the actual dollar figures had converted correctly. Fixed by renaming the
+header to avoid a hardcoded currency symbol at all, consistent with this file's own discipline of
+never hardcoding "$" as label text where `fmt()` should be the only source of a currency symbol.
+Also fixed 2 stale hardcoded GUARDS counts in verify.cjs's own log-message strings (not test
+assertions, but inaccurate either way) by making them read `state.GUARDS.length` dynamically instead.
+
+An independent reviewer directly fetched Turner &amp; Townsend's actual cost-trends page itself —
+the single most important thing to check, since this whole feature's honesty rests on that citation
+being real — and confirmed the exact 4-category table (54/22/14/10 air-cooled, 48/33/9/10
+liquid-cooled, both summing to 100) verbatim, plus independently hand-recomputed the dollar math and
+confirmed the existing WBS/control-account/EVM code path is untouched. It found 2 real issues: the
+axis-intelligence.com "self-described derived calculation" attribution (above) could not be
+re-located after several of its own direct-fetch attempts — softened to say so explicitly, rather
+than either dropping the finding or overstating its certainty; and the breakdown table's dollar
+figures use only this program's air-cooled default with no stated assumption, despite the card's own
+framing emphasizing "both archetypes" — fixed with one clarifying sentence rather than a second,
+largely-invented liquid-cooled dollar column.
+
+index.html 5,166 → 5,303 (+137), verify.cjs 2,052 → 2,099 (+47), stress.cjs unchanged at 544 (one
+in-place count edit, GUARDS 19 → 20). Both suites green.

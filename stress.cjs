@@ -133,7 +133,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 37, `found all 37 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 38, `found all 38 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
@@ -193,7 +193,7 @@ const guardsBlockMatch = indexHtml.match(/var GUARDS = \[([\s\S]*?)\n  \];/);
 check(!!guardsBlockMatch, "found the GUARDS array literal to count structurally");
 if (guardsBlockMatch) {
   const guardEntryCount = (guardsBlockMatch[1].match(/\{ n:"/g) || []).length;
-  check(guardEntryCount === 19, "GUARDS array literal has exactly 19 check entries", `found ${guardEntryCount}`);
+  check(guardEntryCount === 20, "GUARDS array literal has exactly 20 check entries", `found ${guardEntryCount}`);
   check(guardsBlockMatch[1].includes("Escalation assumption re-validated"), "the escalation-staleness guard is registered");
   check(guardsBlockMatch[1].includes("Every region reports the same cost-reporting schema"), "the cross-region schema-consistency guard is registered");
 }

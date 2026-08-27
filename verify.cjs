@@ -579,6 +579,41 @@ let curveIsMonotonic = true;
 for (let i = 1; i < realCurve.length; i++) { if (realCurve[i] < realCurve[i - 1]) curveIsMonotonic = false; }
 assertStrEqual(curveIsMonotonic, true, "the real S-curve never decreases (a cumulative curve by construction)");
 
+console.log("--- Full-scope construction cost breakdown (full-scope research pass, 2026-08-27) ---");
+// Pre-registered (B35): the real Turner & Townsend category %s must sum to exactly 100 for BOTH
+// cooling archetypes -- the actual internal-consistency check that made this pass trust the source
+// enough to use it as the FULL breakdown, not just a partial one.
+const pctAirSum = state.costDriverCategories.reduce((s, c) => s + c.pctAir, 0);
+const pctLiquidSum = state.costDriverCategories.reduce((s, c) => s + c.pctLiquid, 0);
+assertEqual(pctAirSum, 100, "the 4 real air-cooled category percentages sum to exactly 100 (Turner & Townsend's own internal-consistency check)");
+assertEqual(pctLiquidSum, 100, "the 4 real liquid-cooled category percentages sum to exactly 100 too");
+assertEqual(state.costDriverCategories.length, 4, "exactly 4 real categories -- the full breakdown, not a partial 2-of-4 view");
+// Every illustrative sub-trade split must also sum to 100 (of its OWN parent category, not of the
+// total program) -- a sub-trade sum that doesn't close to 100 would silently mis-allocate dollars
+// within a category even though the category-level real % stays correct.
+state.costDriverCategories.forEach((cat) => {
+  const subSum = cat.subTrades.reduce((s, st) => s + st.pct, 0);
+  assertEqual(subSum, 100, `"${cat.name}"'s illustrative sub-trades sum to exactly 100% of that category (not the total program)`);
+});
+// Independent re-derivation via the raw formula (baseline x the real category % x the illustrative
+// sub-trade %), NOT a second call to computeCostBreakdown() with the same inputs -- same
+// non-tautology discipline every other GUARDS-adjacent check in this file already follows.
+const electricalCat = state.costDriverCategories.find((c) => c.key === "electrical");
+const expectedElectricalDollar = state.bridge.baseline * electricalCat.pctAir / 100;
+const computedElectrical = state.costDriverFullResult.find((r) => r.key === "electrical");
+assertEqual(computedElectrical.dollar, expectedElectricalDollar, "Electrical category's $ independently re-derives as baseline x its real 54% air-cooled share", 0.01);
+const switchgearSub = electricalCat.subTrades.find((st) => st.name === "Switchgear & transformers");
+const expectedSwitchgearDollar = expectedElectricalDollar * switchgearSub.pct / 100;
+const computedSwitchgear = computedElectrical.subTrades.find((st) => st.name === "Switchgear & transformers");
+assertEqual(computedSwitchgear.dollar, expectedSwitchgearDollar, "the Switchgear & transformers sub-trade's $ independently re-derives as the category's own $ x its illustrative 35% share", 0.01);
+// Structural check: the rendered table actually contains all 4 category header rows + all 16
+// sub-trade rows (4 categories x 4 sub-trades each) -- not a truncated subset.
+const costBreakdownHtml = elementsById["costBreakdownTable"].innerHTML;
+const realBadgeCount = (costBreakdownHtml.match(/badge real/g) || []).length;
+const illustrativeBadgeCount = (costBreakdownHtml.match(/badge illustrative/g) || []).length;
+assertEqual(realBadgeCount, 4, "the rendered table shows exactly 4 real category header rows");
+assertEqual(illustrativeBadgeCount, 16, "the rendered table shows exactly 16 illustrative sub-trade rows (4 categories x 4 sub-trades)");
+
 console.log("--- Phase 2 director-grade visuals: Cost-driver treemap ---");
 assertEqual(state.treemapResult.total, state.bridge.baseline, "treemap's total BAC reconciles to the real budget-bridge baseline (same reconciliation GUARDS already checks)");
 assertEqual(state.treemapResult.blocks.length, state.controlAccounts.length, "one treemap block per control account");
@@ -1104,6 +1139,18 @@ if (currencySelectEl) {
   currencySelectEl.fire("change");
 }
 
+// Same probe, applied up front this time (full-scope research pass, 2026-08-27) rather than found
+// as a stress-test gap after the fact -- learned from the FX-exposure currency bug above.
+if (currencySelectEl) {
+  currencySelectEl.value = "GBP";
+  currencySelectEl.fire("change");
+  const costBreakdownHtmlGbp = elementsById["costBreakdownTable"] ? elementsById["costBreakdownTable"].innerHTML : "";
+  const costBreakdownConvertedToGbp = costBreakdownHtmlGbp.indexOf("£") !== -1 && costBreakdownHtmlGbp.indexOf("$") === -1;
+  assertStrEqual(costBreakdownConvertedToGbp, true, "the full-scope cost breakdown table's dollar figures convert to GBP when the currency toggle fires (wired into the render-call list up front, not left off it)");
+  currencySelectEl.value = "USD";
+  currencySelectEl.fire("change");
+}
+
 console.log("--- Stress-test fix: actually FIRE a click on one of the 4 tabs added in Phases 2-3 ---");
 // A prior version of this suite's own .tabbtn stub list was stale at 7 tabs (missing exec,
 // framework, actions, triage), and per-element addEventListener was a no-op -- so activateTab()
@@ -1440,14 +1487,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 19, "exactly 19 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 19, "renderGuards() actually ran all 19 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 20, "exactly 20 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 20, "renderGuards() actually ran all 20 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 18 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log(`pass: all ${state.GUARDS.length} live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)`);
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 18 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, `of ${state.GUARDS.length} live integrity checks are failing:`, JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and

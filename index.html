@@ -795,23 +795,56 @@
         program's own numbers — useful context for why cost archetype shifts (air-cooled vs.
         liquid-cooled) matter as much as scale.</p>
       <div class="card">
+        <div class="kpis" id="costDriverFullKpis"></div>
+        <p class="src-note"><span class="badge real">real</span> Turner &amp; Townsend's
+          <i>Data Centre Construction Cost Index 2025-2026</i> reports these as the FULL 4-category
+          breakdown of total construction cost — verified 2026-08-27 (full-scope research pass) by
+          fetching the report's own cost-trends page directly, not a secondary summary — and the 4
+          figures sum to exactly 100% for both cooling archetypes, a real internal-consistency check
+          this build's own earlier version didn't have (it previously showed only 2 of these 4
+          categories, Electrical and Mechanical, leaving 13–30% of total cost unaccounted for).
+          Correction, 2026-08-26 (deep-research pass): an earlier version cited these percentages to
+          "Archdesk 2026," but a direct fetch of Archdesk's actual 2026 post found different figures
+          (32–38% electrical, ~75% MEP+controls combined) — the split shown here traces to the
+          Turner &amp; Townsend index instead, the same report cited for the market $/W benchmarks
+          below. Cost Estimate Classification follows <b>AACE RP 17R-97</b> (Class 5, least-defined,
+          through Class 1, most-defined).</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Full scope cost breakdown, by trade <span class="badge illustrative">real category %, illustrative sub-trade split</span>
+          <button class="info-toggle" type="button" id="toggle-expCostBreakdown" data-explainer="expCostBreakdown" aria-expanded="false" aria-label="Formula and methodology">i</button></h3>
+        <div class="explainer" id="expCostBreakdown"></div>
+        <p class="lede" style="font-size:13px">A genuine gap this research pass found: no primary
+          source (Turner &amp; Townsend, JLL, CBRE, Cushman &amp; Wakefield, Uptime Institute) breaks
+          site civil, structural, envelope, or individual equipment categories out from the 4 real
+          buckets above — two independent research passes confirmed this the same way. The 4
+          category headers and their % below are real; every sub-trade row under them is this
+          program's own illustrative allocation within that real category, not a second real figure.
+          Dollar figures below use this program's own default archetype (air-cooled); the KPI tiles
+          above show the liquid-cooled % for comparison, not duplicated here as a second $ column.</p>
+        <div style="overflow-x:auto"><table id="costBreakdownTable"></table></div>
+        <p class="src-note">Also checked and explicitly NOT used here: a "shell/civil/soft costs
+          18–25%" figure that circulates across several SEO/aggregator sites attributed to Turner
+          &amp; Townsend or Cushman &amp; Wakefield. The original research pass traced it to
+          axis-intelligence.com as a self-described derived calculation rather than a quote from
+          either primary report; a second, independent review pass could not re-locate that exact
+          admission on that domain after several direct-fetch attempts, so treat "traced to
+          axis-intelligence" as the first pass's own finding, not independently re-confirmed —
+          either way, the figure itself is still not used here, since neither pass could verify it
+          as a genuine T&amp;T/Cushman &amp; Wakefield number. Also not used:
+          vendor-sourced fire-protection ($8–25/sq ft) and physical-security ($20–40/sq ft) figures
+          found during this pass — real numbers from real vendor pages, but self-interested pricing
+          claims, not independent research-firm data, so left out of a "real vs. illustrative"
+          breakdown rather than laundered in as if equivalent to the T&amp;T figures above.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
         <div class="kpis">
-          <div class="kpi"><div class="lbl">Electrical / power infra</div><div class="val">~48–54%</div><div class="sub">of total cost, air-cooled baseline</div></div>
-          <div class="kpi"><div class="lbl">Mechanical / cooling</div><div class="val">22–33%</div><div class="sub">air-cooled (22%) to liquid-cooled (33%)</div></div>
           <div class="kpi"><div class="lbl">Liquid-cooled premium</div><div class="val">$4.5–5.2M/MW</div><div class="sub">vs. ~$1.8M/MW air-cooled</div></div>
           <div class="kpi"><div class="lbl">Idle-equipment carrying cost</div><div class="val">$2.8M/mo</div><div class="sub">50MW site, cooling skids awaiting a transformer</div></div>
         </div>
-        <p class="src-note"><span class="badge real">real</span> Sourced to Turner &amp; Townsend's
-          <i>Data Centre Construction Cost Index 2025-2026</i> (electrical/power ~48–54% of total
-          cost for an air-cooled build, mechanical/cooling 22% air-cooled vs. 33% liquid-cooled) and
-          irecruit.co's 2026 cost-per-MW benchmarks (liquid-cooled premium, idle-equipment carrying
-          cost) — not any specific employer's cost data. Correction, 2026-08-26 (deep-research pass):
-          an earlier version cited these percentages to "Archdesk 2026," but a direct fetch of
-          Archdesk's actual 2026 post found different figures (32–38% electrical, ~75% MEP+controls
-          combined) — the split shown here now traces to the Turner &amp; Townsend index instead,
-          the same report already cited for the market $/W benchmarks below. Cost Estimate
-          Classification follows <b>AACE RP 17R-97</b> (Class 5, least-defined, through Class 1,
-          most-defined).</p>
+        <p class="src-note"><span class="badge real">real</span> irecruit.co's 2026 cost-per-MW
+          benchmarks (liquid-cooled premium, idle-equipment carrying cost) — not any specific
+          employer's cost data.</p>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Real market cost benchmarks (US$/W) <span class="badge real">real, 2025–2026</span>
@@ -3207,6 +3240,90 @@
   }
   var netVarianceTrendResult = renderNetVarianceTrend();
 
+  /* ================= COST TAB: full-scope construction cost breakdown (added 2026-08-27,
+     full-scope research pass) -- two independent research agents both confirmed the SAME real,
+     complete, primary-source-verified breakdown (Turner & Townsend Data Centre Construction Cost
+     Index 2025-2026's own cost-trends page, fetched directly): 4 categories that sum to exactly
+     100% of total cost, for BOTH cooling archetypes. This build previously showed only 2 of these
+     4 (Electrical + Mechanical), leaving 13-30% of cost unaccounted for -- a real gap, now closed.
+     Below that level, both research passes independently confirmed no primary source (T&T/JLL/
+     CBRE/Cushman & Wakefield/Uptime Institute) decomposes site civil, structural, envelope, or
+     individual equipment types any further -- every subTrades entry below is this program's own
+     illustrative allocation WITHIN its real parent category, never a second real figure. */
+  var costDriverCategories = [
+    { key:"electrical", name:"Electrical / power infrastructure", pctAir:54, pctLiquid:48,
+      subTrades:[
+        { name:"Switchgear & transformers", pct:35 },
+        { name:"Generators & fuel systems", pct:25 },
+        { name:"UPS systems", pct:25 },
+        { name:"PDUs, busway & distribution", pct:15 }
+      ]},
+    { key:"mechanical", name:"Mechanical / cooling", pctAir:22, pctLiquid:33,
+      subTrades:[
+        { name:"Chillers", pct:35 },
+        { name:"CRAC/CRAH units", pct:30 },
+        { name:"Cooling towers", pct:20 },
+        { name:"Piping, pumps & economizers", pct:15 }
+      ]},
+    { key:"shell", name:"Core/shell & architectural", pctAir:14, pctLiquid:9,
+      subTrades:[
+        { name:"Site work & civil", pct:25 },
+        { name:"Foundations & structural", pct:35 },
+        { name:"Building envelope", pct:25 },
+        { name:"Architectural interior fit-out", pct:15 }
+      ]},
+    { key:"gc", name:"GC/GRs & GC fees (preliminaries)", pctAir:10, pctLiquid:10,
+      subTrades:[
+        { name:"Design & engineering", pct:40 },
+        { name:"GC overhead & profit", pct:35 },
+        { name:"Permits & regulatory", pct:15 },
+        { name:"Commissioning", pct:10 }
+      ]}
+  ];
+  // Pure function: real category % (of total baseline) + illustrative sub-trade % (of the
+  // category's own dollars) in, real+illustrative dollar amounts out. Two independent multiplies,
+  // not one figure derived from the other by division -- keeps each level independently checkable.
+  function computeCostBreakdown(baseline, categories){
+    return categories.map(function(cat){
+      var catDollar = baseline * cat.pctAir / 100;
+      return {
+        key: cat.key, name: cat.name, pctAir: cat.pctAir, pctLiquid: cat.pctLiquid, dollar: catDollar,
+        subTrades: cat.subTrades.map(function(st){
+          return { name: st.name, pct: st.pct, dollar: catDollar * st.pct / 100 };
+        })
+      };
+    });
+  }
+  function renderCostDriverFullKpis(){
+    var el = document.getElementById("costDriverFullKpis");
+    if (!el) return null;
+    var rows = computeCostBreakdown(bridgeResult.baseline, costDriverCategories);
+    el.innerHTML = rows.map(function(r){
+      var liquidNote = r.pctLiquid !== r.pctAir ? (r.pctLiquid + "% liquid-cooled") : "same, liquid-cooled";
+      return "<div class='kpi'><div class='lbl'>" + r.name + "</div><div class='val'>" + r.pctAir + "%</div>" +
+        "<div class='sub'>" + fmt(r.dollar) + " · " + liquidNote + "</div></div>";
+    }).join("");
+    return rows;
+  }
+  var costDriverFullResult = renderCostDriverFullKpis();
+  function renderCostBreakdownTable(){
+    var el = document.getElementById("costBreakdownTable");
+    if (!el) return null;
+    var rows = costDriverFullResult || computeCostBreakdown(bridgeResult.baseline, costDriverCategories);
+    el.innerHTML = "<thead><tr><th scope='col'>Category / sub-trade</th><th scope='col'>% </th><th scope='col'>Illustrative amount (this program)</th></tr></thead><tbody>" +
+      rows.map(function(r){
+        var headerRow = "<tr><td><b>" + r.name + "</b> <span class='badge real'>real</span></td>" +
+          "<td class='tabular'><b>" + r.pctAir + "%</b></td><td class='tabular'><b>" + fmt(r.dollar) + "</b></td></tr>";
+        var subRows = r.subTrades.map(function(st){
+          return "<tr><td style='padding-left:22px'>" + st.name + " <span class='badge illustrative'>illustrative</span></td>" +
+            "<td class='tabular'>" + st.pct + "%</td><td class='tabular'>" + fmt(st.dollar) + "</td></tr>";
+        }).join("");
+        return headerRow + subRows;
+      }).join("") + "</tbody>";
+    return rows;
+  }
+  var costBreakdownResult = renderCostBreakdownTable();
+
   // ---- Phase 2, #8: Cost-driver treemap (Cost tab) -- dollar-weighted, not the WBS %-bar's
   // categories re-drawn a second time; reuses the same real control-account BAC amounts. ----
   var TREEMAP_COLORS = ["accent", "accent2", "success", "warning"];
@@ -4246,7 +4363,7 @@
     exp03: "Drawdown Ratio = % Contingency Drawn ÷ % Physical Complete. A ratio above 1.5x (a practitioner heuristic, not a numbered AACE threshold) means contingency is being spent faster than the work that's supposed to justify spending it — the earlier this fires in a project's life, the more useful the warning.",
     exp04: "Runs 2,000 simulated draws from a triangular distribution (optimistic/most-likely/pessimistic) per AACE RP 57R-09, producing P50/P80/P90 completion-cost percentiles instead of one point estimate. P80, not P50, is common industry convention for pricing contingency — a P50-priced reserve is, by definition, expected to run out roughly half the time — though RP 57R-09 itself treats P80 as a reference point, not a mandated threshold (corrected 2026-08-26, deep-research pass).",
     exp05: "Expected Value = Probability × Impact per risk (AACE RP 62R-11 qualitative risk-assessment framework), summed for total exposure. Ranks risks for mitigation priority before they're priced into contingency — a high-probability, low-impact risk can rank above a low-probability catastrophic one.",
-    exp0708: "Real published 2026 industry splits (Turner & Townsend Data Centre Construction Cost Index 2025-2026): electrical/power ~48–54% of total cost for an air-cooled build; mechanical/cooling 22% air-cooled vs. 33% liquid-cooled. Cost Estimate Classification follows AACE RP 17R-97 (Class 5 = least-defined/conceptual, through Class 1 = most-defined/as-built) — knowing which class an estimate sits at tells you how much variance is actually normal.",
+    exp0708: "Real published 2026 industry splits (Turner & Townsend Data Centre Construction Cost Index 2025-2026), now the FULL 4-category breakdown rather than 2 of 4: electrical/power 54% (air-cooled) / 48% (liquid-cooled); mechanical/cooling 22% / 33%; core/shell & architectural 14% / 9%; GC/GRs & GC fees 10% / 10% — verified 2026-08-27 to sum to exactly 100% for both archetypes by fetching the report's own cost-trends page directly. Cost Estimate Classification follows AACE RP 17R-97 (Class 5 = least-defined/conceptual, through Class 1 = most-defined/as-built) — knowing which class an estimate sits at tells you how much variance is actually normal.",
     exp09: "Real US$/W benchmarks from Turner & Townsend's Data Centre Construction Cost Index 2025-2026 (9th year, 52 markets). A site pricing meaningfully above its market's benchmark is either paying a real premium (liquid cooling, site conditions) or has an estimating problem — the benchmark is what tells you which.",
     exp10: "Percent of baseline allocated per WBS category (GCs & Trades, Long Lead Equipment, Design & Engineering, Site & Utilities). A category consuming a disproportionate share relative to its historical norm is usually the first place to look when a program starts drifting.",
     exp1112: "Per account: EV (Earned Value) = BAC × % Complete; AC (Actual Cost) = EV × an actual/earned ratio; CPI = EV/AC (SAE/ANSI EIA-748-E EVMS formulation, the 2026 edition superseding EIA-748-D). Corrected 2026-08-26 (deep-research pass): the real, cited industry trouble threshold is CPI <0.90 (DOD contract-tracking research: a cumulative CPI below 0.90 by ~20% completion 'almost never recovers'), with 0.90-0.94 a real amber watch band and ≥0.95 healthy — not a bare <1.0 cutoff. CV = EV − AC (negative means overrun). Drills the program-level variance down to which specific account is actually driving it.",
@@ -4277,7 +4394,8 @@
     expRevenueYield: "Revenue per MW = Annual Revenue ÷ Contracted MW — the real, named capacity-economics metric data-center investors actually track (S&P Global Visible Alpha / Chronograph). Adjusted EBITDA Margin = (Revenue − Direct Costs) ÷ Revenue, sized here to land inside Equinix's real 50–57% range (Q2 2026 earnings, July 29, 2026: 53% company-wide, up from 50% a year prior; 51%/54%/57% across Americas/EMEA/APAC) — not the single blended 'gross margin per MW' figure sometimes proposed, which no real operator's filings report. Corrected 2026-08-26: this KPI previously called the figure 'gross margin' and cited Digital Realty alongside Equinix; the metric Equinix actually reports is adjusted EBITDA margin, and Digital Realty's own findable real figure (an 11.5% stabilized development yield) is a different metric that doesn't independently corroborate a margin number.",
     expFxExposure: "Unhedged Exposure = Regional Forecast × (1 − Hedge Ratio). Currency, convertibility, and transferability risk is a real, formally named risk category in cross-border infrastructure financing (Global Infrastructure Hub), and the Bank for International Settlements maintains real, active guidance on FX-settlement risk mitigation; cross-currency swaps are the standard real hedge instrument for long-duration foreign-currency infrastructure liabilities. Added 2026-08-27 (global-program-controls research pass): a genuine white-space finding — no AACE/PMI/ISO project-controls standard integrates FX/regulatory-regime risk as a first-class dimension of the cost baseline, despite it being real, documented treasury practice. This program's own per-region hedge ratios are illustrative.",
     expSustainability: "PUE (Power Usage Effectiveness) = Total Facility Energy ÷ IT Equipment Energy; WUE (Water Usage Effectiveness) is its water-consumption analog — both real, standardized Green Grid metrics, not this program's invention. Real industry-average PUE runs 1.54–1.59; Google's own reported 2025 fleet-wide best-in-class is 1.09. The EU Energy Efficiency Directive, Article 12, is a real, binding reporting mandate for any data center at or above 500kW IT power draw, with an annual 15 May reporting deadline — a real compliance date, not a voluntary target. This program's own per-region PUE/WUE readings are illustrative.",
-    expTechMaturity: "A plain evidence-strength grading, not a technology-adoption roadmap: each row states what this build's own 2026-08-27 research pass actually found, separating real, decades-proven methods (progress monitoring, EVM) from real-but-early fields (ML forecasting, AI risk-mining) and from claims that are mostly vendor narrative once checked (construction-phase digital twins). The point is to say plainly which of these a program could actually rely on today."
+    expTechMaturity: "A plain evidence-strength grading, not a technology-adoption roadmap: each row states what this build's own 2026-08-27 research pass actually found, separating real, decades-proven methods (progress monitoring, EVM) from real-but-early fields (ML forecasting, AI risk-mining) and from claims that are mostly vendor narrative once checked (construction-phase digital twins). The point is to say plainly which of these a program could actually rely on today.",
+    expCostBreakdown: "Category $ = program baseline × the real Turner & Townsend category %; sub-trade $ = category $ × an illustrative sub-trade %. Two independent multiplies (not one figure derived from the other), so each level is checkable on its own — a full-scope, full-scale construction cost research pass (2026-08-27) confirmed via two independent research agents that no primary source decomposes site civil, structural, envelope, or individual equipment types (chillers vs. CRAH vs. cooling towers; generators vs. UPS vs. switchgear) any further than T&T's own 4-category split. Every sub-trade row is this program's own illustrative allocation, never presented as a second real figure."
   };
   // Plain-English alternates to every explainer above, toggled by #explainBtn -- same ids, so
   // rendering just picks which object to read from rather than needing a second render path.
@@ -4289,7 +4407,7 @@
     exp03: "Are we spending the safety cushion faster than we're actually getting work done?",
     exp04: "Instead of one guess at the final cost, this runs 2,000 realistic scenarios and shows the likely range.",
     exp05: "Each risk's 'how likely × how bad' score, so the scariest-sounding risk isn't automatically the top priority.",
-    exp0708: "Where the money actually goes (mostly electrical and cooling), and how locked-down this estimate is right now.",
+    exp0708: "Where the money actually goes across ALL 4 real cost categories (not just electrical and cooling), and how locked-down this estimate is right now.",
     exp09: "Are we paying a fair market rate for this site, or paying a premium?",
     exp10: "How the budget splits across major work categories, so an odd split jumps out early.",
     exp1112: "Which specific budget line is actually driving the overall overrun, not just the total number.",
@@ -4320,7 +4438,8 @@
     expRevenueYield: "Once stabilized, how much does this program actually make per megawatt, and at what margin?",
     expFxExposure: "How much of each region's spend is sitting exposed to currency swings we haven't protected against?",
     expSustainability: "How energy- and water-efficient is each region, compared to the real published industry benchmarks?",
-    expTechMaturity: "Of the new cost-forecasting tech out there, what's actually proven versus still mostly a sales pitch?"
+    expTechMaturity: "Of the new cost-forecasting tech out there, what's actually proven versus still mostly a sales pitch?",
+    expCostBreakdown: "Of every dollar this program spends, where does it actually go — down to the individual trade, not just 'mostly electrical and cooling'?"
   };
   var explainMode = "technical";
   (function(){
@@ -4610,6 +4729,8 @@
     { source:"AACE RP 17R-97", citedFor:"Cost estimate classification (Class 5-1)", year:1997 },
     { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Market $/W benchmarks, escalation rate/outlook", year:2026 },
     { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Data-center cost-driver split (electrical/mechanical %, air-cooled vs. liquid-cooled) -- corrected 2026-08-26 from a misattributed \"Archdesk\" citation", year:2026 },
+    { source:"Turner & Townsend Data Centre Construction Cost Index (cost-trends page, direct fetch)", citedFor:"the FULL 4-category cost-driver split (Electrical/Mechanical/Core-shell+architectural/GC-GRs+fees) summing to exactly 100% for both cooling archetypes -- previously only 2 of 4 categories were shown, added 2026-08-27 (full-scope research pass, independently confirmed by 2 research agents)", year:2026 },
+    { source:"axis-intelligence.com", citedFor:"an \"18-25% shell/civil/soft-cost\" figure circulating across SEO/aggregator sites, checked and explicitly NOT used -- the original research pass traced it to this site's own self-described derived calculation rather than a Turner & Townsend/Cushman & Wakefield quote; a second review pass could not re-locate that exact admission, so this attribution is the first pass's own finding, not independently re-confirmed (added 2026-08-27)", year:null },
     { source:"Turner & Townsend Data Centre Construction Cost Index", citedFor:"Multi-region $/W cost differentials (NA/EMEA/APAC; no LatAm figure found), added 2026-08-26", year:2026 },
     { source:"irecruit.co", citedFor:"Liquid-cooled vs. air-cooled $/MW, idle-equipment carrying cost", year:2026 },
     { source:"Equinix (Q2 2026 earnings, July 29, 2026)", citedFor:"Adjusted EBITDA margin range (50-57%) -- corrected 2026-08-26 from a mislabeled 'gross margin' claim previously also citing Digital Realty", year:2026 },
@@ -4820,6 +4941,8 @@
     renderCvTornado();
     sensitivityResult = renderSensitivityTornado();
     netVarianceTrendResult = renderNetVarianceTrend();
+    costDriverFullResult = renderCostDriverFullKpis();
+    costBreakdownResult = renderCostBreakdownTable();
     treemapResult = renderCostDriverTreemap();
     emvTwoBarResult = renderEmvTwoBar();
     consultantScatterResult = renderConsultantScatter();
@@ -4978,6 +5101,16 @@
         var ok = Math.abs(expected - row.unhedged) < 1e-6;
         return [ok, fmt(row.unhedged)];
       }},
+    { n:"Full-scope cost breakdown: the 4 real category %'s sum to exactly 100 for both cooling archetypes, raw literals", run:function(){
+        // Raw-literal recompute (reads the cited 54/22/14/10 and 48/33/9/10 literals directly, not
+        // a second call to computeCostBreakdown()) -- same tautology class every entry above avoids.
+        // This is the actual internal-consistency check that made this pass trust Turner & Townsend's
+        // split enough to show it as the FULL breakdown (previously only 2 of 4 categories were shown).
+        var airSum = 54 + 22 + 14 + 10;
+        var liquidSum = 48 + 33 + 9 + 10;
+        var ok = airSum === 100 && liquidSum === 100;
+        return [ok, airSum + "% / " + liquidSum + "%"];
+      }},
     { n:"Revenue/MW and adj. EBITDA margin recompute from raw revenue/cost literals, land inside Equinix's real cited 50-57% range", run:function(){
         var expectedRevPerMW = 180000000 / 50;
         var expectedMarginPct = ((180000000 - 85000000) / 180000000) * 100;
@@ -5079,6 +5212,10 @@
     // Phase 2 director-grade visuals
     netVarianceTrendResult: netVarianceTrendResult,
     treemapResult: treemapResult,
+    costDriverCategories: costDriverCategories,
+    computeCostBreakdown: computeCostBreakdown,
+    costDriverFullResult: costDriverFullResult,
+    costBreakdownResult: costBreakdownResult,
     marketBenchmarkResult: marketBenchmarkResult,
     computeCumulativeCurve: computeCumulativeCurve,
     lastMCHistogram: lastMCHistogram,
