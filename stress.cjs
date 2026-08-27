@@ -534,6 +534,15 @@ check(indexHtml.includes('<label for="regionAdjust" style="font-size:12.5px">Exp
 check(indexHtml.includes('<label for="rampDelaySlider" style="font-size:12.5px">Explore an additional ramp delay</label>'),
   "the ramp-delay slider's label no longer carries a fixed width/nowrap either, same simplification");
 
+console.log("--- /stress-test pass (2026-08-27): full-scope cost breakdown findings ---");
+check(indexHtml.includes('id="costBreakdownTable"'), "the full-scope cost breakdown table container exists in the HTML");
+check(/Not meant to reconcile row-for-row against the real "Full scope cost/.test(indexHtml),
+  "the WBS Cost Allocation section explicitly disambiguates itself from the new trade breakdown (2 independent reviewers each flagged the un-clarified juxtaposition as a real reader-confusion risk)");
+check(indexHtml.includes('term:"Full Scope Cost Breakdown"'),
+  "the Full Scope Cost Breakdown has a real glossary entry -- previously unreachable via Cmd+K search (same defect class the Technology Maturity Ledger was fixed for, repeated here)");
+check(indexHtml.includes("costDriverCategories.reduce(function(s, c){ return s + c.pctAir; }, 0);"),
+  "the GUARDS entry for the full-scope breakdown sums the LIVE costDriverCategories array, not hardcoded literals disconnected from live state (the original version would have stayed green even if the live array were broken)");
+
 console.log("");
 if (failures > 0) {
   console.error(failures + " stress check(s) FAILED");

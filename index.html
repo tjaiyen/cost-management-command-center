@@ -916,6 +916,15 @@
         <p class="src-note"><span class="badge illustrative">illustrative</span> Shaped around a
           real GC/subcontractor bid-package composition and design/engineering cost-partnership
           experience — not any real capital program's actual cost data.</p>
+        <p class="src-note">Not meant to reconcile row-for-row against the real "Full scope cost
+          breakdown, by trade" table above (/stress-test finding, 2026-08-27 — two independent
+          reviewers each flagged this as a real, unaddressed confusion risk): this WBS view slices
+          the same total budget by <b>contract-package type</b> (who's actually billing for it — a
+          GC/subcontractor package vs. long-lead equipment vs. design fees), while the trade
+          breakdown above slices it by <b>cost-driver category</b> (what it actually is — electrical
+          vs. mechanical vs. shell). A single electrical subcontractor's invoice, for instance,
+          shows up inside "GCs &amp; Trades" here and inside "Electrical" there — two different,
+          equally valid ways to cut the same dollars, not two contradictory totals.</p>
       </div>
     </section>
 
@@ -3310,12 +3319,16 @@
     var el = document.getElementById("costBreakdownTable");
     if (!el) return null;
     var rows = costDriverFullResult || computeCostBreakdown(bridgeResult.baseline, costDriverCategories);
-    el.innerHTML = "<thead><tr><th scope='col'>Category / sub-trade</th><th scope='col'>% </th><th scope='col'>Illustrative amount (this program)</th></tr></thead><tbody>" +
+    el.innerHTML = "<thead><tr><th scope='col'>Category / sub-trade</th><th scope='col'>%</th><th scope='col'>Illustrative amount (this program)</th></tr></thead><tbody>" +
       rows.map(function(r){
         var headerRow = "<tr><td><b>" + r.name + "</b> <span class='badge real'>real</span></td>" +
           "<td class='tabular'><b>" + r.pctAir + "%</b></td><td class='tabular'><b>" + fmt(r.dollar) + "</b></td></tr>";
+        // /stress-test finding (2026-08-27): the category/sub-trade parent-child relationship was
+        // conveyed only via visual indentation (padding-left) -- invisible to a screen reader, which
+        // gets a flat list of rows with no signal that these 4 belong under the category above them.
+        // aria-label makes it explicit without any new CSS utility class for a single, one-off table.
         var subRows = r.subTrades.map(function(st){
-          return "<tr><td style='padding-left:22px'>" + st.name + " <span class='badge illustrative'>illustrative</span></td>" +
+          return "<tr><td style='padding-left:22px' aria-label='" + st.name + ", a sub-trade of " + r.name + "'>" + st.name + " <span class='badge illustrative'>illustrative</span></td>" +
             "<td class='tabular'>" + st.pct + "%</td><td class='tabular'>" + fmt(st.dollar) + "</td></tr>";
         }).join("");
         return headerRow + subRows;
@@ -4341,6 +4354,7 @@
     { term:"The Green Grid", def:"The real industry consortium that originally defined PUE (2007, White Paper #49), WUE (White Paper #35), and CUE (White Paper #32) — the standard data-center efficiency/sustainability metrics grounding this build's Sustainability &amp; Compliance section, added 2026-08-27." },
     { term:"EU Energy Efficiency Directive, Article 12", def:"Real, binding EU regulation (plus Commission Delegated Regulation (EU) 2024/1364): any data center with ≥500kW installed IT power must publicly report PUE, WUE, Energy Reuse Factor, and Renewable Energy Factor annually via a standard template, due every 15 May. The actual near-term compliance driver for an EU-sited facility this size — more specific and binding than CSRD. Added 2026-08-27." },
     { term:"Technology Maturity Ledger", def:"This build's own honest evidence-strength grading (Data Strategy tab) of 5 cost/schedule-forecasting technologies surveyed in the 2026-08-27 research pass — CV-based progress monitoring and EVM graded Mature (decades of real, standardized use), ML forecasting and AI/NLP risk-mining graded real-but-early, and construction-phase digital twins graded mostly vendor-narrative once checked. Added so a ⌘K search for 'technology maturity' or similar actually surfaces it, not just its parent tab." },
+    { term:"Full Scope Cost Breakdown", def:"This build's own detailed, by-trade construction cost breakdown (Cost tab) — Turner & Townsend's real 4-category split (Electrical, Mechanical, Core/shell & architectural, GC/GRs & fees) each with an illustrative sub-trade allocation beneath it (switchgear, generators, chillers, site civil, and the like), added 2026-08-27 (full-scope research pass). Added so a ⌘K search for 'cost breakdown', 'switchgear', 'site civil', or similar actually surfaces it — the same discoverability gap the Technology Maturity Ledger above was fixed for, repeated here and fixed the same way." },
     { term:"Bain &amp; Company, \"Beyond the Stage Gate\"", def:"Real, published Bain &amp; Company research (via IPA) concluding most capital-project value erosion happens before final investment decision, not after — the specific >17,000-project/~22%-NPV-erosion figures often cited for it could not be independently re-located this pass and are stated as reported, not independently re-verified. Cited evidence for why Gate 4 here is genuinely computed, not a status someone sets to \"pending.\" Added 2026-08-27." },
     { term:"Flyvbjerg, JAPA 2002", def:"Bent Flyvbjerg's core peer-reviewed paper (\"Underestimating Costs in Public Works Projects: Error or Lie?\", Journal of the American Planning Association) examined 258 real transportation projects worth $90B and found systematic cost underestimation best explained by strategic misrepresentation, not honest error — real evidence for why an independently-computed gate matters more than a bigger spreadsheet. Added 2026-08-27." }
   ];
@@ -5101,13 +5115,15 @@
         var ok = Math.abs(expected - row.unhedged) < 1e-6;
         return [ok, fmt(row.unhedged)];
       }},
-    { n:"Full-scope cost breakdown: the 4 real category %'s sum to exactly 100 for both cooling archetypes, raw literals", run:function(){
-        // Raw-literal recompute (reads the cited 54/22/14/10 and 48/33/9/10 literals directly, not
-        // a second call to computeCostBreakdown()) -- same tautology class every entry above avoids.
-        // This is the actual internal-consistency check that made this pass trust Turner & Townsend's
-        // split enough to show it as the FULL breakdown (previously only 2 of 4 categories were shown).
-        var airSum = 54 + 22 + 14 + 10;
-        var liquidSum = 48 + 33 + 9 + 10;
+    { n:"Full-scope cost breakdown: the LIVE 4 real category %'s sum to exactly 100 for both cooling archetypes", run:function(){
+        // /stress-test finding (2026-08-27): the original version of this check summed hardcoded
+        // literals (54+22+14+10) instead of reading costDriverCategories -- it would have stayed
+        // green even if the live array were broken, the exact thing a "Live Integrity Gate" exists
+        // to catch. Fixed to sum the LIVE array's own pctAir/pctLiquid fields -- not a second call
+        // to computeCostBreakdown() (a different function, dollar math not percentage summation),
+        // so this still avoids the tautology class every entry in this array is meant to avoid.
+        var airSum = costDriverCategories.reduce(function(s, c){ return s + c.pctAir; }, 0);
+        var liquidSum = costDriverCategories.reduce(function(s, c){ return s + c.pctLiquid; }, 0);
         var ok = airSum === 100 && liquidSum === 100;
         return [ok, airSum + "% / " + liquidSum + "%"];
       }},

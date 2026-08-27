@@ -1004,3 +1004,28 @@ largely-invented liquid-cooled dollar column.
 
 index.html 5,166 → 5,303 (+137), verify.cjs 2,052 → 2,099 (+47), stress.cjs unchanged at 544 (one
 in-place count edit, GUARDS 19 → 20). Both suites green.
+
+**`/stress-test` pass on the above, 2026-08-27** — self-review plus an independent fresh-context
+reviewer found and fixed 4 real issues, all falsification-tested:
+
+- **A real Live Integrity Gate defect (HIGH)** — the GUARDS entry added for this feature recomputed
+  hardcoded literals (`54+22+14+10`) instead of reading the live `costDriverCategories` array. Empirically
+  probed: broke a live category %, confirmed this repo's own `verify.cjs` test (which reads live
+  state) correctly failed while the GUARDS entry stayed green — exactly the false assurance a "Live
+  Integrity Gate" exists to prevent. Fixed to sum the live array; re-probed, now correctly fails.
+- **The same discoverability gap, repeated (HIGH, caught independently by both this pass and a
+  fresh-context reviewer)** — the new feature had no glossary entry, making it unreachable via ⌘K
+  despite the page's own "searches every tab, KPI, and glossary term" claim — the exact defect class
+  the Technology Maturity Ledger was already fixed for in an earlier pass. Added a glossary entry.
+- **An unaddressed reader-confusion risk (MED, independently flagged by both this pass and the fresh
+  reviewer)** — the existing "WBS Cost Allocation" section (GCs & Trades 52%, illustrative) sits
+  directly below the new real breakdown (Electrical 54%) with nothing explaining they're different
+  categorization lenses (contract-package type vs. cost-driver category) on the same total budget,
+  not two totals that should reconcile. Added an explicit disambiguating note.
+- **Category/sub-trade relationship conveyed only visually (MED)** — indentation alone doesn't reach
+  a screen reader. Added an `aria-label` naming the parent category on all 16 sub-trade rows.
+
+Also fixed: a stray trailing space in the `%` column header (LOW).
+
+index.html 5,303 → 5,319 (+16), verify.cjs 2,099 → 2,124 (+25), stress.cjs 544 → 553 (+9). Both
+suites green.

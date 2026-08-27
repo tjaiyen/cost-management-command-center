@@ -613,6 +613,11 @@ const realBadgeCount = (costBreakdownHtml.match(/badge real/g) || []).length;
 const illustrativeBadgeCount = (costBreakdownHtml.match(/badge illustrative/g) || []).length;
 assertEqual(realBadgeCount, 4, "the rendered table shows exactly 4 real category header rows");
 assertEqual(illustrativeBadgeCount, 16, "the rendered table shows exactly 16 illustrative sub-trade rows (4 categories x 4 sub-trades)");
+// /stress-test finding (2026-08-27, independently caught by a fresh-context reviewer): the
+// category/sub-trade parent-child relationship was conveyed only via visual indentation, invisible
+// to a screen reader. Every sub-trade row now carries an aria-label naming its parent category.
+const subTradeAriaLabelCount = (costBreakdownHtml.match(/aria-label='[^']+, a sub-trade of [^']+'/g) || []).length;
+assertEqual(subTradeAriaLabelCount, 16, "all 16 sub-trade rows carry an aria-label naming their parent category, not just a visual indent a screen reader can't perceive");
 
 console.log("--- Phase 2 director-grade visuals: Cost-driver treemap ---");
 assertEqual(state.treemapResult.total, state.bridge.baseline, "treemap's total BAC reconciles to the real budget-bridge baseline (same reconciliation GUARDS already checks)");
@@ -1151,6 +1156,20 @@ if (currencySelectEl) {
   currencySelectEl.fire("change");
 }
 
+// /stress-test finding (2026-08-27): the currency-toggle probe above only checked the TABLE
+// (#costBreakdownTable) -- the KPI tile row above it (#costDriverFullKpis) is a SEPARATE render
+// call, wired into the same handler but never actually probed on its own. Checking it directly
+// rather than assuming symmetry with the table.
+if (currencySelectEl) {
+  currencySelectEl.value = "GBP";
+  currencySelectEl.fire("change");
+  const costDriverKpisHtmlGbp = elementsById["costDriverFullKpis"] ? elementsById["costDriverFullKpis"].innerHTML : "";
+  const costDriverKpisConvertedToGbp = costDriverKpisHtmlGbp.indexOf("£") !== -1 && costDriverKpisHtmlGbp.indexOf("$") === -1;
+  assertStrEqual(costDriverKpisConvertedToGbp, true, "the full-scope cost breakdown KPI tiles (a separate render call from the table) also convert to GBP when the currency toggle fires");
+  currencySelectEl.value = "USD";
+  currencySelectEl.fire("change");
+}
+
 console.log("--- Stress-test fix: actually FIRE a click on one of the 4 tabs added in Phases 2-3 ---");
 // A prior version of this suite's own .tabbtn stub list was stale at 7 tabs (missing exec,
 // framework, actions, triage), and per-element addEventListener was a no-op -- so activateTab()
@@ -1612,6 +1631,12 @@ console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM o
   // claim -- fixed by giving it a real glossary entry. Fresh query, not a stale prior claim.
   const techMaturityResults = state.paletteSearch("technology maturity", state.paletteIndex);
   assertStrEqual(techMaturityResults.some((r) => r.label.toLowerCase().indexOf("technology maturity") !== -1), true, "searching 'technology maturity' now finds the Technology Maturity Ledger (previously zero results for any variant of this query)");
+  // /stress-test finding (2026-08-27): the SAME discoverability gap, repeated on the new full-scope
+  // cost breakdown feature -- it has no kpiCatalog row (deliberate, same static-reference-content
+  // precedent as above) but ALSO had no glossary entry, same mistake as the Tech Maturity Ledger
+  // before its own fix (pre-registered and confirmed zero results before the fix below landed).
+  const costBreakdownSearchResults = state.paletteSearch("full scope cost breakdown", state.paletteIndex);
+  assertStrEqual(costBreakdownSearchResults.some((r) => r.label.toLowerCase().indexOf("full scope cost breakdown") !== -1), true, "searching 'full scope cost breakdown' now finds it (previously zero results, same fix pattern as the Tech Maturity Ledger)");
 
   const paletteBtnEl = elementsById["paletteBtn"];
   const paletteInputEl = elementsById["paletteInput"];
