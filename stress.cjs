@@ -381,6 +381,13 @@ const tabHistorySyncMatch = indexHtml.match(/function tabHistorySync\(name, push
 check(!!tabHistorySyncMatch && tabHistorySyncMatch[1].includes('typeof history === "undefined"'), "tabHistorySync() guards on typeof history before touching it, not a bare reference");
 const tabFromHashMatch = indexHtml.match(/function tabFromLocationHash\(\)\{([\s\S]*?)\n  \}/);
 check(!!tabFromHashMatch && tabFromHashMatch[1].includes('typeof location === "undefined"'), "tabFromLocationHash() guards on typeof location before touching it, not a bare reference");
+// verify.cjs can only reach the region what-if slider's reset behavior via the ranked-bar click
+// path (the region-tabs buttons are created with document.createElement(), which this repo's own
+// DOM stub can't register by id for a real click test) -- a structural guard closes that gap for
+// the OTHER path, since both must reset the slider on a region switch, not just one.
+const regionBtnHandlerMatch = indexHtml.match(/activeRegion = r\.code;\n([\s\S]*?)\n {6}\}\);/);
+check(!!regionBtnHandlerMatch && regionBtnHandlerMatch[1].includes("resetRegionAdjust()") && regionBtnHandlerMatch[1].includes('persistSet("cmcc-region"'),
+  "the region-tab button's click handler also calls resetRegionAdjust() AND persists the switch, not just the ranked-bar's onClick path (verify.cjs can only exercise the latter directly)");
 
 console.log("");
 if (failures > 0) {

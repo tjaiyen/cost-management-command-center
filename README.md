@@ -196,8 +196,8 @@ legible, marked `illustrative` throughout.
    (added with the interconnection tracker, from a 20-item real industry/company research pass)
    the $ exposure re-derivation against the real cited 30–37% range and both the at-risk and
    cleared schedule-verdict branches.
-   **297 assertions, all passing**
-   (`node verify.cjs | grep -c "^pass:"` → 297) as of the last run. Exists because this repo was
+   **317 assertions, all passing**
+   (`node verify.cjs | grep -c "^pass:"` → 317) as of the last run. Exists because this repo was
    built in a sandboxed environment that could not get a live browser render (a domain-allowlist
    guard blocks it, deliberately) — a Node-based tie-out doesn't need one.
 2. **`node stress.cjs`** — a distinct adversarial sweep, not a renamed copy of verify.cjs: no
@@ -239,8 +239,8 @@ legible, marked `illustrative` throughout.
    Also (added with the interconnection tracker) that its render targets, explainer, and
    currency-toggle re-render all actually exist, and that the LLE section's upgraded generator
    citation states the real range rather than a bare claim.
-   **150 checks, all passing**
-   (`node stress.cjs | grep -c "^pass:"` → 150) as of the last
+   **151 checks, all passing**
+   (`node stress.cjs | grep -c "^pass:"` → 151) as of the last
    run. Scoped honestly to this build's actual surface area — explicitly **not** an attempt to
    match [project-controls-command-center](https://tjaiyen.github.io/project-controls-command-center/)'s
    own `stress.cjs` at its literal 2,974-assertion scale (accumulated over a much larger build).
@@ -403,6 +403,52 @@ self-review after the first pass looked complete: the factoid toast fired immedi
 page load, competing with the "New here? Take the tour" card already on Overview -- suppressed for
 that one initial call only, with its own falsification-tested regression guard. verify.cjs
 243 → 297 (+54), stress.cjs 132 → 150 (+18), both green.
+
+A `/stress-test` pass 2026-08-26 (this session's own review + an independent fresh-context
+reviewer) on the UX/nav commit specifically found and fixed 16 real gaps, none of them silent:
+
+- **A false claim, caught by the independent reviewer**: the commit message and this README
+  claimed "active region" as persisted alongside tab/currency/explain-mode -- it never actually
+  was (no `localStorage` call existed for it at all). Fixed by actually implementing the
+  persistence, not by walking back the claim.
+- **The `verify.cjs` `localStorage` stub was a complete no-op** (`getItem` always returned `null`),
+  so this build's headline "full session persistence" claim had never been exercised by its own
+  test suite for a single one of its 7 keys. Replaced with a real backing store shared across two
+  separate `vm.runInContext()` runs, proving an actual simulated reload restores every key.
+- **The "Did you know?" toast suppressed itself too broadly**: cold-load suppression applied to
+  *whichever* tab a returning session restored to, not just Overview (the only tab it was meant to
+  protect, since only Overview carries the competing "Take the tour" card) -- a user whose habitual
+  landing tab was, say, Cost would never see Cost's own factoid, ever. Scoped the suppression to
+  Overview specifically.
+- **Command palette accessibility gaps**: missing the ARIA combobox pattern entirely
+  (`role="combobox"`, `aria-controls`, `aria-activedescendant`) -- a screen-reader user arrowing
+  through results got zero announcement of which one was highlighted, the visual-only highlight
+  being invisible to them. Fixed, and the highlight-update function was also switched off
+  `querySelectorAll()` (untestable in this repo's own DOM stub) onto the same `getElementById()`
+  pattern already used everywhere else on this page.
+- **Inconsistent click-target-vs-keyboard-target mapping** across the 4 newly-wired drill-downs:
+  the region ranked bar accepted a click anywhere on its row, but the CV tornado, sensitivity
+  tornado, and LPF bar only accepted a click on the narrow bar itself -- the same "click any bar
+  for its detail" instruction meant a different mouse hit-area depending on which visualization you
+  were on. Standardized all 4 to row-click + bar-keydown.
+- **The visited-tab dot was genuinely invisible to screen readers** (`aria-hidden="true"`, no text
+  alternative anywhere) and, despite its own code comment claiming "a small filled/hollow
+  indicator," was never actually hollow -- both states were identically filled circles differing
+  only by color. Added a real `aria-label` and made the unvisited state a genuine hollow ring.
+- **Activating the command palette while the guided Tour was active** left the Tour's own step
+  counter stale against wherever the palette jumped to. Now ends the Tour on a palette jump.
+- **Opening the keyboard-shortcuts overlay and the command palette in either order** could leave
+  both open simultaneously. Each now closes the other first.
+- **The palette had no focus-return-on-close**, and its `kpiExplainersSimple`-vs-`kpiExplainers` key
+  correspondence test only compared counts, not the actual key sets -- both fixed, along with
+  closing an accepted limitation (the browser Back/Forward *reception* mechanism had literally zero
+  test coverage, since `verify.cjs`'s sandboxed `window` had no `addEventListener` of its own) by
+  giving the test sandbox a real one.
+
+Every fix above has its own falsification-tested regression guard (the fix was temporarily
+reverted, confirmed the new test failed, restored, re-confirmed green) -- not just a fresh assertion
+that happened to pass once. verify.cjs 297 → 317 (+20), stress.cjs 150 → 151 (+1, one check's
+regex needed updating for an intentional code change rather than a new check), both green.
 
 ## Design lineage
 

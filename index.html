@@ -326,7 +326,7 @@
   .stoplight-tile .st-val{font:700 18px/1.3 ui-monospace,monospace}
 
   .tornado{margin:14px 0}
-  .tornado-row{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px}
+  .tornado-row{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px; cursor:pointer}
   .tornado-row .tname{width:150px; flex-shrink:0; text-align:right}
   .tornado-row .thalf{flex:1; position:relative; height:18px}
   .tornado-row .tbar{position:absolute; top:0; height:100%; width:0; cursor:pointer; border-radius:3px;
@@ -385,11 +385,15 @@
     :root:not([data-theme="dark"]) .tabbtn[data-cluster="actions"][aria-selected="true"]{color:rgb(91 33 182); border-bottom-color:rgb(91 33 182)}
   }
 
-  /* visited-tab progress dot -- a small filled/hollow indicator appended after the label via
-     ::after so no extra DOM node is needed inside the flex-sensitive tab rail */
-  .tabbtn .visit-dot{display:inline-block; width:5px; height:5px; border-radius:50%; margin-left:6px;
-    background:rgb(var(--c-text-secondary)/0.3); vertical-align:middle}
-  .tabbtn.visited .visit-dot{background:rgb(var(--c-success))}
+  /* visited-tab progress dot -- genuinely hollow (border only, transparent center) when unvisited,
+     filled solid when visited, so the signal is a real shape/fill difference, not color alone (a
+     stress-test finding: an earlier version claimed "filled/hollow" in this very comment but only
+     ever changed background color, leaving both states identically filled circles). The visible
+     dot is still decorative for screen readers (aria-hidden, unaffected by this) -- the actual
+     screen-reader signal is the aria-label markVisited() sets on the button itself. */
+  .tabbtn .visit-dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px;
+    vertical-align:middle; background:transparent; border:1.4px solid rgb(var(--c-text-secondary)/0.45)}
+  .tabbtn.visited .visit-dot{background:rgb(var(--c-success)); border-color:rgb(var(--c-success))}
   .tour-progress{font-size:11px; color:rgb(var(--c-text-secondary)); margin-left:auto; white-space:nowrap}
 
   /* tab-switch entrance animation -- re-triggers naturally because .tabpanel goes from
@@ -1247,7 +1251,7 @@
 
 <div class="palette-overlay" id="paletteOverlay" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="palette-card">
-    <input class="palette-input" id="paletteInput" type="text" placeholder="Jump to a tab, KPI, or glossary term…" aria-label="Search this dashboard" autocomplete="off" />
+    <input class="palette-input" id="paletteInput" type="text" role="combobox" aria-expanded="true" aria-controls="paletteResults" aria-autocomplete="list" placeholder="Jump to a tab, KPI, or glossary term…" aria-label="Search this dashboard" autocomplete="off" />
     <div class="palette-results" id="paletteResults" role="listbox" aria-label="Search results"></div>
     <div class="palette-hint">↑↓ to move · Enter to jump · Esc to close</div>
   </div>
@@ -1394,7 +1398,14 @@
     if (visitedTabs[name]) return;
     visitedTabs[name] = true;
     var btn = tabButtons.filter(function(b){ return b.dataset.tab === name; })[0];
-    if (btn) btn.classList.add("visited");
+    if (btn) {
+      btn.classList.add("visited");
+      // The dot itself is aria-hidden (purely decorative for sighted users) -- without this, a
+      // screen-reader user gets NO signal at all that a tab has been visited, not even a weak one,
+      // since the color-only dot is invisible to them entirely (stress-test finding, 2026-08-26).
+      var info = TAB_INFO[name];
+      if (info) btn.setAttribute("aria-label", info.label + " (visited)");
+    }
     renderTourProgress();
     persistSet("cmcc-visited", Object.keys(visitedTabs).join(","));
   }
@@ -1435,7 +1446,7 @@
     contingency: "A risk doesn't have to be the biggest dollar figure to deserve the most attention — a high-probability, low-impact risk can outrank a rare catastrophic one on expected value.",
     governance: "AACE RP 108R-19 treats a stale field-vs-ERP sync as a real accounting-alignment problem — past its threshold, this month's numbers are provably stale, not just possibly stale.",
     portfolio: "Try the escalation-swing slider under a region's detail panel below — it's non-destructive and resets the moment you switch regions.",
-    framework: "Gate 4 here is genuinely computed from reserve ÷ risk exposure, not a status bar someone set to \"pending\" by policy.",
+    framework: "Gate 4 here is genuinely computed from remaining reserve (reserve minus drawn) ÷ total risk exposure, not a status bar someone set to \"pending\" by policy.",
     actions: "A closed action item never counts toward staleness, no matter how old it is — only open items age against the threshold.",
     triage: "This tab re-checks the same alert functions already computed on other tabs — a digest, not a second implementation that could quietly drift from the original.",
     data: "The DuckDB parity layer here is a free, local second proof layer — the same budget-bridge total, independently computed in SQL instead of JavaScript.",
@@ -1496,10 +1507,17 @@
   // TAB_FACTOIDS while it's still undefined. Invoked once, at the very end of this script, after
   // every var it (transitively) touches is assigned -- see the closing call near __CMCC_STATE__.
   function restoreInitialTab(){
+    // suppressFactoid is scoped to "the restored tab happens to be Overview" -- NOT "this is a
+    // cold load," full stop. The original rationale (don't compete with the "Take the tour" card)
+    // only applies to Overview specifically; a returning user whose last tab was, say, Cost would
+    // otherwise never see Cost's own factoid at all, since every subsequent cold load keeps
+    // landing back on Cost and re-suppressing it (stress-test finding, 2026-08-26 -- confirmed by
+    // simulating 5 consecutive cold loads with a real persisted "cmcc-lasttab": the factoid never
+    // fired once).
     var fromHash = tabFromLocationHash();
-    if (fromHash && tabButtons.some(function(b){ return b.dataset.tab === fromHash; })) { activateTab(fromHash, false, true); return; }
+    if (fromHash && tabButtons.some(function(b){ return b.dataset.tab === fromHash; })) { activateTab(fromHash, false, fromHash === "overview"); return; }
     var lastTab = readPersisted("cmcc-lasttab");
-    if (lastTab && tabButtons.some(function(b){ return b.dataset.tab === lastTab; })) { activateTab(lastTab, false, true); return; }
+    if (lastTab && tabButtons.some(function(b){ return b.dataset.tab === lastTab; })) { activateTab(lastTab, false, lastTab === "overview"); return; }
     activateTab("overview", false, true);
   }
 
@@ -1513,7 +1531,14 @@
 
   /* ---------- global 1-9 tab-jump + "?" keyboard-shortcuts overlay ---------- */
   var shortcutsOverlay = document.getElementById("shortcutsOverlay");
-  function openShortcuts(){ shortcutsOverlay.hidden = false; }
+  // Closes the palette first if it's open -- otherwise pressing "?" (or clicking the Shortcuts
+  // button) while the palette is open leaves BOTH modal-style overlays open simultaneously
+  // (stress-test finding, 2026-08-26; the reverse direction was already safe since typing "?"
+  // inside the palette's own input is gated by the existing `!typing` check elsewhere).
+  function openShortcuts(){
+    if (typeof paletteOpen === "function" && paletteOpen() && typeof closePalette === "function") closePalette();
+    shortcutsOverlay.hidden = false;
+  }
   function closeShortcuts(){ shortcutsOverlay.hidden = true; }
   function shortcutsOpen(){ return !shortcutsOverlay.hidden; }
   var shortcutsBtn = document.getElementById("shortcutsBtn");
@@ -2364,7 +2389,7 @@
     var maxAbs = Math.max.apply(null, ranked.map(function(a){ return Math.abs(a.cv); })) || 1;
     el.innerHTML = ranked.map(function(a, i){
       var overBudget = a.cv < 0;
-      return '<div class="tornado-row"><div class="tname">' + a.name + '</div>' +
+      return '<div class="tornado-row" id="cvRow' + i + '"><div class="tname">' + a.name + '</div>' +
         '<div class="thalf"><div class="tbar ' + (overBudget ? "neg" : "pos") + '" id="cvBar' + i + '" tabindex="0" ' +
         'title="' + a.name + ': CV ' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '"></div></div>' +
         '<div class="tval">' + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + '</div></div>';
@@ -2375,15 +2400,19 @@
         if (bar) bar.style.width = (Math.abs(a.cv) / maxAbs * 100) + "%";
       });
     });
+    // Click binds to the WIDE row (label+bar+value), keydown to the narrow focusable bar --
+    // matching the shared renderRankedBar()'s own pattern, for a consistent mouse hit-area across
+    // every drill-down on this page (stress-test finding, 2026-08-26: this and the sensitivity/LPF
+    // visualizations below previously only accepted a click on the narrow bar itself).
     ranked.forEach(function(a, i){
+      var row = document.getElementById("cvRow" + i);
       var bar = document.getElementById("cvBar" + i);
-      if (!bar) return;
       var show = function(){
         var d = document.getElementById("cvTornadoDetail");
         if (d) d.innerHTML = "<b>" + a.name + "</b> — CV " + (a.cv >= 0 ? "+" : "") + fmt(a.cv) + " (CPI " + a.cpi.toFixed(2) + "), BAC " + fmt(a.bac) + ".";
       };
-      bar.addEventListener("click", show);
-      bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
+      if (row) row.addEventListener("click", show);
+      if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
     return ranked;
   }
@@ -2412,7 +2441,7 @@
     var maxAbs = Math.max.apply(null, scenarios.map(function(s){ return Math.abs(s.delta); })) || 1;
     el.innerHTML = scenarios.map(function(s, i){
       var favorable = s.delta < 0;
-      return '<div class="tornado-row"><div class="tname">' + s.name + '</div>' +
+      return '<div class="tornado-row" id="sensRow' + i + '"><div class="tname">' + s.name + '</div>' +
         '<div class="thalf"><div class="tbar ' + (favorable ? "pos" : "neg") + '" id="sensBar' + i + '" tabindex="0" ' +
         'title="' + s.name + ': ' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + ' vs. current forecast"></div></div>' +
         '<div class="tval">' + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + '</div></div>';
@@ -2423,15 +2452,16 @@
         if (bar) bar.style.width = (Math.abs(s.delta) / maxAbs * 100) + "%";
       });
     });
+    // Click on the wide row, keydown on the narrow bar -- see the CV tornado's own comment above.
     scenarios.forEach(function(s, i){
+      var row = document.getElementById("sensRow" + i);
       var bar = document.getElementById("sensBar" + i);
-      if (!bar) return;
       var show = function(){
         var d = document.getElementById("sensitivityDetail");
         if (d) d.innerHTML = "<b>" + s.name + "</b> — " + (s.delta >= 0 ? "+" : "") + fmt(s.delta) + " vs. the current forecast.";
       };
-      bar.addEventListener("click", show);
-      bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
+      if (row) row.addEventListener("click", show);
+      if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
     return scenarios;
   }
@@ -2785,7 +2815,7 @@
     el.innerHTML = '<div class="tornado">' + ranked.map(function(p, i){
       var deviation = p.lpf - 1;
       var lossOfProductivity = deviation < 0;
-      return '<div class="tornado-row"><div class="tname">' + p.trade + '</div>' +
+      return '<div class="tornado-row" id="lpfRow' + i + '"><div class="tname">' + p.trade + '</div>' +
         '<div class="thalf"><div class="tbar ' + (lossOfProductivity ? "neg" : "pos") + '" id="lpfBar' + i + '" tabindex="0" ' +
         'title="' + p.trade + ': LPF ' + p.lpf.toFixed(2) + ' (' + (deviation >= 0 ? "+" : "") + deviation.toFixed(2) + ' vs. 1.0 benchmark)"></div></div>' +
         '<div class="tval">' + p.lpf.toFixed(2) + '</div></div>';
@@ -2796,16 +2826,17 @@
         if (bar) bar.style.width = (Math.abs(p.lpf - 1) / maxAbs * 100) + "%";
       });
     });
+    // Click on the wide row, keydown on the narrow bar -- see the CV tornado's own comment above.
     ranked.forEach(function(p, i){
+      var row = document.getElementById("lpfRow" + i);
       var bar = document.getElementById("lpfBar" + i);
-      if (!bar) return;
       var deviation = p.lpf - 1;
       var show = function(){
         var d = document.getElementById("lpfDetail");
         if (d) d.innerHTML = "<b>" + p.trade + "</b> — LPF " + p.lpf.toFixed(2) + " (" + (deviation >= 0 ? "+" : "") + deviation.toFixed(2) + " vs. the 1.0 benchmark).";
       };
-      bar.addEventListener("click", show);
-      bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
+      if (row) row.addEventListener("click", show);
+      if (bar) bar.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { if (e.preventDefault) e.preventDefault(); show(); } });
     });
     return ranked;
   }
@@ -2819,6 +2850,15 @@
     { code:"LATAM", name:"Latin America", baseline:800000000, forecast:850400000 }
   ];
   var activeRegion = "NA";
+  (function(){
+    // Restored here, before the first renderRegionTabs()/renderRegionDetail() call below reads
+    // activeRegion -- matches the same "restore before first read" discipline currentCurrency
+    // already uses. A stress-test finding: this was previously claimed as persisted (commit
+    // message/README) but never actually was -- a real gap between what shipped and what the
+    // commit said shipped, not just a missing test.
+    var storedRegion = readPersisted("cmcc-region");
+    if (storedRegion && regions.some(function(r){ return r.code === storedRegion; })) activeRegion = storedRegion;
+  })();
   function renderRegionTabs(){
     var el = document.getElementById("regionTabs");
     el.innerHTML = "";
@@ -2826,7 +2866,12 @@
       var btn = document.createElement("button");
       btn.className = "region-btn"; btn.textContent = r.code;
       btn.setAttribute("aria-pressed", r.code === activeRegion ? "true" : "false");
-      btn.addEventListener("click", function(){ activeRegion = r.code; renderRegionTabs(); renderRegionDetail(); if (typeof resetRegionAdjust === "function") resetRegionAdjust(); });
+      btn.addEventListener("click", function(){
+        activeRegion = r.code;
+        persistSet("cmcc-region", activeRegion);
+        renderRegionTabs(); renderRegionDetail();
+        if (typeof resetRegionAdjust === "function") resetRegionAdjust();
+      });
       el.appendChild(btn);
     });
   }
@@ -2855,6 +2900,7 @@
       fmt: function(v){ return (v >= 0 ? "+" : "") + v.toFixed(1) + "%"; },
       onClick: function(item){
         activeRegion = item.code;
+        persistSet("cmcc-region", activeRegion);
         renderRegionTabs();
         renderRegionDetail();
         if (typeof resetRegionAdjust === "function") resetRegionAdjust();
@@ -3404,31 +3450,59 @@
     paletteSelectedIdx = 0;
     if (paletteResultsCache.length === 0) {
       paletteResultsEl.innerHTML = '<div class="palette-empty">No matches.</div>';
+      paletteInputEl.setAttribute("aria-activedescendant", "");
       return;
     }
+    // tabindex="-1" on each option keeps focus in the input (the real ARIA combobox pattern --
+    // Tab should never walk through up to 20 result buttons individually); aria-activedescendant
+    // on the input is what actually announces the highlighted option to a screen reader, since the
+    // visual-only highlight was previously silent to assistive tech (stress-test finding,
+    // 2026-08-26).
     paletteResultsEl.innerHTML = paletteResultsCache.map(function(it, i){
-      return '<button class="palette-item" type="button" role="option" data-idx="' + i + '" aria-selected="' + (i === 0 ? "true" : "false") + '">' +
+      return '<button class="palette-item" type="button" role="option" id="paletteItem' + i + '" tabindex="-1" data-idx="' + i + '" aria-selected="' + (i === 0 ? "true" : "false") + '">' +
         '<span class="pi-kind">' + it.kind + '</span>' + it.label +
         '<span class="pi-sub">' + it.sub + '</span></button>';
     }).join("");
+    paletteInputEl.setAttribute("aria-activedescendant", "paletteItem0");
   }
+  // Looked up by id (document.getElementById), NOT paletteResultsEl.querySelectorAll() -- this
+  // repo's own verify.cjs DOM stub can't resolve querySelectorAll against innerHTML-rendered
+  // content (same reasoning already applied to the shared renderRankedBar() helper).
   function highlightPaletteSelection(){
-    var buttons = paletteResultsEl.querySelectorAll(".palette-item");
-    buttons.forEach(function(b, i){ b.setAttribute("aria-selected", i === paletteSelectedIdx ? "true" : "false"); });
+    paletteResultsCache.forEach(function(it, i){
+      var b = document.getElementById("paletteItem" + i);
+      if (b) b.setAttribute("aria-selected", i === paletteSelectedIdx ? "true" : "false");
+    });
+    paletteInputEl.setAttribute("aria-activedescendant", "paletteItem" + paletteSelectedIdx);
   }
   function activatePaletteResult(idx){
     var it = paletteResultsCache[idx];
     if (!it) return;
+    // A palette jump is a deliberate "take me somewhere specific" action, which can land anywhere
+    // in the tab order -- if the guided Tour is still active, its own step counter would go stale
+    // against whatever tab the palette just opened (self-review finding, 2026-08-26).
+    if (tourActive && typeof endTour === "function") endTour();
     if (it.action.type === "tab") activateTab(it.action.tab, true);
     closePalette();
   }
+  // Self-review finding: without this, a keyboard user's focus falls back to document.body the
+  // moment the palette closes, however it was triggered (button click or Cmd+K) -- disorienting
+  // for exactly the audience most likely to use a command palette in the first place.
+  var paletteReturnFocusEl = null;
   function openPalette(){
+    // Same mutual-exclusion as openShortcuts() above, other direction.
+    if (typeof shortcutsOpen === "function" && shortcutsOpen() && typeof closeShortcuts === "function") closeShortcuts();
+    paletteReturnFocusEl = (typeof document !== "undefined" && document.activeElement) || null;
     paletteOverlayEl.hidden = false;
     paletteInputEl.value = "";
     renderPaletteResults();
     if (typeof paletteInputEl.focus === "function") paletteInputEl.focus();
   }
-  function closePalette(){ paletteOverlayEl.hidden = true; }
+  function closePalette(){
+    paletteOverlayEl.hidden = true;
+    if (paletteReturnFocusEl && typeof paletteReturnFocusEl.focus === "function") paletteReturnFocusEl.focus();
+    paletteReturnFocusEl = null;
+  }
   paletteInputEl.addEventListener("input", renderPaletteResults);
   paletteInputEl.addEventListener("keydown", function(e){
     if (e.key === "ArrowDown") { if (e.preventDefault) e.preventDefault(); paletteSelectedIdx = Math.min(paletteSelectedIdx + 1, paletteResultsCache.length - 1); highlightPaletteSelection(); }

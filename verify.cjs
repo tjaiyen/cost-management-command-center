@@ -156,6 +156,10 @@ const documentStub = {
       getAttribute(name){ return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null; },
     };
   })(),
+  // Plain settable field (not a real browser's live-tracked focus) -- lets a test simulate "this
+  // element had focus when the palette opened" to check the palette's own focus-return-on-close
+  // behavior, which reads document.activeElement at open time.
+  activeElement: null,
   addEventListener(type, handler){
     (documentHandlers[type] = documentHandlers[type] || []).push(handler);
     if (type === "click") documentClickHandlers.push(handler);
@@ -231,7 +235,18 @@ infoToggleBtnStub2.classList.add("info-toggle");
 infoToggleBtnStub2.dataset = { explainer: "exp20" };
 elementsById["aace5709exp"] = withProperties(makeElementStub()); // the explainer panel itself
 
-const localStorageStub = { getItem(){ return null; }, setItem(){} };
+// A REAL backing store (not a no-op) -- a stress-test finding: the previous no-op version meant
+// this build's headline "full localStorage persistence" claim (theme/lasttab/currency/explain-
+// mode/visited/factoids-seen/region) was never actually exercised by this suite at all, only the
+// in-memory behavior during a single page load. Kept as a plain object (not a Map) so a SECOND,
+// later vm.runInContext() of the same page script can share this exact store and prove a
+// simulated "reload" actually restores what the first run persisted -- see the dedicated
+// "persistence round-trip" section near the end of this file.
+const localStorageBackingStore = {};
+const localStorageStub = {
+  getItem(key){ return Object.prototype.hasOwnProperty.call(localStorageBackingStore, key) ? localStorageBackingStore[key] : null; },
+  setItem(key, value){ localStorageBackingStore[key] = String(value); },
+};
 
 // Minimal history/location mock -- gives the browser-back/forward feature REAL exercise instead
 // of a stated-but-untested limitation. Counting push/replace separately (not just the resulting
@@ -245,12 +260,22 @@ const mockHistory = {
 };
 const mockLocation = { get hash(){ return mockHash; } };
 
+// window's OWN addEventListener (distinct from document's) -- a stress-test finding: the guard
+// `typeof window.addEventListener === "function"` in the page's popstate-wiring code always
+// evaluated false without this, silently no-op'ing the registration on every verify.cjs run. That
+// left the actual "does clicking the browser Back button work" mechanism completely untested --
+// only the pushState/replaceState half was. `window === sandbox` below, so this method lives
+// directly on the sandbox object.
+const windowHandlers = {};
+function fireWindowEvent(type, evt) { (windowHandlers[type] || []).forEach((h) => h(evt || {})); }
+
 const sandbox = {
   document: documentStub,
   window: {},
   localStorage: localStorageStub,
   history: mockHistory,
   location: mockLocation,
+  addEventListener(type, handler) { (windowHandlers[type] = windowHandlers[type] || []).push(handler); },
   getComputedStyle: () => ({ getPropertyValue: () => "6 182 212" }),
   console,
   Math,
@@ -1118,6 +1143,7 @@ console.log("--- Exploration progress: visited-tab tracking + the 'Did you know?
     actionsBtn.fire("click");
     assertStrEqual(state.visitedTabs.actions, true, "clicking actions marks it visited in the shared visitedTabs object");
     assertStrEqual(actionsBtn.classList.contains("visited"), true, "the clicked tab button gains the .visited class");
+    assertStrEqual(actionsBtn.getAttribute("aria-label"), "Actions (visited)", "a screen-reader user gets the same 'visited' signal via aria-label, not just the sighted-only color dot (self-review finding)");
     const progressEl = elementsById["tourProgress"];
     assertStrEqual(progressEl.textContent.indexOf(" of 11 explored") !== -1, true, "the progress indicator reports 'N of 11 explored'");
     assertStrEqual(elementsById["factoidToast"].classList.contains("show"), true, "visiting a tab for the first time shows its 'Did you know?' toast");
@@ -1134,7 +1160,14 @@ console.log("--- Exploration progress: visited-tab tracking + the 'Did you know?
 
 console.log('--- "Explain it simply" toggle: technical vs. plain-English explainer text ---');
 {
-  assertEqual(Object.keys(state.kpiExplainersSimple).length, Object.keys(state.kpiExplainers).length, "every technical explainer has a matching plain-English simple version, none silently missing");
+  // A count-only check (30 === 30) would pass even if one key were typo'd -- e.g. a "simple" entry
+  // under a name that doesn't match any real technical id would silently leave that id's simple
+  // mode falling back to its own technical text (renderExplainers()'s own `|| kpiExplainers[id]`
+  // fallback), invisibly, while some OTHER id ended up with two entries. Compare the actual key
+  // SETS, not just their sizes (self-review finding, 2026-08-26).
+  const techKeys = Object.keys(state.kpiExplainers).sort();
+  const simpleKeys = Object.keys(state.kpiExplainersSimple).sort();
+  assertStrEqual(JSON.stringify(simpleKeys), JSON.stringify(techKeys), "kpiExplainersSimple has EXACTLY the same key set as kpiExplainers, not just the same count");
   assertStrEqual(state.getExplainMode(), "technical", "explain mode starts 'technical', matching this build's real default");
   const explainBtnEl = elementsById["explainBtn"];
   if (!explainBtnEl) { failures++; console.error("FAIL: #explainBtn was never registered"); }
@@ -1173,6 +1206,41 @@ console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM o
     paletteInputEl.fire("keydown", { key: "Enter" });
     assertStrEqual(elementsById["paletteOverlay"].hidden, true, "pressing Enter on a result closes the palette");
     assertStrEqual(state.getCurrentTab(), "cost", "pressing Enter actually navigated to the top matching result's own tab");
+    // ArrowDown must actually MOVE the selection, not just be accepted without effect -- pre-
+    // registered via a direct call to the real search function: for query "cost", index 1 is the
+    // "Portfolio Forecast" KPI (tab: overview), distinct from index 0's "Cost" tab.
+    const costQueryResults = state.paletteSearch("cost", state.paletteIndex);
+    assertStrEqual(costQueryResults[1] && costQueryResults[1].action.tab, "overview", "pre-registered: the 2nd 'cost' result is a KPI targeting Overview, distinct from the 1st (Cost tab itself)");
+    paletteBtnEl.fire("click");
+    paletteInputEl.value = "cost";
+    paletteInputEl.fire("input");
+    assertStrEqual(paletteInputEl.getAttribute("aria-activedescendant"), "paletteItem0", "rendering results points aria-activedescendant at the first (default-selected) option");
+    paletteInputEl.fire("keydown", { key: "ArrowDown" });
+    assertStrEqual(paletteInputEl.getAttribute("aria-activedescendant"), "paletteItem1", "ArrowDown moves aria-activedescendant to the newly-highlighted option (screen-reader accessible, not just a visual highlight -- self-review finding)");
+    assertStrEqual(documentStub.getElementById("paletteItem1").getAttribute("aria-selected"), "true", "the new selection is marked aria-selected (looked up via getElementById, since renderPaletteResults()'s innerHTML string is what named these ids, not a real parsed child tree in this stub)");
+    assertStrEqual(documentStub.getElementById("paletteItem0").getAttribute("aria-selected"), "false", "...and the previous selection is un-marked");
+    paletteInputEl.fire("keydown", { key: "Enter" });
+    assertStrEqual(state.getCurrentTab(), "overview", "ArrowDown then Enter activates the SECOND result, not the first -- selection genuinely moves, not just accepted as a no-op keypress");
+
+    // Focus-return-on-close (self-review finding): whatever had focus when the palette opened
+    // should get it back when it closes, however it closes (Escape here) -- otherwise a keyboard
+    // user's focus silently falls back to document.body.
+    const fakeFocusTarget = withProperties(makeElementStub());
+    let focusCallCount = 0;
+    fakeFocusTarget.focus = () => { focusCallCount++; };
+    documentStub.activeElement = fakeFocusTarget;
+    paletteBtnEl.fire("click");
+    documentStub.fire("keydown", { key: "Escape", target: {} });
+    assertEqual(focusCallCount, 1, "closing the palette (via Escape) returns focus to whatever had it before the palette opened");
+
+    // The empty-results branch (rendered HTML, not just paletteSearch()'s own return value) was
+    // never actually checked against the DOM.
+    paletteBtnEl.fire("click");
+    paletteInputEl.value = "zzz-no-such-zzz";
+    paletteInputEl.fire("input");
+    assertStrEqual(elementsById["paletteResults"].innerHTML.indexOf("No matches") !== -1, true, "a nonsense query renders the real empty-state message in the DOM, not just returning [] from the pure function");
+    documentStub.fire("keydown", { key: "Escape", target: {} });
+    documentStub.activeElement = null; // reset so this fixture can't leak into any later test
   }
   // The global Ctrl/Cmd+K handler, not just the header button.
   documentStub.fire("keydown", { key: "k", metaKey: true, target: {} });
@@ -1180,30 +1248,47 @@ console.log("--- Command Palette (Ctrl/Cmd+K): pure search function + real DOM o
   documentStub.fire("keydown", { key: "Escape", target: {} });
   assertStrEqual(elementsById["paletteOverlay"].hidden, true, "Escape closes the palette (checked before the shortcuts overlay in the same handler)");
   if (overviewBtn) overviewBtn.fire("click"); // reset to Overview in case a palette jump landed elsewhere
+
+  // Self-review finding: a palette jump can land anywhere, which would leave the guided Tour's own
+  // step counter stale against whatever tab actually ended up active if the tour was mid-session.
+  if (startTourBtnEl && paletteInputEl) {
+    startTourBtnEl.fire("click");
+    assertStrEqual(state.isTourActive(), true, "sanity check: the tour is genuinely active before this probe");
+    paletteBtnEl.fire("click");
+    paletteInputEl.value = "cost";
+    paletteInputEl.fire("input");
+    paletteInputEl.fire("keydown", { key: "Enter" });
+    assertStrEqual(state.isTourActive(), false, "activating a palette result while the guided Tour is active correctly ends the tour, instead of leaving its step counter stale");
+    if (overviewBtn) overviewBtn.fire("click"); // reset to Overview
+  }
 }
 
 console.log("--- Drill-down click-to-detail: CV tornado / sensitivity tornado / LPF bar / Control Account Ledger (previously the one visualization pattern on this page with no drill-down at all) ---");
 {
-  const cvBar0 = elementsById["cvBar0"];
-  if (!cvBar0) { failures++; console.error("FAIL: could not find cvBar0 to click-test"); }
+  // Click now binds to the WIDE row (id "...Row0"), keydown to the narrow bar (id "...Bar0") --
+  // both fired here so each element's own listener is actually exercised (stress-test finding,
+  // 2026-08-26: previously both were on the same narrow bar, inconsistent with the region ranked
+  // bar's row-click pattern; the row-click test below is what actually caught the retrofit).
+  const cvRow0 = elementsById["cvRow0"];
+  if (!cvRow0) { failures++; console.error("FAIL: could not find cvRow0 to click-test"); }
   else {
-    cvBar0.fire("click");
+    cvRow0.fire("click");
     const t = elementsById["cvTornadoDetail"].innerHTML;
-    assertStrEqual(t.indexOf("CV") !== -1 && t.indexOf("CPI") !== -1, true, "clicking a CV tornado bar shows a real CV/CPI reconciliation, not the placeholder text");
+    assertStrEqual(t.indexOf("CV") !== -1 && t.indexOf("CPI") !== -1, true, "clicking a CV tornado ROW (not just the narrow bar) shows a real CV/CPI reconciliation, not the placeholder text");
   }
-  const sensBar0 = elementsById["sensBar0"];
-  if (!sensBar0) { failures++; console.error("FAIL: could not find sensBar0 to click-test"); }
+  const sensRow0 = elementsById["sensRow0"];
+  if (!sensRow0) { failures++; console.error("FAIL: could not find sensRow0 to click-test"); }
   else {
-    sensBar0.fire("click");
+    sensRow0.fire("click");
     const t = elementsById["sensitivityDetail"].innerHTML;
-    assertStrEqual(t.indexOf("vs. the current forecast") !== -1, true, "clicking a sensitivity tornado bar shows a real scenario detail, not the placeholder text");
+    assertStrEqual(t.indexOf("vs. the current forecast") !== -1, true, "clicking a sensitivity tornado ROW (not just the narrow bar) shows a real scenario detail, not the placeholder text");
   }
-  const lpfBar0 = elementsById["lpfBar0"];
-  if (!lpfBar0) { failures++; console.error("FAIL: could not find lpfBar0 to click-test"); }
+  const lpfRow0 = elementsById["lpfRow0"];
+  if (!lpfRow0) { failures++; console.error("FAIL: could not find lpfRow0 to click-test"); }
   else {
-    lpfBar0.fire("click");
+    lpfRow0.fire("click");
     const t = elementsById["lpfDetail"].innerHTML;
-    assertStrEqual(t.indexOf("LPF") !== -1 && t.indexOf("benchmark") !== -1, true, "clicking an LPF bar shows a real productivity detail, not the placeholder text");
+    assertStrEqual(t.indexOf("LPF") !== -1 && t.indexOf("benchmark") !== -1, true, "clicking an LPF ROW (not just the narrow bar) shows a real productivity detail, not the placeholder text");
   }
   const calRow0 = elementsById["calRow0"];
   if (!calRow0) { failures++; console.error("FAIL: could not find calRow0 to click-test"); }
@@ -1268,6 +1353,110 @@ console.log("--- Browser back/forward support: real history.pushState (direct ta
   assertEqual(mockPushCount, pushBefore2, "an internal .triage-jump does NOT push a new history entry");
   assertEqual(mockReplaceCount, replaceBefore2 + 1, "an internal .triage-jump replaces the current history entry instead");
   if (overviewBtn) overviewBtn.fire("click"); // reset back to Overview
+
+  // Real popstate reception (the actual browser Back/Forward button mechanism) -- previously
+  // untested: the page's own `typeof window.addEventListener === "function"` guard always
+  // evaluated false in this sandbox (window had no addEventListener of its own), so the
+  // registration silently no-op'd on every prior run of this suite (independent-reviewer finding).
+  fireWindowEvent("popstate", { state: { cmccTab: "framework" } });
+  assertStrEqual(state.getCurrentTab(), "framework", "a real popstate event (simulating the browser Back/Forward button) actually re-activates the tab named in its own state, proving the registration genuinely fired");
+  if (overviewBtn) overviewBtn.fire("click"); // reset back to Overview
+}
+
+console.log("--- Persistence round-trip: a REAL simulated reload restores every persisted key (stress-test finding, 2026-08-26 -- the old localStorage stub was a total no-op, so this build's headline 'full persistence' claim was never actually exercised by this suite) ---");
+{
+  // Explicit, deterministic values written directly to the shared backing store -- NOT whatever
+  // the rest of this suite's cumulative clicks happened to leave behind (that would make this
+  // test's outcome depend on every other test's exact order, exactly the fragility a stress-test
+  // pass should remove, not introduce). This tests the RESTORE contract in isolation: given key K
+  // holds value V, does a fresh load apply V.
+  localStorageBackingStore["cmcc-theme"] = "dark";
+  localStorageBackingStore["cmcc-lasttab"] = "contingency";
+  localStorageBackingStore["cmcc-currency"] = "GBP";
+  localStorageBackingStore["cmcc-explain"] = "simple";
+  localStorageBackingStore["cmcc-visited"] = "overview,cost";
+  localStorageBackingStore["cmcc-factoids-seen"] = "overview";
+  localStorageBackingStore["cmcc-region"] = "EMEA";
+
+  // A genuinely fresh DOM + sandbox (mirrors the minimal stub set built at the top of this file),
+  // sharing ONLY localStorageStub (the same backing store) with the first run above -- a real
+  // second "page load," not a re-read of the first run's already-live state.
+  const elementsById2 = {};
+  function getOrCreate2(id) { if (!elementsById2[id]) elementsById2[id] = withProperties(makeElementStub()); return elementsById2[id]; }
+  const documentStub2 = {
+    getElementById: (id) => getOrCreate2(id),
+    querySelectorAll: (sel) => {
+      if (sel === ".tabbtn") {
+        return ["overview", "exec", "cost", "contingency", "governance", "portfolio", "framework", "actions", "triage", "data", "reference"].map((name) => {
+          const b = withProperties(makeElementStub());
+          b.dataset = { tab: name };
+          elementsById2["panel-" + name] = elementsById2["panel-" + name] || withProperties(makeElementStub());
+          return b;
+        });
+      }
+      if (sel === ".tabpanel") return Object.keys(elementsById2).filter((k) => k.startsWith("panel-")).map((k) => elementsById2[k]);
+      return [];
+    },
+    documentElement: (() => {
+      const attrs2 = {};
+      return {
+        setAttribute(name, value) { attrs2[name] = String(value); },
+        getAttribute(name) { return Object.prototype.hasOwnProperty.call(attrs2, name) ? attrs2[name] : null; },
+      };
+    })(),
+    activeElement: null,
+    addEventListener() {},
+    createElement: () => withProperties(makeElementStub()),
+  };
+  elementsById2["mcCanvas"] = Object.assign(makeElementStub(), { width: 420, height: 140, getContext: () => ({ clearRect() {}, fillRect() {} }) });
+  ["pctComplete", "drawdownPct", "mcMin", "mcMode", "mcMax", "wiScope", "wiEscalation", "glossarySearch", "regionAdjust"].forEach((id) => {
+    elementsById2[id] = makeElementStub(); elementsById2[id].value = "0";
+  });
+  elementsById2["pctComplete"].value = "18"; elementsById2["drawdownPct"].value = "35";
+  elementsById2["mcMin"].value = "1750000000"; elementsById2["mcMode"].value = "1870000000"; elementsById2["mcMax"].value = "2170000000";
+  elementsById2["wiScope"].value = "4"; elementsById2["wiEscalation"].value = "2";
+  elementsById2["shortcutsOverlay"] = Object.assign(makeElementStub(), { hidden: true });
+  elementsById2["jumpBreadcrumb"] = Object.assign(makeElementStub(), { hidden: true });
+  elementsById2["paletteOverlay"] = Object.assign(makeElementStub(), { hidden: true });
+
+  const sandbox2 = {
+    document: documentStub2,
+    window: {},
+    localStorage: localStorageStub, // the SAME backing store as the first run -- this IS the point
+    history: { pushState() {}, replaceState() {} },
+    location: { hash: "" },
+    getComputedStyle: () => ({ getPropertyValue: () => "6 182 212" }),
+    console, Math, setTimeout, clearTimeout, Date,
+  };
+  sandbox2.window = sandbox2;
+  vm.createContext(sandbox2);
+  try {
+    vm.runInContext(pageScript, sandbox2);
+  } catch (err) {
+    failures++;
+    console.error("FAIL: the simulated-reload page script threw:", err.message);
+  }
+  const state2 = sandbox2.window.__CMCC_STATE__;
+  if (!state2) {
+    failures++;
+    console.error("FAIL: the simulated reload's window.__CMCC_STATE__ was not set");
+  } else {
+    assertStrEqual(documentStub2.documentElement.getAttribute("data-theme"), "dark", "a fresh load restores the persisted theme");
+    assertStrEqual(state2.getCurrentTab(), "contingency", "a fresh load restores the persisted last-active tab");
+    assertStrEqual(elementsById2["currencySelect"] && elementsById2["currencySelect"].value, "GBP", "a fresh load restores the persisted currency");
+    assertStrEqual(state2.getExplainMode(), "simple", "a fresh load restores the persisted explain-mode");
+    assertStrEqual(!!state2.visitedTabs.overview && !!state2.visitedTabs.cost, true, "a fresh load restores the persisted visited-tabs set");
+    assertStrEqual(!!state2.getShownFactoids().overview, true, "a fresh load restores the persisted shown-factoids set");
+    assertStrEqual(state2.getActiveRegion(), "EMEA", "a fresh load restores the persisted active region (the exact gap an independent reviewer found: this key was previously claimed as persisted but never actually was)");
+    // Factoid-suppression scoping (independent-reviewer finding): the cold-load suppression must
+    // apply ONLY when the restored tab is Overview -- this fixture's persisted last-tab is
+    // "contingency" (not Overview), and contingency's factoid was NOT in the persisted seen-set,
+    // so it must fire on this very load, not be silently suppressed forever just because it's a
+    // cold start. A prior version suppressed unconditionally on every cold load regardless of
+    // which tab was restored, confirmed by simulating 5 consecutive cold loads that never once
+    // fired a non-Overview tab's factoid.
+    assertStrEqual(!!state2.getShownFactoids().contingency, true, "a cold load restoring a NON-Overview tab still shows that tab's own factoid (suppression is Overview-specific, not blanket) -- contingency was not in the persisted seen-set, so this can only be true if the cold-load suppression let it fire");
+  }
 }
 
 console.log("");
