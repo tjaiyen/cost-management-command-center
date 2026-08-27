@@ -673,6 +673,33 @@ assertStrEqual(clearedFixture.atRisk, false, "computeInterconnectionExposure() c
 const tieFixture = state.computeInterconnectionExposure(1750000000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 5, assumedDevelopmentScheduleYears: 5 });
 assertStrEqual(tieFixture.atRisk, false, "computeInterconnectionExposure() at the exact tie boundary (wait === assumed schedule) does not flag at-risk -- 'exceeds' is strict, not inclusive");
 
+console.log("--- Cross-Border FX & Regulatory-Regime Exposure (global-program-controls research pass, 2026-08-27) ---");
+// Independent re-derivation via the raw formula (forecast x (1 - hedge ratio)), NOT a second call
+// to computeUnhedgedExposure() with the same inputs -- same non-tautology discipline as the
+// interconnection block above.
+assertEqual(state.fxExposureAssumptions.NA.hedgeRatioPct, 100, "NA is assumed fully hedged by construction (this program's own reporting currency)");
+assertEqual(state.computeUnhedgedExposure(state.bridge.final, 100), 0, "computeUnhedgedExposure() at a 100% hedge ratio leaves exactly $0 unhedged, independent of the forecast figure");
+assertEqual(state.computeUnhedgedExposure(1000000, 65), 1000000 * (1 - 65 / 100), "computeUnhedgedExposure() independently re-derives as forecast x (1 - hedge ratio), not a second call to itself");
+assertEqual(state.computeUnhedgedExposure(1000000, 0), 1000000, "at a 0% hedge ratio, the entire forecast is correctly unhedged");
+assertEqual(state.fxExposureResult.length, 4, "the FX exposure table renders exactly 4 rows, one per real portfolio region");
+const naFxRow = state.fxExposureResult.find((r) => r.code === "NA");
+assertEqual(naFxRow.unhedged, 0, "NA's own rendered row shows exactly $0 unhedged exposure, matching its 100% hedge-ratio assumption");
+const latamFxRow = state.fxExposureResult.find((r) => r.code === "LATAM");
+assertEqual(latamFxRow.unhedged, state.regions.find((r) => r.code === "LATAM").forecast * (1 - 40 / 100), "LATAM's rendered row independently re-derives from its own real forecast x the cited 40% hedge ratio", 0.01);
+assertStrEqual(latamFxRow.unhedged > naFxRow.unhedged, true, "LATAM (lowest assumed hedge coverage) carries strictly more unhedged exposure than NA (fully hedged), not an arbitrary ordering");
+
+console.log("--- Sustainability & Compliance / Technology Maturity Ledger (global-program-controls research pass, 2026-08-27) ---");
+assertEqual(state.sustainabilityResult.length, 4, "sustainability table renders exactly 4 rows, one per real portfolio region");
+assertEqual(state.GREEN_GRID_PUE_INDUSTRY_AVG.low, 1.54, "the real Green Grid industry-average PUE low bound is 1.54, not a rounded/invented figure");
+assertEqual(state.GREEN_GRID_PUE_BEST_IN_CLASS, 1.09, "Google's real 2025 fleet-wide best-in-class PUE is 1.09");
+// Every illustrative region PUE in this program's own assumptions sits below the real industry
+// average band -- pre-registered before checking, not asserted after seeing the data.
+const allRegionsBetterThanAvg = state.sustainabilityAssumptions.every((r) => r.pue < state.GREEN_GRID_PUE_INDUSTRY_AVG.low);
+assertStrEqual(allRegionsBetterThanAvg, true, "this program's own illustrative PUE figures are all below the real industry-average band (pre-registered expectation, not fitted after the fact)");
+assertEqual(state.techMaturityResult.length, 5, "technology maturity ledger has exactly 5 real, evidence-graded rows");
+const matureCount = state.techMaturityLedger.filter((t) => t.maturity === "Mature").length;
+assertEqual(matureCount, 2, "exactly 2 technologies are graded 'Mature' (progress monitoring + EVM), not silently inflated to include the newer, thinner-evidenced ones");
+
 console.log("--- Commercial Ramp tab: reserve status, delay impact, SLA penalty, revenue yield (independent-reviewer finding, 2026-08-26 -- these had zero direct test coverage) ---");
 // computeRampReserveStatus: this build's own live default, then the never-exercised exhausted branch.
 assertEqual(state.computeRampReserveStatus(42000000, 18500000).remaining, 23500000, "computeRampReserveStatus: this program's real default (reserve 42M, incurred 18.5M) leaves 23.5M remaining");
@@ -1294,8 +1321,8 @@ if (!complianceCheck) {
   assertStrEqual(complianceCheck.run()[1], "clean", "the compliance sweep reports 'clean' on this build's real rendered content");
 }
 
-console.log("--- KPI Catalog: exactly 24 rows, every 'real' badge carries a real citation, every tab is real ---");
-assertEqual(state.kpiCatalog.length, 24, "KPI catalog has exactly 24 rows, not 23 or 25");
+console.log("--- KPI Catalog: exactly 25 rows, every 'real' badge carries a real citation, every tab is real ---");
+assertEqual(state.kpiCatalog.length, 25, "KPI catalog has exactly 25 rows, not 24 or 26");
 const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","ramp","framework","actions","triage","data","reference"];
 let realBadgeNoCitation = 0, unknownTab = 0;
 state.kpiCatalog.forEach((k) => {

@@ -93,7 +93,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   **Live Integrity Gate** — 13 reconciliation checks that run in your browser on every page load,
   not just in a Node test file someone would have to clone the repo to see (including a live
   escalation-assumption staleness check and a cross-region cost-reporting schema check).
-- **Reference** — the 24-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
+- **Reference** — the 25-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
   badge → citation, one row per built visual across all 12 tabs), plus a searchable,
   category-filterable glossary of every AACE Recommended Practice, every real data-center cost
   figure, every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV), and (added
@@ -150,11 +150,11 @@ legible, marked `illustrative` throughout.
 
 - **Currency toggle** (USD/GBP/JPY/BRL, header) — converts this program's own illustrative dollar
   figures only; cited real industry benchmarks stay in their originally published currency.
-- **Contextual explainer toggles on all 24 KPIs** — click the (i) next to any KPI to see its real
+- **Contextual explainer toggles on all 25 KPIs** — click the (i) next to any KPI to see its real
   formula, a plain-language meaning, and diagnostic guidance inline, without leaving the tab (the
   original 20 numbered KPIs share 17 buttons — 3 pairs share one heading/section — the 4 Commercial
-  Ramp KPIs added later each get their own).
-- **A guided, 24-stop Tour** — walks the KPI catalog's own 24 rows in sequence, switching tabs live
+  Ramp KPIs and the FX exposure KPI added later each get their own).
+- **A guided, 25-stop Tour** — walks the KPI catalog's own 25 rows in sequence, switching tabs live
   and showing each one's operational question (Start/Next/Prev/Exit, clamped at both ends).
 - **Structured, dual-encoded alert cards** — every warning (contingency drawdown, data quality,
   Gate 4, float erosion) shows Detected / Probable Cause / Suggested Action, with a shape (▲/●)
@@ -391,7 +391,7 @@ verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now exp
 **UX/navigation upgrade pass, 2026-08-26** — a full brainstorm-then-build round covering
 interactivity, navigation, and onboarding, none of it adding an external dependency:
 
-- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 24-KPI catalog, or the full
+- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 25-KPI catalog, or the full
   glossary from one search box, wired through the existing global keyboard-shortcut handler.
 - **Per-cluster tab-rail tinting + exploration progress** — the tab rail's existing 5 groups
   (Executive/Cost & Risk/Governance & Portfolio/Actions/Reference) now carry their own accent color
@@ -747,3 +747,57 @@ non-color marker still matched the old binary-flag source text. Both real logic 
 falsification-tested (broke each, confirmed the real test suite catches it, restored, re-confirmed
 green). An independent fresh-context reviewer then checked the full batch for correctness.
 verify.cjs 417 → 432 (+15), stress.cjs 198 → 199 (+1), both green.
+
+**Global-program-controls research pass, insight-driven upgrade (2026-08-27)** — a separate deep
+research pass (brainstorm mode, genuinely sourced) surveyed peer-reviewed/tested best practices for
+large-scale, multi-region capital-program controls (governance, ROI, sustainability, proactive
+technology) — published standalone as its own artifact, then translated into 3 real additions here:
+
+*New KPI: Cross-Border FX & Regulatory-Regime Exposure* (Portfolio tab) — a genuine white-space
+finding: no AACE/PMI/ISO project-controls standard integrates currency/regulatory-regime risk into
+the cost baseline, despite it being real, documented treasury practice (Global Infrastructure Hub
+names currency/convertibility/transferability risk as a real cross-border category; the Bank for
+International Settlements maintains real FX-settlement risk guidance; cross-currency swaps are the
+standard real hedge instrument). Unhedged Exposure = Regional Forecast × (1 − Hedge Ratio) — the
+formula and risk category are real, this program's own per-region hedge ratios are illustrative.
+KPI catalog grows from 24 to **25 rows**.
+
+*New reference content (Data Strategy tab)* — **Sustainability & Regulatory Compliance**: The Green
+Grid's real, standardized PUE/WUE metrics (real industry-average PUE 1.54–1.59, Google's real 2025
+fleet-wide best-in-class 1.09), and the EU Energy Efficiency Directive Article 12's real binding
+reporting mandate (≥500kW IT power, 15 May annual deadline) — program-specific PUE/WUE readings are
+illustrative. **Technology Maturity Ledger**: an honest evidence-strength grading of 5 technologies
+this research pass surveyed (progress monitoring and EVM graded Mature; ML forecasting and AI/NLP
+risk-mining graded real-but-early; construction-phase digital twins graded mostly vendor-narrative,
+not independently corroborated for that phase specifically).
+
+*Citation reinforcements* — added IPA/Merrow's megaproject database and CII's Front-End Planning
+research (front-end definition quality as the strongest success predictor found, >60% vs ~22%
+average success rate) to the existing Estimate Maturity section; added Bain & Company's >17,000-
+project NPV-erosion finding (~22% average erosion pre-FID) and Flyvbjerg's peer-reviewed strategic-
+misrepresentation finding (JAPA 2002, 258 transportation projects, $90B) to the existing Gate 4
+section, reinforcing why a genuinely computed (not self-reported) gate matters.
+
+Explicitly declined as a dashboard feature: a "portfolio risk correlation" visual the research
+considered — no real construction-specific study was found to cite, and building an illustrative
+visual there would have implied more rigor than exists.
+
+Every new pure-function branch (hedge-ratio math, PUE-vs-average categorization, the Mature-count
+tally) was falsification-tested (broken, confirmed the specific test fails as predicted, restored,
+re-confirmed green) before shipping. `otherStandards` glossary grows from 4 to 12 real entries;
+`dataFreshnessLog` grows from 30 to 39 real sourced rows. index.html 4,873 → 5,055 (+182), verify.cjs
+1,845 → 1,872 (+27), stress.cjs unchanged at 524 (explainer-div count updated in place). Both suites
+green.
+
+An independent fresh-context reviewer then hand-verified the math, independently re-checked every
+new citation via live web search, and ran both suites itself. Found and fixed 2 real issues: the
+Live Integrity Gate's own KPI-catalog-count check still displayed a stale "24 entries" label in its
+user-facing text (the underlying check had correctly been bumped to `=== 25`) — exactly the kind of
+gap that panel exists to catch, on itself; and a stale, undated dev comment claiming "24 KPIs / 34
+explainer divs" that read as a current-state claim rather than a historical note. Also surfaced,
+unprompted, a genuine confidence gap the original citations didn't disclose: IPA/Merrow's "~22%
+average success rate" is specifically Merrow's own oil-and-gas megaproject baseline, not a verified
+cross-industry figure, and the specific ">17,000 projects / ~22% NPV erosion" numbers often
+attached to Bain's real "Beyond the Stage Gate" research could not be independently re-located —
+both now stated with that caveat rather than as flatly-confirmed figures, everywhere they appear
+(Estimate Maturity and Gate 4 src-notes, both glossary entries, both dataFreshnessLog rows).

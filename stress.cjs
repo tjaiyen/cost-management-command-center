@@ -133,7 +133,7 @@ check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same
 console.log("--- All 20-KPI formula/methodology explainer divs have matching content, in both directions ---");
 const explainerDivIds = [...indexHtml.matchAll(/class="explainer" id="(exp\w+)"/g)].map((m) => m[1]);
 const explainerObjMatch = indexHtml.match(/var kpiExplainers = \{([\s\S]*?)\n  \};/);
-check(explainerDivIds.length === 34, `found all 34 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
+check(explainerDivIds.length === 37, `found all 37 expected explainer divs in the HTML`, `found ${explainerDivIds.length}`);
 if (explainerObjMatch) {
   const explainerKeys = [...explainerObjMatch[1].matchAll(/^\s*(exp\w+):/gm)].map((m) => m[1]);
   const divsWithNoContent = explainerDivIds.filter((id) => !explainerKeys.includes(id));
