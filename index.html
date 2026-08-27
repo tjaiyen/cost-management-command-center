@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <title>Cost Management Command Center — TJ Jaiyen</title>
-<meta name="description" content="A cost-management methodology demo — 11 tabs covering an executive brief, CAPEX budget bridges with a live tri-point Monte Carlo, a live-computed stage gate, vendor governance, multi-region portfolio rollup, and a data-strategy pipeline — built around a synthetic capital-development program. Zero dependencies." />
+<meta name="description" content="A cost-management methodology demo — 12 tabs covering an executive brief, CAPEX budget bridges with a live tri-point Monte Carlo, a live-computed stage gate, vendor governance, commercial ramp &amp; revenue yield, multi-region portfolio rollup, and a data-strategy pipeline — built around a synthetic capital-development program. Zero dependencies." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -527,6 +527,7 @@
     <span class="rail-group" aria-hidden="true">Governance &amp; Portfolio</span>
     <button class="tabbtn" role="tab" data-tab="governance" data-cluster="governance" aria-selected="false">Vendor &amp; Governance<span class="visit-dot" aria-hidden="true"></span></button>
     <button class="tabbtn" role="tab" data-tab="portfolio" data-cluster="governance" aria-selected="false">Portfolio<span class="visit-dot" aria-hidden="true"></span></button>
+    <button class="tabbtn" role="tab" data-tab="ramp" data-cluster="governance" aria-selected="false">Commercial Ramp<span class="visit-dot" aria-hidden="true"></span></button>
     <button class="tabbtn" role="tab" data-tab="framework" data-cluster="governance" aria-selected="false">Operating Framework<span class="cnt" id="cntGate4" hidden></span><span class="visit-dot" aria-hidden="true"></span></button>
     <span class="rail-group" aria-hidden="true">Actions</span>
     <button class="tabbtn" role="tab" data-tab="actions" data-cluster="actions" aria-selected="false">Actions<span class="visit-dot" aria-hidden="true"></span></button>
@@ -539,7 +540,7 @@
 <div class="wrap" id="main-content">
   <h1>Who's actually watching the contingency reserve?</h1>
   <p class="lede">A cost-management methodology demo built around a synthetic capital-development
-    program — 11 tabs, real math computed live in this page's own JavaScript, no build step, no
+    program — 12 tabs, real math computed live in this page's own JavaScript, no build step, no
     server, no dependency to install.</p>
 
   <button class="info-toggle disclaimer-toggle" type="button" data-explainer="fullDisclaimer" aria-expanded="false">
@@ -1113,6 +1114,90 @@
     </section>
   </div>
 
+  <!-- ============================================================ COMMERCIAL RAMP ============================================================ -->
+  <div class="tabpanel" id="panel-ramp" role="tabpanel" aria-labelledby="tab-ramp">
+    <section id="ramp-lag-section">
+      <h2>Tenant Power-Ramp Lag &amp; Reserve <span class="badge illustrative">illustrative program, real cited range</span>
+        <button class="info-toggle" type="button" data-explainer="expRampLag" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expRampLag"></div>
+      <p class="lede" style="font-size:13px">Construction ending is not revenue starting — a signed
+        lease still takes real time to ramp to its full contracted power draw, and every month of
+        that lag burns real, largely unrecoverable operating overhead the program underwrote a
+        reserve against.</p>
+      <div class="card">
+        <div class="kpis" id="rampKpis"></div>
+        <div id="rampWarn" aria-live="polite"></div>
+        <div class="slider-row" style="margin-top:14px">
+          <label for="rampDelaySlider" style="font-size:12.5px; white-space:nowrap; width:170px">Explore an additional ramp delay</label>
+          <input type="range" id="rampDelaySlider" min="0" max="12" value="0" />
+          <span class="tabular" id="rampDelaySliderVal">+0 mo</span>
+        </div>
+        <p class="src-note" id="rampDelayNote">Non-destructive — projects the reserve burn from
+          additional ramp delay without changing the baseline figures above.</p>
+        <p class="src-note"><span class="badge real">real</span> A tenant's power draw commonly takes
+          roughly 12–30 months to ramp from lease commencement to full contracted capacity — real,
+          cited industry sources describe this dynamic directly: Adventures in CRE's own data-center
+          development model, and a DOE-funded 2026 study ("Hidden Economic Consequences of Adapting
+          to Fast-Ramping Datacenter Loads"). This program's own 18-month assumed ramp and its $42M
+          reserve are <span class="badge illustrative">illustrative</span>.</p>
+      </div>
+    </section>
+
+    <section id="leased-metered-section">
+      <h2>Leased vs. Metered Power Mix <span class="badge real">real revenue-mix benchmark</span>
+        <button class="info-toggle" type="button" data-explainer="expLeasedMetered" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expLeasedMetered"></div>
+      <p class="lede" style="font-size:13px">Most hyperscale revenue comes from the reserved-capacity
+        lease itself, not from what a tenant actually draws — a real distinction with direct
+        cash-flow and OpEx-recovery consequences.</p>
+      <div class="card">
+        <div class="kpis" id="leasedMeteredKpis"></div>
+        <p class="src-note"><span class="badge real">real</span> Hyperscale data-center revenue
+          typically splits 70–80% reserved-capacity base rent and 15–20% metered power pass-through
+          (Cushman &amp; Wakefield, <i>Data Center Spotlight: Power and Lease Pricing Outlook</i>) — a
+          real, published revenue-mix benchmark, not a stabilization-timeline target. This program's
+          own mix is <span class="badge illustrative">illustrative</span>.</p>
+      </div>
+    </section>
+
+    <section id="sla-penalty-section">
+      <h2>SLA Uptime &amp; Penalty Exposure <span class="badge real">real Uptime Institute tiers</span>
+        <button class="info-toggle" type="button" data-explainer="expSlaPenalty" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expSlaPenalty"></div>
+      <p class="lede" style="font-size:13px">Uptime shortfalls below a committed SLA tier convert
+        directly into a real dollar penalty exposure — a cost-risk consequence of an operations
+        metric, computed the same way an actual SLA-credit clause would.</p>
+      <div class="card">
+        <div class="kpis" id="slaKpis"></div>
+        <div id="slaWarn" aria-live="polite"></div>
+        <p class="src-note"><span class="badge real">real</span> Uptime Institute's own Tier
+          standards: Tier III ≈ 99.982% (~1.6 hrs/yr allowed downtime), Tier IV ≈ 99.995% (~26 min/yr)
+          — this program commits to the real Tier IV standard, not a blanket "five nines"
+          (99.999%) claim (that figure is real only as Equinix's own power-specific SLA, not a
+          universal industry standard). Actual uptime and the resulting penalty math are
+          <span class="badge illustrative">illustrative</span>.</p>
+      </div>
+    </section>
+
+    <section id="revenue-yield-section">
+      <h2>Revenue per MW &amp; Gross Margin <span class="badge illustrative">illustrative figures, real benchmark range</span>
+        <button class="info-toggle" type="button" data-explainer="expRevenueYield" aria-expanded="false" aria-label="Formula and methodology">i</button></h2>
+      <div class="explainer" id="expRevenueYield"></div>
+      <p class="lede" style="font-size:13px">Revenue per megawatt and stabilized gross margin are the
+        real, named metrics operators actually report — not the single blended "gross margin per MW"
+        figure sometimes proposed, which no real operator's filings or earnings calls report.</p>
+      <div class="card">
+        <div class="kpis" id="revenueYieldKpis"></div>
+        <p class="src-note"><span class="badge real">real</span> "Revenue per MW" is the real,
+          named capacity-economics metric data-center investors actually track (S&amp;P Global Visible
+          Alpha / Chronograph); real stabilized gross margins for hyperscale/colocation assets run
+          roughly 50–55% (Digital Realty, Equinix Q1 2026 reporting). This program's own revenue and
+          direct-cost figures are <span class="badge illustrative">illustrative</span>, sized to land
+          inside that real range, not to invent a new one.</p>
+      </div>
+    </section>
+  </div>
+
   <!-- ============================================================ OPERATING FRAMEWORK ============================================================ -->
   <div class="tabpanel" id="panel-framework" role="tabpanel" aria-labelledby="tab-framework">
     <section>
@@ -1390,7 +1475,7 @@
   });
 
   /* ---------- hover/focus-preview mini-drawer on every tab button ---------- */
-  // One small hand-authored map (11 tabs, not duplicated per-KPI). label is its own field here --
+  // One small hand-authored map (12 tabs, not duplicated per-KPI). label is its own field here --
   // NOT read from btn.textContent -- because the Operating Framework button now also carries a
   // a .cnt status-pill span element as a DOM child; textContent would silently concatenate the pill's own
   // text onto the label the moment that pill has content (e.g. "Operating FrameworkGate 4 blocked"),
@@ -1403,6 +1488,7 @@
     contingency: { label:"Contingency & Risk", q:"Is the reserve keeping pace with real risk, or running out?", note:"Monte Carlo, drawdown ratio, priced risk register, float signal, EMV settlement." },
     governance: { label:"Vendor & Governance", q:"Can leadership trust the numbers, and is the crew performing?", note:"Consultant scorecard, data-quality health, crew productivity." },
     portfolio: { label:"Portfolio", q:"How is this program doing across its own regions?", note:"Multi-region cost rollup." },
+    ramp: { label:"Commercial Ramp", q:"After construction ends, does the revenue actually show up on schedule?", note:"Tenant power-ramp lag, leased-vs-metered mix, SLA penalty exposure, revenue per MW." },
     framework: { label:"Operating Framework", q:"What governance does this program actually run on?", note:"A genuinely computed Gate 4, plus the illustrative stage-gate track." },
     actions: { label:"Actions", q:"What's open, who owns it, and what's gone stale?", note:"A commercial action-item register with real staleness logic." },
     triage: { label:"Attention & Triage", q:"Out of everything on this dashboard, what actually needs a human right now?", note:"A cross-tab digest re-checking every alert already computed elsewhere." },
@@ -1506,6 +1592,7 @@
     contingency: "A risk doesn't have to be the biggest dollar figure to deserve the most attention — a high-probability, low-impact risk can outrank a rare catastrophic one on expected value.",
     governance: "AACE RP 108R-19 treats a stale field-vs-ERP sync as a real accounting-alignment problem — past its threshold, this month's numbers are provably stale, not just possibly stale.",
     portfolio: "Try the escalation-swing slider under a region's detail panel below — it's non-destructive and resets the moment you switch regions.",
+    ramp: "A tenant's power draw commonly takes 12–30 months to ramp from lease signing to full contracted capacity — real, cited industry sources describe this exact lag.",
     framework: "Gate 4 here is genuinely computed from remaining reserve (reserve minus drawn) ÷ total risk exposure, not a status bar someone set to \"pending\" by policy.",
     actions: "A closed action item never counts toward staleness, no matter how old it is — only open items age against the threshold.",
     triage: "This tab re-checks the same alert functions already computed on other tabs — a digest, not a second implementation that could quietly drift from the original.",
@@ -3047,6 +3134,168 @@
   if (regionAdjustInput) regionAdjustInput.addEventListener("input", function(){ regionAdjustResult = renderRegionAdjust(); });
   var regionAdjustResult = renderRegionAdjust();
 
+  /* ================= COMMERCIAL RAMP TAB (brainstorm build, harvested from an uploaded 30-KPI
+     document -- 25 of its 30 KPIs and its "1-click execute"/3D-twin UX proposal were independently
+     fact-checked and rejected as wrong, out of scope, or fabricated; this tab is the one domain
+     that survived: post-construction tenant-ramp economics, rebuilt entirely on real citations this
+     session's own research found, not the source document's own numbers, several of which were
+     confirmed wrong.) ================= */
+
+  // ---- Section 1: tenant power-ramp lag + reserve burn ----
+  var rampAssumptions = {
+    assumedRampMonths: 18,       // illustrative: this program's own assumed lease-to-full-ramp lag
+    realCitedLowMonths: 12,      // real, cited: see src-note in the HTML
+    realCitedHighMonths: 30,
+    reserve: 42000000,           // illustrative: $ set aside for ramp-period unrecoverable OpEx
+    incurred: 18500000,          // illustrative: $ actually incurred so far
+    monthlyBurnRate: 1200000     // illustrative: $/month unrecoverable OpEx during an extended ramp
+  };
+  // Pure function: reserve/incurred in, remaining + exhaustion verdict out -- same pattern as
+  // computeGateStatus above (reserve minus drawn, not just a bare percentage).
+  function computeRampReserveStatus(reserve, incurred){
+    var remaining = reserve - incurred;
+    return { remaining: remaining, pctUsed: reserve > 0 ? (incurred / reserve) * 100 : 0, exhausted: remaining < 0 };
+  }
+  // Pure function: an additional delay (months) in, the projected additional burn + new remaining
+  // reserve out -- what the ramp-delay slider actually recomputes live.
+  function computeRampDelayImpact(reserve, incurred, extraMonths, monthlyBurn){
+    var additionalBurn = Math.max(0, extraMonths) * monthlyBurn;
+    var newIncurred = incurred + additionalBurn;
+    return { additionalBurn: additionalBurn, newIncurred: newIncurred, newRemaining: reserve - newIncurred };
+  }
+  function rampAlertContent(status){
+    if (status.exhausted) {
+      return { className:"alert-card warn", html:
+        '<div class="alert-head"><span class="alert-shape">▲</span> RAMP RESERVE EXHAUSTED</div>' +
+        '<div class="alert-row"><b>Detected:</b> unrecoverable OpEx incurred (' + fmt(rampAssumptions.incurred) + ') has exceeded the ' + fmt(rampAssumptions.reserve) + ' ramp reserve</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> the tenant\'s actual power-ramp lag is running past the 18-month assumption this reserve was underwritten against</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> escalate for a reserve top-up, or revisit the underwritten ramp-schedule assumption before the next reporting period</div>' };
+    }
+    return { className:"alert-card ok", html:
+      '<div class="alert-head"><span class="alert-shape">●</span> RAMP RESERVE ON TRACK</div>' +
+      '<div class="alert-row">Unrecoverable OpEx incurred so far is within the underwritten reserve.</div>' };
+  }
+  function renderRampKpis(){
+    var status = computeRampReserveStatus(rampAssumptions.reserve, rampAssumptions.incurred);
+    var el = document.getElementById("rampKpis");
+    if (el) el.innerHTML =
+      '<div class="kpi"><div class="lbl">Assumed ramp lag (this program)</div><div class="val">' + rampAssumptions.assumedRampMonths + ' mo</div></div>' +
+      '<div class="kpi"><div class="lbl">Real cited range</div><div class="val">' + rampAssumptions.realCitedLowMonths + '–' + rampAssumptions.realCitedHighMonths + ' mo</div></div>' +
+      '<div class="kpi"><div class="lbl">Ramp reserve</div><div class="val tabular">' + fmt(rampAssumptions.reserve) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Remaining reserve</div><div class="val tabular">' + fmt(status.remaining) + '</div></div>';
+    var warnEl = document.getElementById("rampWarn");
+    if (warnEl) {
+      var content = rampAlertContent(status);
+      warnEl.className = content.className;
+      warnEl.innerHTML = content.html;
+    }
+    return status;
+  }
+  var rampStatus = renderRampKpis();
+  var rampDelaySliderInput = document.getElementById("rampDelaySlider");
+  function renderRampDelaySlider(){
+    if (!rampDelaySliderInput) return null;
+    var extraMonths = parseInt(rampDelaySliderInput.value, 10);
+    var impact = computeRampDelayImpact(rampAssumptions.reserve, rampAssumptions.incurred, extraMonths, rampAssumptions.monthlyBurnRate);
+    var valEl = document.getElementById("rampDelaySliderVal");
+    if (valEl) valEl.textContent = "+" + extraMonths + " mo";
+    var noteEl = document.getElementById("rampDelayNote");
+    if (noteEl) noteEl.innerHTML = extraMonths === 0
+      ? "Non-destructive — projects the reserve burn from additional ramp delay without changing the baseline figures above."
+      : "At +" + extraMonths + " months, projected additional unrecoverable OpEx is <b>" + fmt(impact.additionalBurn) + "</b>, leaving a projected remaining reserve of <b>" + fmt(impact.newRemaining) + "</b>.";
+    return impact;
+  }
+  var rampDelayResult = renderRampDelaySlider();
+  if (rampDelaySliderInput) rampDelaySliderInput.addEventListener("input", function(){ rampDelayResult = renderRampDelaySlider(); });
+
+  // ---- Section 2: leased vs. metered power revenue mix ----
+  var leasedMeteredMix = {
+    realLowLeasedPct: 70, realHighLeasedPct: 80,   // real, cited: Cushman & Wakefield
+    realLowMeteredPct: 15, realHighMeteredPct: 20,
+    thisProgramLeasedPct: 76,                       // illustrative, sized inside the real cited range
+    thisProgramMeteredPct: 19
+  };
+  function renderLeasedMeteredKpis(){
+    var el = document.getElementById("leasedMeteredKpis");
+    if (!el) return;
+    el.innerHTML =
+      '<div class="kpi"><div class="lbl">Real benchmark: reserved-capacity rent</div><div class="val">' + leasedMeteredMix.realLowLeasedPct + '–' + leasedMeteredMix.realHighLeasedPct + '%</div><div class="sub">of total revenue</div></div>' +
+      '<div class="kpi"><div class="lbl">Real benchmark: metered pass-through</div><div class="val">' + leasedMeteredMix.realLowMeteredPct + '–' + leasedMeteredMix.realHighMeteredPct + '%</div><div class="sub">of total revenue</div></div>' +
+      '<div class="kpi"><div class="lbl">This program\'s mix — leased</div><div class="val">' + leasedMeteredMix.thisProgramLeasedPct + '%</div></div>' +
+      '<div class="kpi"><div class="lbl">This program\'s mix — metered</div><div class="val">' + leasedMeteredMix.thisProgramMeteredPct + '%</div></div>';
+  }
+  renderLeasedMeteredKpis();
+
+  // ---- Section 3: SLA uptime + penalty exposure (a real cost-risk consequence of an ops metric) ----
+  var slaAssumptions = {
+    committedTier: "Tier IV", committedUptimePct: 99.995,  // real, cited: Uptime Institute Tier IV
+    actualUptimePct: 99.97,                                 // illustrative
+    contractedMW: 50,                                       // illustrative, matches this program's real-grounded 50MW campus scale
+    annualRevenuePerMW: 3600000                             // illustrative, sized inside the real cited stabilized-margin range below
+  };
+  // Pure function: committed vs. actual uptime % in, real downtime-minute math + a $ penalty
+  // exposure out -- the same mechanics a real SLA-credit clause uses, not an invented formula.
+  function computeSLAPenaltyExposure(committedPct, actualPct, annualRevenue){
+    var minutesPerYear = 365 * 24 * 60;
+    var allowedDowntimeMinutes = (100 - committedPct) / 100 * minutesPerYear;
+    var actualDowntimeMinutes = (100 - actualPct) / 100 * minutesPerYear;
+    var excessDowntimeMinutes = Math.max(0, actualDowntimeMinutes - allowedDowntimeMinutes);
+    var penaltyExposure = (excessDowntimeMinutes / minutesPerYear) * annualRevenue;
+    return { allowedDowntimeMinutes: allowedDowntimeMinutes, actualDowntimeMinutes: actualDowntimeMinutes, excessDowntimeMinutes: excessDowntimeMinutes, penaltyExposure: penaltyExposure, breach: actualPct < committedPct };
+  }
+  function slaAlertContent(result){
+    if (result.breach) {
+      return { className:"alert-card warn", html:
+        '<div class="alert-head"><span class="alert-shape">▲</span> SLA BREACH — Penalty Exposure</div>' +
+        '<div class="alert-row"><b>Detected:</b> actual uptime is below the committed ' + slaAssumptions.committedTier + ' standard by ' + Math.round(result.excessDowntimeMinutes) + ' minutes/year of excess downtime</div>' +
+        '<div class="alert-row"><b>Probable cause:</b> unplanned mechanical/electrical downtime beyond the redundancy design\'s own tolerance</div>' +
+        '<div class="alert-row"><b>Suggested action:</b> root-cause the specific outage before the next SLA reporting period closes the penalty window</div>' };
+    }
+    return { className:"alert-card ok", html:
+      '<div class="alert-head"><span class="alert-shape">●</span> SLA IN COMPLIANCE</div>' +
+      '<div class="alert-row">Actual uptime is meeting the committed ' + slaAssumptions.committedTier + ' standard.</div>' };
+  }
+  function renderSlaKpis(){
+    var annualRevenue = slaAssumptions.annualRevenuePerMW * slaAssumptions.contractedMW;
+    var result = computeSLAPenaltyExposure(slaAssumptions.committedUptimePct, slaAssumptions.actualUptimePct, annualRevenue);
+    var el = document.getElementById("slaKpis");
+    if (el) el.innerHTML =
+      '<div class="kpi"><div class="lbl">Committed SLA</div><div class="val">' + slaAssumptions.committedTier + ' (' + slaAssumptions.committedUptimePct.toFixed(3) + '%)</div></div>' +
+      '<div class="kpi"><div class="lbl">Actual uptime</div><div class="val">' + slaAssumptions.actualUptimePct.toFixed(3) + '%</div></div>' +
+      '<div class="kpi"><div class="lbl">Excess downtime</div><div class="val">' + Math.round(result.excessDowntimeMinutes) + ' min/yr</div></div>' +
+      '<div class="kpi"><div class="lbl">Penalty exposure</div><div class="val tabular">' + fmt(result.penaltyExposure) + '</div></div>';
+    var warnEl = document.getElementById("slaWarn");
+    if (warnEl) {
+      var content = slaAlertContent(result);
+      warnEl.className = content.className;
+      warnEl.innerHTML = content.html;
+    }
+    return result;
+  }
+  var slaResult = renderSlaKpis();
+
+  // ---- Section 4: revenue per MW + gross margin (the real, separately-reported pair -- not the
+  // single blended "gross margin per MW" figure the source document proposed, which no real
+  // operator's filings or earnings calls report) ----
+  var revenueYieldAssumptions = {
+    annualRevenue: 180000000,   // illustrative: 50MW x the illustrative $3.6M/MW/yr above
+    directCosts: 85000000       // illustrative, sized so the resulting margin lands inside the real cited range
+  };
+  function computeRevenuePerMW(annualRevenue, contractedMW){ return contractedMW > 0 ? annualRevenue / contractedMW : 0; }
+  function computeGrossMarginPct(revenue, directCosts){ return revenue > 0 ? ((revenue - directCosts) / revenue) * 100 : 0; }
+  function renderRevenueYieldKpis(){
+    var revenuePerMW = computeRevenuePerMW(revenueYieldAssumptions.annualRevenue, slaAssumptions.contractedMW);
+    var marginPct = computeGrossMarginPct(revenueYieldAssumptions.annualRevenue, revenueYieldAssumptions.directCosts);
+    var el = document.getElementById("revenueYieldKpis");
+    if (el) el.innerHTML =
+      '<div class="kpi"><div class="lbl">Annual revenue</div><div class="val tabular">' + fmt(revenueYieldAssumptions.annualRevenue) + '</div></div>' +
+      '<div class="kpi"><div class="lbl">Revenue per MW</div><div class="val tabular">' + fmt(revenuePerMW) + '</div><div class="sub">per MW / year</div></div>' +
+      '<div class="kpi"><div class="lbl">Gross margin</div><div class="val">' + marginPct.toFixed(1) + '%</div></div>' +
+      '<div class="kpi"><div class="lbl">Real cited stabilized range</div><div class="val">50–55%</div></div>';
+    return { revenuePerMW: revenuePerMW, marginPct: marginPct };
+  }
+  var revenueYieldResult = renderRevenueYieldKpis();
+
   /* ================= PORTFOLIO TAB: stage-gate progress ================= */
   var gates = [
     { name:"Gate 1: Feasibility", status:"done" },
@@ -3335,7 +3584,11 @@
     expScurve: "Cumulative % = running total of simulated draws in each histogram bin ÷ 2,000 total draws — the same 2,000-draw Monte Carlo run already producing the histogram and the P50/P80/P90 readouts, just re-expressed as a cumulative curve. Reading the curve at the dashed 80% line is the same P80 value shown numerically above; the curve just makes 'how much of the distribution sits below any given cost' immediately visual.",
     expTreemap: "Block width = each control account's BAC ÷ total program BAC — the same real dollar amounts as the Control Account Ledger table below, not a second invented split. A block visibly wider than the others is where a 1% productivity or scope swing does the most damage in absolute dollars, even if its % share hasn't changed.",
     expFloatBurndown: "Plots the same 4 float readings driving the KPI tiles and the alert above, then extends a dashed projection to the same 'weeks to zero' figure computeFloatErosionRate() already calculates — seeing the trajectory, not just the current reading, is what makes an erosion pattern legible before it's a crisis.",
-    expInterconnection: "$ Exposure = Baseline × a real, cited 30–37% share of total project budget (RMI / Eckert Seamans / Data Center Knowledge, 2026). Schedule risk = a real, cited up-to-12-year typical wait for a data-center-scale interconnection request compared against this program's own assumed development schedule. Interconnection is now frequently the true critical path — not the construction activities a schedule traditionally tracks — which is exactly why it gets its own line here instead of being absorbed into 'site work.'"
+    expInterconnection: "$ Exposure = Baseline × a real, cited 30–37% share of total project budget (RMI / Eckert Seamans / Data Center Knowledge, 2026). Schedule risk = a real, cited up-to-12-year typical wait for a data-center-scale interconnection request compared against this program's own assumed development schedule. Interconnection is now frequently the true critical path — not the construction activities a schedule traditionally tracks — which is exactly why it gets its own line here instead of being absorbed into 'site work.'",
+    expRampLag: "Remaining Reserve = Ramp Reserve − Unrecoverable OpEx Incurred. Real, cited industry sources (Adventures in CRE's data-center development model; a DOE-funded 2026 study on fast-ramping datacenter loads) describe a genuine 12–30 month lag between lease commencement and full contracted power draw — this program's own 18-month assumption and its reserve math are illustrative, sized inside that real range.",
+    expLeasedMetered: "Real, published revenue-mix benchmark (Cushman & Wakefield, Data Center Spotlight): hyperscale data-center revenue typically splits 70–80% reserved-capacity base rent and 15–20% metered power pass-through. This is a revenue-MIX benchmark, not a stabilization-timeline target — a distinction an earlier version of this section's source material blurred.",
+    expSlaPenalty: "Penalty Exposure = (Actual Downtime Minutes − Committed-Tier Allowed Downtime Minutes) ÷ Minutes per Year × Annual Revenue — the same mechanics a real SLA-credit clause uses. Committed to the real Uptime Institute Tier IV standard (99.995%, ~26 min/yr allowed downtime), not a blanket 'five nines' (99.999%) claim, which is real only as Equinix's own power-specific SLA, not a universal industry standard.",
+    expRevenueYield: "Revenue per MW = Annual Revenue ÷ Contracted MW — the real, named capacity-economics metric data-center investors actually track (S&P Global Visible Alpha / Chronograph). Gross Margin = (Revenue − Direct Costs) ÷ Revenue, sized here to land inside the real ~50–55% stabilized range Digital Realty and Equinix actually report — not the single blended 'gross margin per MW' figure sometimes proposed, which no real operator's filings report."
   };
   // Plain-English alternates to every explainer above, toggled by #explainBtn -- same ids, so
   // rendering just picks which object to read from rather than needing a second render path.
@@ -3371,7 +3624,11 @@
     expScurve: "The same 2,000-scenario simulation, replotted to show what share of outcomes cost less than a given amount.",
     expTreemap: "Which budget category is the single biggest block of money, where a small % swing costs the most in real dollars.",
     expFloatBurndown: "The trend line for schedule cushion disappearing, not just today's one-off snapshot.",
-    expInterconnection: "The unglamorous but often make-or-break cost and schedule risk of just getting the power hookup approved."
+    expInterconnection: "The unglamorous but often make-or-break cost and schedule risk of just getting the power hookup approved.",
+    expRampLag: "After construction ends, does the tenant's actual power draw ramp up fast enough, or is the program burning cash waiting for revenue to catch up?",
+    expLeasedMetered: "Is most of the revenue coming from the lease itself, or from what the tenant actually uses — and does that match what's realistic?",
+    expSlaPenalty: "If uptime slips below what was promised, how much does that actually cost in penalties?",
+    expRevenueYield: "Once stabilized, how much does this program actually make per megawatt, and at what margin?"
   };
   var explainMode = "technical";
   (function(){
@@ -3418,6 +3675,10 @@
     { q:"Can leadership trust this month's numbers, or is the field system out of sync?", kpi:"Data-Quality Reconciliation Health", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 108R-19" },
     { q:"Which trade is losing productivity, and is it worth escalating?", kpi:"Crew Labor Productivity Factor", tab:"governance", tabLabel:"Vendor & Governance", badge:"real", cite:"AACE RP 22R-01" },
     { q:"Which region in the portfolio is the actual outlier, and by how much?", kpi:"Multi-Region Cost Variance", tab:"portfolio", tabLabel:"Portfolio", badge:"illustrative", cite:"—" },
+    { q:"Construction is done — is the revenue actually ramping on schedule?", kpi:"Tenant Power-Ramp Lag", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Adventures in CRE + DOE 2026 (12-30mo ramp lag)" },
+    { q:"Is our leased-vs-metered revenue mix in line with how the market actually contracts?", kpi:"Leased vs. Metered Revenue Mix", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Cushman & Wakefield" },
+    { q:"If uptime slips below the committed SLA, what's the dollar exposure?", kpi:"SLA Penalty Exposure", tab:"ramp", tabLabel:"Commercial Ramp", badge:"real", cite:"Uptime Institute Tier IV + Equinix" },
+    { q:"How much revenue and margin is each contracted MW actually yielding?", kpi:"Revenue per MW / Gross Margin", tab:"ramp", tabLabel:"Commercial Ramp", badge:"illustrative", cite:"S&P Global Visible Alpha/Chronograph + Digital Realty/Equinix" },
     { q:"Enough reserve left to responsibly move into execution, or gating on hope?", kpi:"Gate 4 Contingency Coverage", tab:"framework", tabLabel:"Operating Framework", badge:"real", cite:"AACE RP 40R-08" }
   ];
   function renderKpiCatalog(){
@@ -3696,6 +3957,10 @@
     interconnectionResult = renderInterconnectionExposure();
     regionRankedBarResult = renderRegionRankedBar();
     regionAdjustResult = renderRegionAdjust();
+    rampStatus = renderRampKpis();
+    rampDelayResult = renderRampDelaySlider();
+    slaResult = renderSlaKpis();
+    revenueYieldResult = renderRevenueYieldKpis();
   });
 
   /* ================= LIVE INTEGRITY GATE (GUARDS) -- runs in the browser, not just in verify.cjs =================
@@ -3729,8 +3994,8 @@
     { n:"Monte Carlo percentiles stay ordered: P50 ≤ P80 ≤ P90", run:function(){
         return [lastMC.p50 <= lastMC.p80 && lastMC.p80 <= lastMC.p90, lastMC.p50.toFixed(0) + " / " + lastMC.p80.toFixed(0) + " / " + lastMC.p90.toFixed(0)];
       }},
-    { n:"KPI catalog has exactly 20 entries, each pointing at a real tab", run:function(){
-        var ok = kpiCatalog.length === 20 && kpiCatalog.every(function(k){ return !!k.tab; });
+    { n:"KPI catalog has exactly 24 entries, each pointing at a real tab", run:function(){
+        var ok = kpiCatalog.length === 24 && kpiCatalog.every(function(k){ return !!k.tab; });
         return [ok, kpiCatalog.length + " registered"];
       }},
     { n:"Compliance sweep: no employer name in this build's own rendered content", run:function(){
@@ -3747,7 +4012,8 @@
           "gateTrack", "floatKpis", "floatWarn", "drawdownWarn", "dqKpis", "dqWarn", "emvTable",
           "emvVerdict", "emvTwoBar", "consultantTable", "productivityTable", "lpfRankedBar",
           "regionDetail", "regionTabs", "riskCategoryKpis", "actionsKpis", "actionsTable",
-          "triageList", "heatmapDetail", "stoplightDetail", "maturityDetail", "pipelineDiagram"];
+          "triageList", "heatmapDetail", "stoplightDetail", "maturityDetail", "pipelineDiagram",
+          "rampKpis", "rampWarn", "leasedMeteredKpis", "slaKpis", "slaWarn", "revenueYieldKpis"];
         var text = ids.map(function(id){ var el = document.getElementById(id); return el ? el.innerHTML : ""; }).join(" ");
         var hit = bad.some(function(t){ return text.indexOf(t) !== -1; });
         return [!hit, hit ? "FOUND" : "clean"];
@@ -3801,6 +4067,32 @@
         var expected = Math.round(bridgeResult.baseline * 0.35 * 0.055);
         var actual = bridgeSteps[2].value;
         return [expected === actual, fmt(actual)];
+      }},
+    { n:"Ramp reserve remaining recomputes from reserve minus incurred, raw literals", run:function(){
+        // Raw-literal recompute (reserve/incurred read as plain data, not a second call to
+        // computeRampReserveStatus()) -- same tautology class the interconnection/escalation
+        // checks above avoid.
+        var expected = 42000000 - 18500000;
+        var ok = Math.abs(expected - rampStatus.remaining) < 1e-6;
+        return [ok, fmt(rampStatus.remaining)];
+      }},
+    { n:"SLA penalty exposure recomputes from the real Tier IV committed uptime vs. actual, priced against annual revenue", run:function(){
+        var minutesPerYear = 365 * 24 * 60;
+        var allowed = (100 - 99.995) / 100 * minutesPerYear;
+        var actualDown = (100 - 99.97) / 100 * minutesPerYear;
+        var excess = Math.max(0, actualDown - allowed);
+        var annualRevenue = 3600000 * 50; // annualRevenuePerMW x contractedMW, both raw literals
+        var expected = (excess / minutesPerYear) * annualRevenue;
+        var ok = Math.abs(expected - slaResult.penaltyExposure) < 1e-6;
+        return [ok, fmt(slaResult.penaltyExposure)];
+      }},
+    { n:"Revenue/MW and gross margin recompute from raw revenue/cost literals, land inside the real cited 50-55% range", run:function(){
+        var expectedRevPerMW = 180000000 / 50;
+        var expectedMarginPct = ((180000000 - 85000000) / 180000000) * 100;
+        var ok = Math.abs(expectedRevPerMW - revenueYieldResult.revenuePerMW) < 1e-6 &&
+          Math.abs(expectedMarginPct - revenueYieldResult.marginPct) < 1e-6 &&
+          expectedMarginPct >= 50 && expectedMarginPct <= 55;
+        return [ok, fmt(expectedRevPerMW) + "/MW, " + expectedMarginPct.toFixed(1) + "%"];
       }}
   ];
   function renderGuards(){
@@ -3929,7 +4221,23 @@
     paletteIndex: paletteIndex,
     TAB_FACTOIDS: TAB_FACTOIDS,
     getShownFactoids: function(){ return shownFactoids; },
-    TAB_INFO: TAB_INFO
+    TAB_INFO: TAB_INFO,
+    // Commercial Ramp tab (brainstorm build, doc-verification harvest)
+    rampAssumptions: rampAssumptions,
+    computeRampReserveStatus: computeRampReserveStatus,
+    computeRampDelayImpact: computeRampDelayImpact,
+    rampAlertContent: rampAlertContent,
+    getRampStatus: function(){ return rampStatus; },
+    getRampDelayResult: function(){ return rampDelayResult; },
+    leasedMeteredMix: leasedMeteredMix,
+    slaAssumptions: slaAssumptions,
+    computeSLAPenaltyExposure: computeSLAPenaltyExposure,
+    slaAlertContent: slaAlertContent,
+    getSlaResult: function(){ return slaResult; },
+    revenueYieldAssumptions: revenueYieldAssumptions,
+    computeRevenuePerMW: computeRevenuePerMW,
+    computeGrossMarginPct: computeGrossMarginPct,
+    getRevenueYieldResult: function(){ return revenueYieldResult; }
   };
 })();
 </script>

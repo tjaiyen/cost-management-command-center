@@ -1,10 +1,11 @@
 # Cost Management Command Center
 
-A cost-management methodology demo — 11 tabs covering an executive brief, CAPEX budget bridges
+A cost-management methodology demo — 12 tabs covering an executive brief, CAPEX budget bridges
 with a live tri-point Monte Carlo, a genuinely live-computed stage gate, schedule float read as a
-cost-risk signal, EMV-based change-order settlement modeling, vendor/crew governance, multi-region
-portfolio rollup, a cross-tab attention-triage digest, and a data-strategy pipeline (now with a
-free, local DuckDB parity layer) — built around a synthetic capital-development program.
+cost-risk signal, EMV-based change-order settlement modeling, vendor/crew governance, commercial
+ramp & revenue yield, multi-region portfolio rollup, a cross-tab attention-triage digest, and a
+data-strategy pipeline (now with a free, local DuckDB parity layer) — built around a synthetic
+capital-development program.
 
 **Live:** https://tjaiyen.github.io/cost-management-command-center/
 
@@ -64,6 +65,17 @@ pipeline is the one piece with a real dependency — see Verification below.)
   as realistic labels), with **all 4 regions ranked on one bar** above the one-at-a-time tabs
   (clicking a ranked bar now switches the active region below it), plus a **non-destructive
   escalation-swing what-if slider** scoped to whichever region is active.
+- **Commercial Ramp** — post-construction revenue-side tracking the uploaded-document review
+  surfaced as genuinely net-new (construction cost tracking says nothing about whether the revenue
+  actually shows up on schedule once the build is done): a **tenant power-ramp lag** section (real
+  12–30 month lease-to-full-draw lag, non-destructive delay slider against the contingency reserve
+  burn rate), a **leased-vs-metered revenue mix** card (real ~70–80% leased / ~15–20% metered
+  industry split vs. this program's own mix), an **SLA penalty exposure** calculator (real Uptime
+  Institute Tier IV 99.995% committed uptime vs. actual, priced against contracted MW and
+  revenue/MW), and a **revenue yield** card (revenue per MW, gross margin — sized to land inside the
+  real cited 50–55% range, not invented). Harvested from the uploaded 30-KPI document after
+  independently fact-checking all 30 KPIs and all 4 UX proposals — roughly half the document's
+  claims didn't survive verification (see Provenance below); this tab is what did.
 - **Operating Framework** — a genuinely *computed* Gate 4 (Contingency Coverage Ratio = remaining
   reserve ÷ total priced risk EV; currently BLOCKED on this build's own real numbers, not a bar
   someone set to "pending"), now paired with a **live radial-style gauge**, plus the illustrative
@@ -79,7 +91,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   not just in a Node test file someone would have to clone the repo to see (including a live
   escalation-assumption staleness check and a cross-region cost-reporting schema check).
 - **Reference** — the 20-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
-  badge → citation, one row per built visual across all 11 tabs), plus a searchable,
+  badge → citation, one row per built visual across all 12 tabs), plus a searchable,
   category-filterable glossary of every AACE Recommended Practice, every real data-center cost
   figure, every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV), and (added
   from a real JD-gap analysis, 2026-08-26) an **Industry Vocabulary** category — AOR/EOR, LLE, and
@@ -367,7 +379,7 @@ verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now exp
 **UX/navigation upgrade pass, 2026-08-26** — a full brainstorm-then-build round covering
 interactivity, navigation, and onboarding, none of it adding an external dependency:
 
-- **Command palette (⌘K)** — fuzzy-jumps to any of the 11 tabs, the 20-KPI catalog, or the full
+- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 20-KPI catalog, or the full
   glossary from one search box, wired through the existing global keyboard-shortcut handler.
 - **Per-cluster tab-rail tinting + exploration progress** — the tab rail's existing 5 groups
   (Executive/Cost & Risk/Governance & Portfolio/Actions/Reference) now carry their own accent color
@@ -503,6 +515,42 @@ gaps, flagged for a future accessibility-focused pass rather than folded into th
 
 verify.cjs 317 → 347 (+30), stress.cjs 151 → 160 (+9), both green.
 
+**Commercial Ramp tab (2026-08-26)** — a user upload proposed 30 KPIs plus a "Digital Twin Command
+Center" UX layer (3D WebGL canvas, a 1-click auto-execute engine, an ESG water-saved counter). Per
+this project's own harvest-don't-import discipline, every one of the ~34 numeric/UX claims was
+independently fact-checked against real, named, dated sources before anything was built — not
+sampled, the full document. Roughly half didn't survive: several KPIs were off by an order of
+magnitude or more (a carbon-intensity figure ~36x low, a rack-density figure already a hardware
+generation obsolete), a chunk restated KPIs this build already had under different names, and all
+three UX centerpieces were rejected on this project's own constraints (zero-dependency architecture
+rules out a 3D WebGL engine; no real backend rules out an "auto-execute" action button that can't
+actually execute anything; the ESG tracker leaned on a stale, unverified figure). What survived and
+got built: post-construction commercial/revenue tracking, a real gap in a program that otherwise
+only tracks cost through construction completion. New **Commercial Ramp** tab, 4 sections — tenant
+power-ramp lag vs. reserve burn (real 12–30 month lease-to-full-draw lag, Adventures in CRE + a
+DOE-funded 2026 study, paired with a non-destructive delay slider), leased-vs-metered revenue mix
+(real ~70–80%/~15–20% split, Cushman & Wakefield), SLA penalty exposure (real Uptime Institute Tier
+IV 99.995% committed uptime, priced against contracted MW), and revenue yield (revenue/MW, gross
+margin sized to land inside the real cited 50–55% range, not invented). 4 new KPI-catalog rows (20
+→ 24), 4 new technical + 4 new plain-English explainer entries, one new TAB_FACTOIDS entry, tab
+count 11 → 12 everywhere it was stated.
+
+An independent fresh-context reviewer then re-checked the tab's math (hand-recomputed every new
+pure function against the literals, confirmed all correct) and found 2 real gaps this pass had
+missed: (1) the "no employer name in this build's own rendered content" GUARDS check scans a fixed
+container-id list that never picked up this tab's 6 new containers — fixed by adding them; (2) none
+of the 5 new pure functions (`computeRampReserveStatus`, `computeRampDelayImpact`,
+`computeSLAPenaltyExposure`, `computeRevenuePerMW`, `computeGrossMarginPct`) had dedicated test
+coverage anywhere — only generic structural/count checks existed. Fixed with 3 new GUARDS entries
+(raw-literal recompute, not a second call to the same pure function — the same tautology class this
+build's GUARDS already guards against elsewhere) plus ~24 new direct verify.cjs assertions exercising
+every function's real-default value AND its never-exercised-by-default branch (exhausted reserve, no
+SLA breach, divide-by-zero guards). Both fixes were falsification-tested: broke the compliance-sweep
+gap on purpose (injected a fake employer-name literal into a ramp container) and confirmed the GUARD
+actually failed; broke `computeGrossMarginPct`'s divide-by-zero guard on purpose and confirmed the
+new dedicated assertion (not just the generic GUARDS check) caught it — both restored, re-confirmed
+green. verify.cjs 345 → 368 (+23), stress.cjs 157 → 164 (+7), both green.
+
 ## Design lineage
 
 Architecture (single self-contained HTML file, tab-based navigation, theme tokens, real-vs-
@@ -514,7 +562,8 @@ larger sibling project (20 KPIs, 13 tabs, 12,191 lines, 2,974+124 tests, a DuckD
 around a synthetic capital transit program). **Correction (`/stress-test` audit, 2026-08-26):** an
 earlier draft of this section claimed this repo underwent "a 5-phase expansion" that "mapped that
 reference's tabs" to match its scale — that never happened, and the metrics said so on inspection:
-this build sits at **11 tabs / ~3,030 lines**, not 13 / 12,191. What's true instead: a handful of
+this build sat at 11 tabs / ~3,030 lines at the time, not 13 / 12,191 — since grown to **12 tabs /
+~4,218 lines** with the Commercial Ramp tab below. What's true instead: a handful of
 individual mechanisms were selectively borrowed from that sibling project across several separate,
 unplanned feature requests over this repo's history — the GUARDS live-integrity-gate pattern, the
 Gate-4 tab-rail status pill, and the general "real-vs-illustrative badge" discipline itself. Two

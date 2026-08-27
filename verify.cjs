@@ -131,9 +131,9 @@ const documentStub = {
       // gap: any test asserting a tab button's OWN displayed label, like the return-breadcrumb
       // test below, silently got an empty string instead of a real mismatch or a real match).
       var TAB_LABELS = { overview:"Overview", exec:"Executive Command", cost:"Cost", contingency:"Contingency & Risk",
-        governance:"Vendor & Governance", portfolio:"Portfolio", framework:"Operating Framework",
+        governance:"Vendor & Governance", portfolio:"Portfolio", ramp:"Commercial Ramp", framework:"Operating Framework",
         actions:"Actions", triage:"Attention & Triage", data:"Data Strategy", reference:"Reference" };
-      lastTabButtonStubs = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"].map((name) => {
+      lastTabButtonStubs = ["overview","exec","cost","contingency","governance","portfolio","ramp","framework","actions","triage","data","reference"].map((name) => {
         const b = withProperties(makeElementStub());
         b.dataset = { tab: name };
         b.textContent = TAB_LABELS[name];
@@ -648,6 +648,37 @@ assertStrEqual(clearedFixture.atRisk, false, "computeInterconnectionExposure() c
 // a program with zero schedule margin isn't flagged, which is the documented, intended semantic.
 const tieFixture = state.computeInterconnectionExposure(1750000000, { pctOfBudgetLow: 30, pctOfBudgetHigh: 37, typicalWaitYearsDataCenter: 5, assumedDevelopmentScheduleYears: 5 });
 assertStrEqual(tieFixture.atRisk, false, "computeInterconnectionExposure() at the exact tie boundary (wait === assumed schedule) does not flag at-risk -- 'exceeds' is strict, not inclusive");
+
+console.log("--- Commercial Ramp tab: reserve status, delay impact, SLA penalty, revenue yield (independent-reviewer finding, 2026-08-26 -- these had zero direct test coverage) ---");
+// computeRampReserveStatus: this build's own live default, then the never-exercised exhausted branch.
+assertEqual(state.computeRampReserveStatus(42000000, 18500000).remaining, 23500000, "computeRampReserveStatus: this program's real default (reserve 42M, incurred 18.5M) leaves 23.5M remaining");
+assertStrEqual(state.computeRampReserveStatus(42000000, 18500000).exhausted, false, "this program's default reserve state is correctly NOT exhausted");
+const exhaustedFixture = state.computeRampReserveStatus(10000000, 12000000);
+assertStrEqual(exhaustedFixture.exhausted, true, "computeRampReserveStatus() correctly flags exhausted when incurred exceeds reserve (never-exercised-by-default branch)");
+assertEqual(exhaustedFixture.remaining, -2000000, "computeRampReserveStatus() reports a negative remaining, not a clamped zero, when exhausted");
+assertStrEqual(state.rampAlertContent(exhaustedFixture).className, "alert-card warn", "rampAlertContent() fires the warn branch when the reserve is exhausted");
+assertStrEqual(state.rampAlertContent(state.computeRampReserveStatus(42000000, 18500000)).className, "alert-card ok", "rampAlertContent() fires the ok branch on this program's real (non-exhausted) default");
+// computeRampDelayImpact: zero extra months is a no-op; a real slider drag adds burn correctly.
+assertEqual(state.computeRampDelayImpact(42000000, 18500000, 0, 1200000).newRemaining, 23500000, "computeRampDelayImpact() at 0 extra months is a no-op on the remaining reserve");
+assertEqual(state.computeRampDelayImpact(42000000, 18500000, 6, 1200000).additionalBurn, 7200000, "computeRampDelayImpact(): 6 extra months x $1.2M/mo burn = $7.2M additional burn");
+assertEqual(state.computeRampDelayImpact(42000000, 18500000, 6, 1200000).newRemaining, 23500000 - 7200000, "computeRampDelayImpact(): new remaining correctly nets the additional burn off the original remaining");
+assertEqual(state.computeRampDelayImpact(42000000, 18500000, -3, 1200000).additionalBurn, 0, "computeRampDelayImpact() clamps a negative extra-months input to zero burn, not a negative burn");
+// computeSLAPenaltyExposure: this program's real default (a genuine breach), then the never-exercised no-breach branch.
+const slaDefault = state.computeSLAPenaltyExposure(99.995, 99.97, 180000000);
+assertEqual(slaDefault.penaltyExposure, 45000, "computeSLAPenaltyExposure(): this program's real default (99.995% committed vs 99.97% actual, $180M annual revenue) prices out to a $45,000 penalty exposure", 1);
+assertStrEqual(slaDefault.breach, true, "this program's real default is correctly flagged as an SLA breach");
+const slaNoBreach = state.computeSLAPenaltyExposure(99.9, 99.95, 180000000);
+assertStrEqual(slaNoBreach.breach, false, "computeSLAPenaltyExposure() correctly clears when actual uptime exceeds committed (never-exercised-by-default branch)");
+assertEqual(slaNoBreach.penaltyExposure, 0, "computeSLAPenaltyExposure() reports zero exposure when there's no breach, not a negative credit");
+assertStrEqual(state.slaAlertContent(slaDefault).className, "alert-card warn", "slaAlertContent() fires the warn branch on this program's real (breaching) default");
+assertStrEqual(state.slaAlertContent(slaNoBreach).className, "alert-card ok", "slaAlertContent() fires the ok branch when there's no breach");
+// computeRevenuePerMW / computeGrossMarginPct: this program's real default, landing inside the real cited 50-55% range.
+assertEqual(state.computeRevenuePerMW(180000000, 50), 3600000, "computeRevenuePerMW(): this program's real default ($180M revenue / 50 contracted MW) is $3.6M/MW/yr");
+assertEqual(state.computeRevenuePerMW(180000000, 0), 0, "computeRevenuePerMW() guards divide-by-zero on zero contracted MW, not NaN/Infinity");
+const marginPct = state.computeGrossMarginPct(180000000, 85000000);
+assertStrEqual(marginPct >= 50 && marginPct <= 55, true, "computeGrossMarginPct(): this program's real default margin genuinely lands inside the real cited 50-55% stabilized range, not just claimed to");
+assertEqual(state.computeGrossMarginPct(180000000, 0), 100, "computeGrossMarginPct() at zero direct cost is a 100% margin, not a divide error");
+assertEqual(state.computeGrossMarginPct(0, 0), 0, "computeGrossMarginPct() guards divide-by-zero on zero revenue, not NaN");
 
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
@@ -1209,14 +1240,14 @@ overviewBtn.fire("click"); // an ORDINARY tab click (via the real tab button, no
 assertStrEqual(elementsById["jumpBreadcrumb"].hidden, true, "an ordinary tab click (not a jump) invalidates any pending return breadcrumb");
 
 console.log("--- Live Integrity Gate (GUARDS) -- firing every check directly, not trusting the page's own summary ---");
-assertEqual(state.GUARDS.length, 15, "exactly 15 live integrity checks are registered");
-assertEqual(state.guardsResult.length, 15, "renderGuards() actually ran all 15 checks at page load, not a subset");
+assertEqual(state.GUARDS.length, 18, "exactly 18 live integrity checks are registered");
+assertEqual(state.guardsResult.length, 18, "renderGuards() actually ran all 18 checks at page load, not a subset");
 const guardsFailures = state.guardsResult.filter((r) => !r.pass);
 if (guardsFailures.length === 0) {
-  console.log("pass: all 15 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
+  console.log("pass: all 18 live integrity checks pass on this build's real default state (pre-registered expectation, not assumed)");
 } else {
   failures++;
-  console.error("FAIL:", guardsFailures.length, "of 15 live integrity checks are failing:", JSON.stringify(guardsFailures));
+  console.error("FAIL:", guardsFailures.length, "of 18 live integrity checks are failing:", JSON.stringify(guardsFailures));
 }
 // Independently re-run each check a second time by calling .run() directly (not just trusting
 // renderGuards()'s own cached result array) -- proves each check is genuinely self-contained and
@@ -1230,9 +1261,9 @@ if (!complianceCheck) {
   assertStrEqual(complianceCheck.run()[1], "clean", "the compliance sweep reports 'clean' on this build's real rendered content");
 }
 
-console.log("--- KPI Catalog: exactly 20 rows, every 'real' badge carries a real citation, every tab is real ---");
-assertEqual(state.kpiCatalog.length, 20, "KPI catalog has exactly 20 rows, not 19 or 21");
-const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","framework","actions","triage","data","reference"];
+console.log("--- KPI Catalog: exactly 24 rows, every 'real' badge carries a real citation, every tab is real ---");
+assertEqual(state.kpiCatalog.length, 24, "KPI catalog has exactly 24 rows, not 23 or 25");
+const KNOWN_TABS = ["overview","exec","cost","contingency","governance","portfolio","ramp","framework","actions","triage","data","reference"];
 let realBadgeNoCitation = 0, unknownTab = 0;
 state.kpiCatalog.forEach((k) => {
   if (k.badge === "real" && (!k.cite || k.cite === "—")) realBadgeNoCitation++;
@@ -1272,7 +1303,7 @@ console.log("--- Exploration progress: visited-tab tracking + the 'Did you know?
     assertStrEqual(actionsBtn.classList.contains("visited"), true, "the clicked tab button gains the .visited class");
     assertStrEqual(actionsBtn.getAttribute("aria-label"), "Actions (visited)", "a screen-reader user gets the same 'visited' signal via aria-label, not just the sighted-only color dot (self-review finding)");
     const progressEl = elementsById["tourProgress"];
-    assertStrEqual(progressEl.textContent.indexOf(" of 11 explored") !== -1, true, "the progress indicator reports 'N of 11 explored'");
+    assertStrEqual(progressEl.textContent.indexOf(" of 12 explored") !== -1, true, "the progress indicator reports 'N of 12 explored'");
     assertStrEqual(elementsById["factoidToast"].classList.contains("show"), true, "visiting a tab for the first time shows its 'Did you know?' toast");
     assertStrEqual(elementsById["factoidText"].textContent, state.TAB_FACTOIDS.actions, "the toast shows that tab's own real factoid text, not a placeholder");
     assertStrEqual(state.getShownFactoids().actions, true, "the factoid is now marked shown, so it won't repeat");
@@ -1514,7 +1545,7 @@ console.log("--- Persistence round-trip: a REAL simulated reload restores every 
     getElementById: (id) => getOrCreate2(id),
     querySelectorAll: (sel) => {
       if (sel === ".tabbtn") {
-        return ["overview", "exec", "cost", "contingency", "governance", "portfolio", "framework", "actions", "triage", "data", "reference"].map((name) => {
+        return ["overview", "exec", "cost", "contingency", "governance", "portfolio", "ramp", "framework", "actions", "triage", "data", "reference"].map((name) => {
           const b = withProperties(makeElementStub());
           b.dataset = { tab: name };
           elementsById2["panel-" + name] = elementsById2["panel-" + name] || withProperties(makeElementStub());
