@@ -12,27 +12,27 @@
     --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-bg-card2:27 35 52;
     --c-accent:6 182 212; --c-accent2:34 211 238;
     --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
-    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13; --c-line:6 182 212;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13; --c-watch:234 179 8; --c-line:6 182 212;
   }
   @media (prefers-color-scheme: light){
     :root{
       --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-bg-card2:241 245 249;
       --c-accent:14 116 144; --c-accent2:8 145 178;
       --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:8 145 178;
-      --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9; --c-line:14 116 144;
+      --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9; --c-watch:161 128 4; --c-line:14 116 144;
     }
   }
   :root[data-theme="dark"]{
     --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-bg-card2:27 35 52;
     --c-accent:6 182 212; --c-accent2:34 211 238;
     --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
-    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13; --c-line:6 182 212;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13; --c-watch:234 179 8; --c-line:6 182 212;
   }
   :root[data-theme="light"]{
     --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-bg-card2:241 245 249;
     --c-accent:14 116 144; --c-accent2:8 145 178;
     --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:8 145 178;
-    --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9; --c-line:14 116 144;
+    --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9; --c-watch:161 128 4; --c-line:14 116 144;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -413,7 +413,13 @@
     transition:opacity 500ms, transform 500ms}
   .stoplight-tile.shown{opacity:1; transform:translateY(0)}
   .stoplight-tile.ok{background:rgb(var(--c-success)/0.12); border:1px solid rgb(var(--c-success)/0.4)}
-  .stoplight-tile.watch{background:rgb(var(--c-warning)/0.12); border:1px solid rgb(var(--c-warning)/0.4)}
+  /* --c-watch (not --c-warning) -- independent-reviewer finding, 2026-08-26: --c-warning's own
+     orange is chromatically close to --c-danger's orange-red (RGB distance ~58 vs. ~239 to
+     --c-success), so the new 3-tier CPI system's middle "watch" band read almost as alarming as
+     "trouble" at a glance despite the distinct icon. A dedicated golden-yellow token (added to all
+     4 theme blocks above) keeps --c-warning's own existing usages (e.g. the drawdown gauge's
+     middle band) completely untouched. */
+  .stoplight-tile.watch{background:rgb(var(--c-watch)/0.12); border:1px solid rgb(var(--c-watch)/0.4)}
   .stoplight-tile.warn{background:rgb(var(--c-danger)/0.12); border:1px solid rgb(var(--c-danger)/0.4)}
   .stoplight-tile .st-name{font-size:11px; color:rgb(var(--c-text-secondary))}
   .stoplight-tile .st-val{font:700 18px/1.3 ui-monospace,monospace}
@@ -3996,11 +4002,14 @@
     { term:"LLE (Long-Lead Equipment)", def:"Procurement items (transformers, switchgear, generators, chillers) whose lead time is long enough to become the schedule-driving constraint on its own, independent of construction progress. See the Cost tab's own Long-Lead Equipment Schedule-Risk Tracker for a live, real-cited example (transformer lead times running 160+ weeks in 2026)." },
     { term:"Quantity Surveying (QS)", def:"The cost-management discipline of measuring and pricing construction work directly from drawings/specifications — historically a UK/Commonwealth-origin credentialed profession (RICS-chartered), increasingly used as a title in US infrastructure and data-center cost-consultancy circles. Cited here as real professional vocabulary; construction cost/estimating experience is adjacent to this discipline, not a claim of QS chartership." }
   ];
-  /* ---------- Formula & methodology explainers for all 20 KPIs (extends the one AACE RP 57R-09
-     explainer that existed before this build to 17 slots covering all 20 -- 3 pairs share one
-     heading/section, so 17 buttons, 20 KPIs). Text lives in one object; the buttons/divs are
-     already in the HTML (each with an empty #expNN div) -- this just fills them in, reusing the
-     existing .info-toggle click-delegation with zero new wiring. ---------- */
+  /* ---------- Formula & methodology explainers for the ORIGINAL 20 KPIs (extends the one AACE
+     RP 57R-09 explainer that existed before this build to 17 slots covering all 20 -- 3 pairs
+     share one heading/section, so 17 buttons, 20 KPIs). Text lives in one object; the buttons/divs
+     are already in the HTML (each with an empty #expNN div) -- this just fills them in, reusing the
+     existing .info-toggle click-delegation with zero new wiring. The catalog has since grown to 24
+     KPIs (Commercial Ramp added 4 more, each with its own non-numbered explainer id -- expRampLag
+     etc., not exp21-24) -- 34 explainer divs total now, this historical note describes only the
+     original numbered set's own design rationale. ---------- */
   var kpiExplainers = {
     exp01: "Portfolio Forecast = Underwriting Baseline + Σ(scope change + market escalation + field-execution variance − contingency drawdown). Reads live off the Cost tab's own budget bridge, not a separately-typed number. A forecast climbing faster than physical progress is usually the first sign a re-baseline conversation is coming. Added 2026-08-26 (deep-research pass): a second, performance-based Estimate at Completion (AACE RP 80R-13) — EAC = BAC ÷ aggregate CPI — answers a different question (where current cost-performance trend says this lands) than the cost-element bridge above (why the number moved).",
     exp0206: "Net Variance = Current Forecast − Underwriting Baseline (AACE RP 86R-14 variance-analysis framework). The Market Escalation step is priced using an index-based method (AACE RP 58R-10, extended by RP 68R-11 with Monte Carlo for escalation uncertainty specifically) — a variance concentrated in the escalation step usually means the market moved, not that the team executed poorly.",
@@ -4101,7 +4110,7 @@
     });
   }
 
-  /* ---------- Reference tab: the 20-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
+  /* ---------- Reference tab: the 24-KPI catalog (question -> KPI -> tab jump -> citation) ---------- */
   var kpiCatalog = [
     { q:"What will this program actually cost by completion, not what did we budget?", kpi:"Portfolio Forecast", tab:"overview", tabLabel:"Overview", badge:"real", cite:"real $208K driver + AACE RP 80R-13" },
     { q:"How far off baseline are we today, and is that gap growing or shrinking?", kpi:"Net Variance", tab:"cost", tabLabel:"Cost", badge:"real", cite:"AACE RP 86R-14" },
@@ -4826,6 +4835,7 @@
     revenueYieldAssumptions: revenueYieldAssumptions,
     computeRevenuePerMW: computeRevenuePerMW,
     computeGrossMarginPct: computeAdjEbitdaMarginPct, // key kept for backward compatibility; function renamed 2026-08-26
+    computeAdjEbitdaMarginPct: computeAdjEbitdaMarginPct, // the real, current name -- independent-reviewer finding: the old key alone left the rename itself untested
     getRevenueYieldResult: function(){ return revenueYieldResult; },
     // 10-feature UX/UI brainstorm pass (2026-08-26)
     arrayToCSV: arrayToCSV,               // #1 CSV export -- pure formatting half

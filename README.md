@@ -51,7 +51,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   probability S-curve** plotted from the same 2,000-draw simulation as the histogram, and a
   reliability note tying the real $208K variance to the simulated band; a **probability × impact
   risk heat-map** (click any bubble for its detail) feeding a priced risk register
-  (**AACE RP 40R-08**) — categorized into Execution / Escalation / Regulatory & Community buckets,
+  (**AACE RP 62R-11**) — categorized into Execution / Escalation / Regulatory & Community buckets,
   each tracked and re-priced separately rather than blended into one contingency number; schedule
   float read as a cost-risk *input signal* (not schedule ownership), now with a **burn-down line**
   projected to the real "weeks to zero" figure; and an EMV-based change-order settlement decision
@@ -93,7 +93,7 @@ pipeline is the one piece with a real dependency — see Verification below.)
   **Live Integrity Gate** — 13 reconciliation checks that run in your browser on every page load,
   not just in a Node test file someone would have to clone the repo to see (including a live
   escalation-assumption staleness check and a cross-region cost-reporting schema check).
-- **Reference** — the 20-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
+- **Reference** — the 24-KPI catalog (operational question → KPI → jump-to-tab → real/illustrative
   badge → citation, one row per built visual across all 12 tabs), plus a searchable,
   category-filterable glossary of every AACE Recommended Practice, every real data-center cost
   figure, every other real industry standard (RICS/ICMS, Uptime Institute Tier I–IV), and (added
@@ -150,10 +150,11 @@ legible, marked `illustrative` throughout.
 
 - **Currency toggle** (USD/GBP/JPY/BRL, header) — converts this program's own illustrative dollar
   figures only; cited real industry benchmarks stay in their originally published currency.
-- **Contextual explainer toggles on all 20 KPIs** — click the (i) next to any KPI to see its real
-  formula, a plain-language meaning, and diagnostic guidance inline, without leaving the tab (17
-  buttons cover all 20 — 3 pairs share one heading/section).
-- **A guided, 20-stop Tour** — walks the KPI catalog's own 20 rows in sequence, switching tabs live
+- **Contextual explainer toggles on all 24 KPIs** — click the (i) next to any KPI to see its real
+  formula, a plain-language meaning, and diagnostic guidance inline, without leaving the tab (the
+  original 20 numbered KPIs share 17 buttons — 3 pairs share one heading/section — the 4 Commercial
+  Ramp KPIs added later each get their own).
+- **A guided, 24-stop Tour** — walks the KPI catalog's own 24 rows in sequence, switching tabs live
   and showing each one's operational question (Start/Next/Prev/Exit, clamped at both ends).
 - **Structured, dual-encoded alert cards** — every warning (contingency drawdown, data quality,
   Gate 4, float erosion) shows Detected / Probable Cause / Suggested Action, with a shape (▲/●)
@@ -390,7 +391,7 @@ verify.cjs 234 → 243, stress.cjs 132 → 132 (its one structural check now exp
 **UX/navigation upgrade pass, 2026-08-26** — a full brainstorm-then-build round covering
 interactivity, navigation, and onboarding, none of it adding an external dependency:
 
-- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 20-KPI catalog, or the full
+- **Command palette (⌘K)** — fuzzy-jumps to any of the 12 tabs, the 24-KPI catalog, or the full
   glossary from one search box, wired through the existing global keyboard-shortcut handler.
 - **Per-cluster tab-rail tinting + exploration progress** — the tab rail's existing 5 groups
   (Executive/Cost & Risk/Governance & Portfolio/Actions/Reference) now carry their own accent color

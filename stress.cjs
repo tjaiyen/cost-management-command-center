@@ -493,6 +493,18 @@ check(indexHtml.includes("cmccKpi") && indexHtml.includes("e.state.cmccKpi"),
 check(indexHtml.includes('var dataFreshnessLog = [') && (indexHtml.match(/year:\s*(\d{4}|null)/g) || []).length >= 15,
   "dataFreshnessLog carries at least 15 entries, each with an explicit year or an honest null");
 
+console.log("--- CPI stoplight 'watch' tier uses a dedicated, contrast-distinct token (stress-test follow-up, 2026-08-26) ---");
+// Independent-reviewer finding: reusing --c-warning for the new 3-tier CPI system's middle band
+// put it chromatically much closer to --c-danger than to --c-success (RGB distance ~58 vs ~239),
+// undercutting the "genuine amber tier" the 3-band system was built to provide. Fixed with a
+// dedicated --c-watch token, defined in all 4 theme blocks (bare :root, prefers-color-scheme,
+// [data-theme=dark], [data-theme=light]) -- NOT just added to one, which would silently break
+// under a different theme setting.
+const watchTokenCount = (indexHtml.match(/--c-watch:\d+ \d+ \d+/g) || []).length;
+check(watchTokenCount === 4, "--c-watch is defined in all 4 theme blocks, not just one (would silently break under an unaddressed theme)", `found ${watchTokenCount}`);
+check(indexHtml.includes(".stoplight-tile.watch{background:rgb(var(--c-watch)/0.12); border:1px solid rgb(var(--c-watch)/0.4)}"),
+  "the stoplight 'watch' tile uses the dedicated --c-watch token, not the shared --c-warning (whose other usages, e.g. the drawdown gauge, stay untouched)");
+
 console.log("--- Header narrow-viewport hardening (stress-test follow-up, 2026-08-26) ---");
 // A live visual check was blocked by this session's own tooling (agent-browser's domain allowlist
 // fails closed on both localhost and file:// -- confirmed empirically, see README); this makes the

@@ -696,13 +696,19 @@ assertStrEqual(slaNoBreach.breach, false, "computeSLAPenaltyExposure() correctly
 assertEqual(slaNoBreach.penaltyExposure, 0, "computeSLAPenaltyExposure() reports zero exposure when there's no breach, not a negative credit");
 assertStrEqual(state.slaAlertContent(slaDefault).className, "alert-card warn", "slaAlertContent() fires the warn branch on this program's real (breaching) default");
 assertStrEqual(state.slaAlertContent(slaNoBreach).className, "alert-card ok", "slaAlertContent() fires the ok branch when there's no breach");
-// computeRevenuePerMW / computeGrossMarginPct: this program's real default, landing inside the real cited 50-55% range.
+// computeRevenuePerMW / computeAdjEbitdaMarginPct: this program's real default, landing inside the real cited 50-57% range.
+// Independent-reviewer finding, 2026-08-26: the function was renamed from computeGrossMarginPct to
+// computeAdjEbitdaMarginPct in production, but this suite only ever called it by the OLD name
+// (which still worked via a backward-compat export alias) -- meaning the rename itself was never
+// actually exercised under its real, current name. Test both directly, and assert they're the SAME
+// function (not two independently-drifting implementations).
 assertEqual(state.computeRevenuePerMW(180000000, 50), 3600000, "computeRevenuePerMW(): this program's real default ($180M revenue / 50 contracted MW) is $3.6M/MW/yr");
 assertEqual(state.computeRevenuePerMW(180000000, 0), 0, "computeRevenuePerMW() guards divide-by-zero on zero contracted MW, not NaN/Infinity");
-const marginPct = state.computeGrossMarginPct(180000000, 85000000);
-assertStrEqual(marginPct >= 50 && marginPct <= 57, true, "computeGrossMarginPct(): this program's real default margin genuinely lands inside Equinix's real cited 50-57% adjusted-EBITDA-margin range (corrected 2026-08-26 from a mislabeled '50-55% gross margin' claim), not just claimed to");
-assertEqual(state.computeGrossMarginPct(180000000, 0), 100, "computeGrossMarginPct() at zero direct cost is a 100% margin, not a divide error");
-assertEqual(state.computeGrossMarginPct(0, 0), 0, "computeGrossMarginPct() guards divide-by-zero on zero revenue, not NaN");
+assertStrEqual(state.computeGrossMarginPct === state.computeAdjEbitdaMarginPct, true, "the computeGrossMarginPct export is a genuine alias for computeAdjEbitdaMarginPct (the same function reference), not a stale second copy");
+const marginPct = state.computeAdjEbitdaMarginPct(180000000, 85000000);
+assertStrEqual(marginPct >= 50 && marginPct <= 57, true, "computeAdjEbitdaMarginPct(): this program's real default margin genuinely lands inside Equinix's real cited 50-57% adjusted-EBITDA-margin range (corrected 2026-08-26 from a mislabeled '50-55% gross margin' claim), not just claimed to");
+assertEqual(state.computeAdjEbitdaMarginPct(180000000, 0), 100, "computeAdjEbitdaMarginPct() at zero direct cost is a 100% margin, not a divide error");
+assertEqual(state.computeAdjEbitdaMarginPct(0, 0), 0, "computeAdjEbitdaMarginPct() guards divide-by-zero on zero revenue, not NaN");
 
 console.log("--- Multi-Region Rollup ---");
 assertEqual(state.regions.length, 4, "region count");
