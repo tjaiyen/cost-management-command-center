@@ -69,6 +69,13 @@
   .req{font-style:italic;color:rgb(var(--c-text-secondary))}
   .gapcard{border:1px solid rgb(var(--c-danger)/.3);background:rgb(var(--c-danger)/.06);border-radius:10px;padding:14px 16px;margin:10px 0}
   .gapcard h3{margin:0 0 4px;font-size:14px}
+  .calc-note{background:rgb(var(--c-accent)/.08);border:1px solid rgb(var(--c-accent)/.25);border-radius:8px;padding:10px 14px;font-size:12.5px;color:rgb(var(--c-text-secondary));margin-bottom:16px}
+  .calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+  .field label{display:block;font-size:11px;color:rgb(var(--c-text-secondary));text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
+  .field select,.field input{width:100%;background:rgb(var(--c-bg-primary));border:1px solid var(--c-line);color:rgb(var(--c-text-primary));padding:7px 9px;border-radius:6px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px}
+  .calc-out{background:rgb(var(--c-bg-primary));border:1px solid var(--c-line);border-radius:8px;padding:14px 16px}
+  .calc-line{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px}
+  .calc-line.total{border-top:1px solid var(--c-line);margin-top:6px;padding-top:10px;font-weight:700;color:rgb(var(--c-accent));font-size:15px}
   footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--c-line);color:rgb(var(--c-text-secondary));font-size:12.5px}
 </style>
 </head>
@@ -85,6 +92,35 @@
     (<a href="https://www.amazon.jobs/en/jobs/10512991/senior-manufacturing-cost-engineer-amazon-manufacturing-services">req 10512991</a>,
     Bellevue/Seattle, WA), including the requirements this background does <em>not</em> clear.
     A coverage table is only worth reading if the shortfalls are in it.</p>
+
+  <h2>Should-cost, live</h2>
+  <div class="card">
+    <div class="calc-note">Illustrative calculator — demonstrates the bottom-up should-cost / machine-hour-rate
+      methodology the JD's "Cost Model Development" responsibility asks for. Every input below is a generic,
+      editable assumption, not real AMS cost data.</div>
+    <div class="calc-grid">
+      <div class="field"><label>Process technology</label>
+        <select id="calcProcess" onchange="calcShouldCost()">
+          <option value="cnc">Subtractive CNC machining</option>
+          <option value="am">Additive (metal powder-bed)</option>
+          <option value="sheet">Sheet metal fabrication</option>
+        </select></div>
+      <div class="field"><label>Batch quantity</label><input type="number" id="calcBatch" value="24" min="1" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Raw stock mass (kg)</label><input type="number" id="calcMass" value="4.0" step="0.1" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Material rate ($/kg)</label><input type="number" id="calcMatRate" value="18.00" step="0.5" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Cycle time (min/unit)</label><input type="number" id="calcRuntime" value="40" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Setup / changeover (min)</label><input type="number" id="calcSetup" value="30" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Machine-hour rate ($/hr)</label><input type="number" id="calcMhr" value="45.00" step="0.5" onchange="calcShouldCost()"></div>
+      <div class="field"><label>Loaded labor rate ($/hr)</label><input type="number" id="calcLabor" value="38.00" step="0.5" onchange="calcShouldCost()"></div>
+    </div>
+    <div class="calc-out">
+      <div class="calc-line"><span>Net material cost (3% scrap-adjusted)</span><span class="mono" id="calcOutMat">$0.00</span></div>
+      <div class="calc-line"><span>Machine conversion (cycle+setup × MHR)</span><span class="mono" id="calcOutMach">$0.00</span></div>
+      <div class="calc-line"><span>Direct labor (manning-adjusted)</span><span class="mono" id="calcOutLabor">$0.00</span></div>
+      <div class="calc-line"><span>Overhead (12% of material + conversion)</span><span class="mono" id="calcOutOh">$0.00</span></div>
+      <div class="calc-line total"><span>Should-cost per unit</span><span class="mono" id="calcOutTotal">$0.00</span></div>
+    </div>
+  </div>
 
   <h2>Key Responsibilities</h2>
   <div class="card tblwrap">
@@ -244,5 +280,38 @@
       the <a href="index.html">methodology demo</a> this brief accompanies.</p>
   </footer>
 </div>
+
+<script>
+  // Bottom-up should-cost calculator: material + machine conversion + labor + overhead.
+  // Manning ratio (operators per machine) varies by process — additive runs largely unattended
+  // once a build starts, sheet-metal forming is closer to 1:1 operator attendance.
+  var MANNING = { cnc: 0.5, am: 0.25, sheet: 1.0 };
+
+  function calcShouldCost() {
+    var proc = document.getElementById('calcProcess').value;
+    var batch = parseFloat(document.getElementById('calcBatch').value) || 1;
+    var mass = parseFloat(document.getElementById('calcMass').value) || 0;
+    var matRate = parseFloat(document.getElementById('calcMatRate').value) || 0;
+    var runtime = parseFloat(document.getElementById('calcRuntime').value) || 0;
+    var setup = parseFloat(document.getElementById('calcSetup').value) || 0;
+    var mhr = parseFloat(document.getElementById('calcMhr').value) || 0;
+    var laborRate = parseFloat(document.getElementById('calcLabor').value) || 0;
+    var manning = MANNING[proc] !== undefined ? MANNING[proc] : 0.5;
+
+    var totalHours = (runtime + (setup / batch)) / 60.0;
+    var matCost = mass * matRate * 1.03; // 3% nesting/build scrap allowance
+    var machineCost = totalHours * mhr;
+    var laborCost = totalHours * laborRate * manning;
+    var overheadCost = (matCost + machineCost + laborCost) * 0.12;
+    var totalCost = matCost + machineCost + laborCost + overheadCost;
+
+    document.getElementById('calcOutMat').innerText = '$' + matCost.toFixed(2);
+    document.getElementById('calcOutMach').innerText = '$' + machineCost.toFixed(2);
+    document.getElementById('calcOutLabor').innerText = '$' + laborCost.toFixed(2);
+    document.getElementById('calcOutOh').innerText = '$' + overheadCost.toFixed(2);
+    document.getElementById('calcOutTotal').innerText = '$' + totalCost.toFixed(2);
+  }
+  calcShouldCost();
+</script>
 </body>
 </html>

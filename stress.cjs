@@ -325,6 +325,22 @@ const amsFitHtml = fs.readFileSync(path.join(__dirname, "ams-fit.html"), "utf8")
 const amsFitRows = (amsFitHtml.match(/<tr><td class="req">/g) || []).length;
 check(amsFitRows === 34, "ams-fit.html has all 34 coverage rows (20 Responsibilities + 6 Basic + 8 Preferred, matching every line in the real AMS posting)", `found ${amsFitRows}`);
 
+console.log("--- ams-fit.html: should-cost calculator wiring (2026-09-04) ---");
+// Lightweight structural checks, not a full DOM-stub/vm re-derivation like index.html's dual-stack
+// parity engine below -- proportionate to a 17-line pure function with no persisted state. The
+// arithmetic itself was verified live in-browser before this check was written (B27/B35
+// pre-registered expectation): default inputs (cnc/24/4.0kg/$18/40min/30min/$45mhr/$38labor) ->
+// $74.16 material / $30.94 machine / $13.06 labor / $14.18 overhead / $132.34 total; switching
+// process to 'am' (manning 0.5->0.25) -> $6.53 labor / $125.02 total. Both reproduced exactly.
+check(amsFitHtml.includes("function calcShouldCost()"), "calcShouldCost() is defined");
+check(amsFitHtml.includes("calcShouldCost();") && /<\/script>\s*<\/body>/.test(amsFitHtml), "calcShouldCost() runs on load (called at the bottom of the script, not just wired to onchange)");
+const calcIds = ["calcProcess", "calcBatch", "calcMass", "calcMatRate", "calcRuntime", "calcSetup", "calcMhr", "calcLabor",
+  "calcOutMat", "calcOutMach", "calcOutLabor", "calcOutOh", "calcOutTotal"];
+const missingCalcIds = calcIds.filter((id) => !amsFitHtml.includes(`id="${id}"`));
+check(missingCalcIds.length === 0, "every calculator input/output id referenced by calcShouldCost() has a matching element in the HTML", JSON.stringify(missingCalcIds));
+check(/MANNING = \{ cnc: 0\.5, am: 0\.25, sheet: 1\.0 \}/.test(amsFitHtml), "the manning-ratio map covers all 3 process options offered in the <select> (cnc/am/sheet)");
+check(amsFitHtml.includes("Illustrative calculator") && amsFitHtml.includes("not real AMS cost data"), "the calculator is labeled illustrative, not presented as real AMS cost data (never-fabricate discipline)");
+
 console.log("--- Glossary: every category has a real render target, not just a filter/count entry ---");
 // Real bug found and fixed in this same pass: adding a 4th "vocab" glossaryCategories entry without
 // a matching <dl> container + renderCategory() call left it correctly counted/filterable but

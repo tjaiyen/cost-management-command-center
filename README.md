@@ -299,6 +299,13 @@ JD phrasing rather than resolved in either direction). `stress.cjs` enforces the
 floor as `ada-fit.html` (34, not just "some") and that its header nav link survives the mobile
 breakpoint.
 
+`ams-fit.html` also carries a live, editable **should-cost calculator** ("Should-cost, live") — a
+17-line bottom-up model (material + machine conversion + labor + overhead, manning ratio varies by
+process) directly demonstrating the JD's own "Cost Model Development" ask, labeled illustrative
+throughout (generic inputs, not real AMS cost data). Golden-value pair confirmed live in-browser
+before the stress check was written (default inputs → $132.34 total; switching to additive → $125.02):
+see `stress.cjs`'s "should-cost calculator wiring" block for the structural checks and exact numbers.
+
 ## Status
 
 Built 2026-08-25 (7 tabs), published the same day. Expanded to full scale 2026-08-26 across 5
