@@ -306,6 +306,18 @@ throughout (generic inputs, not real AMS cost data). Golden-value pair confirmed
 before the stress check was written (default inputs → $132.34 total; switching to additive → $125.02):
 see `stress.cjs`'s "should-cost calculator wiring" block for the structural checks and exact numbers.
 
+[`ams-narrative.html`](ams-narrative.html) is a work sample, not a fit brief — a hypothetical AMS
+build-vs-buy decision (bring bracket machining in-house or keep outsourcing it) written end-to-end
+in Amazon's own internal 6-page narrative format (Context → Operating Tenets → Process Physics →
+Financial Reconciliation → Build-vs-Buy Evaluation → Implementation/Risk), demonstrating the format
+itself plus the should-cost/MHR/variance methodology underneath it. Explicitly labeled illustrative —
+every dollar figure is invented for the exercise, not real AMS data. **Caught and fixed a real bug
+while writing it:** a $0.02 material-cost slip that happened to cancel against two smaller errors
+elsewhere and left the printed total looking right — a reader checking only the total would never
+have caught it. `stress.cjs` now re-derives every printed dollar figure from the row's own stated
+basis text and cross-checks it against what's printed (not just re-summing the same cells), and the
+new check was confirmed to fail on the pre-fix version before it was confirmed to pass on the fix.
+
 ## Status
 
 Built 2026-08-25 (7 tabs), published the same day. Expanded to full scale 2026-08-26 across 5

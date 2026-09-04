@@ -341,6 +341,47 @@ check(missingCalcIds.length === 0, "every calculator input/output id referenced 
 check(/MANNING = \{ cnc: 0\.5, am: 0\.25, sheet: 1\.0 \}/.test(amsFitHtml), "the manning-ratio map covers all 3 process options offered in the <select> (cnc/am/sheet)");
 check(amsFitHtml.includes("Illustrative calculator") && amsFitHtml.includes("not real AMS cost data"), "the calculator is labeled illustrative, not presented as real AMS cost data (never-fabricate discipline)");
 
+console.log("--- ams-narrative.html: should-cost table arithmetic (2026-09-04) ---");
+// Real bug caught by hand before this check existed: the material line was off by $0.02 (a
+// buy-to-fly multiplication slip), which happened to cancel against two smaller errors elsewhere
+// and left the printed TOTAL looking right -- a reader checking only the total, not each line,
+// would never have caught it. This re-derives every printed dollar figure from the row's own
+// stated inputs and cross-checks it against what's actually printed, closing that gap so a future
+// hand-edit can't reintroduce the same silently-cancelling-error class (B27 "close the gate hole").
+const amsNarrHtml = fs.readFileSync(path.join(__dirname, "ams-narrative.html"), "utf8");
+const money = (s) => { const m = amsNarrHtml.match(s); return m ? parseFloat(m[1]) : NaN; };
+const narrMat = money(/Material \(net, scrap-adjusted\)[\s\S]*?<td>\$([\d.]+)<\/td>/);
+const narrMach = money(/Machine conversion[\s\S]*?<td>\$([\d.]+)<\/td>/);
+const narrLabor = money(/Direct labor[\s\S]*?<td>\$([\d.]+)<\/td>/);
+const narrOh = money(/Overhead \(allocated\)[\s\S]*?<td>\$([\d.]+)<\/td>/);
+const narrTotal = money(/Should-cost per unit<\/b><\/td><td><\/td><td><b>\$([\d.]+)<\/b><\/td>/);
+const narrGapMatch = amsNarrHtml.match(/<b>\+\$([\d.]+) \(([\d.]+)%\)<\/b>/);
+[narrMat, narrMach, narrLabor, narrOh, narrTotal].forEach((v, i) => {
+  check(!Number.isNaN(v), `ams-narrative.html should-cost row ${i} was found and parsed as a dollar figure`, `raw=${v}`);
+});
+check(!!narrGapMatch, "found the gap-vs-quote figure to check");
+// Independently re-derive from the row's own stated basis text (4.2kg @ $9.40/kg, 1.06x buy-to-fly;
+// 38min cycle + 48min/24-unit-lot setup; $47.50/hr MHR; $36.00/hr labor at 0.5 manning; 12% OH on
+// material+machine+labor; $186.00 external quote) -- not just re-summing the printed cells, which
+// would validate the same slip if it were reproduced in the derivation too.
+const derivedMat = Math.round(4.2 * 9.40 * 1.06 * 100) / 100;
+const derivedHrs = (38 + 48 / 24) / 60;
+const derivedMach = Math.round(derivedHrs * 47.50 * 100) / 100;
+const derivedLabor = Math.round(derivedHrs * 36.00 * 0.5 * 100) / 100;
+const derivedOh = Math.round((derivedMat + derivedMach + derivedLabor) * 0.12 * 100) / 100;
+const derivedTotal = Math.round((derivedMat + derivedMach + derivedLabor + derivedOh) * 100) / 100;
+const derivedGap = Math.round((186.00 - derivedTotal) * 100) / 100;
+const derivedPct = Math.round((derivedGap / 186.00) * 1000) / 10;
+check(Math.abs(narrMat - derivedMat) < 0.005, "material $/unit matches its own stated basis (4.2kg @ $9.40/kg, 1.06x buy-to-fly)", `printed=${narrMat} derived=${derivedMat}`);
+check(Math.abs(narrMach - derivedMach) < 0.005, "machine conversion $/unit matches its own stated basis (40min/unit @ $47.50/hr MHR)", `printed=${narrMach} derived=${derivedMach}`);
+check(Math.abs(narrLabor - derivedLabor) < 0.005, "direct labor $/unit matches its own stated basis (40min/unit @ $36.00/hr, 0.5 manning)", `printed=${narrLabor} derived=${derivedLabor}`);
+check(Math.abs(narrOh - derivedOh) < 0.005, "overhead $/unit is really 12% of material+machine+labor, not a disconnected number", `printed=${narrOh} derived=${derivedOh}`);
+check(Math.abs(narrTotal - derivedTotal) < 0.005, "the printed should-cost TOTAL is the real sum of its own four line items (the exact defect class the hand-caught bug was)", `printed=${narrTotal} derived=${derivedTotal}`);
+if (narrGapMatch) {
+  check(Math.abs(parseFloat(narrGapMatch[1]) - derivedGap) < 0.005, "the gap-vs-quote dollar figure matches $186.00 minus the real total", `printed=${narrGapMatch[1]} derived=${derivedGap}`);
+  check(Math.abs(parseFloat(narrGapMatch[2]) - derivedPct) < 0.15, "the gap percentage matches gap/quote, not a separately-typed number", `printed=${narrGapMatch[2]}% derived=${derivedPct}%`);
+}
+
 console.log("--- Glossary: every category has a real render target, not just a filter/count entry ---");
 // Real bug found and fixed in this same pass: adding a 4th "vocab" glossaryCategories entry without
 // a matching <dl> container + renderCategory() call left it correctly counted/filterable but
@@ -538,6 +579,7 @@ check(!!narrowHeaderMatch, "found the header narrow-viewport rule (720px breakpo
 check(!/\.navlinks\{display:none\}/.test(indexHtml), "navlinks is NEVER hidden outright at any breakpoint -- it shrinks instead, so 'Role fit brief' (ada-fit.html) stays reachable (the footer does NOT independently link that page -- confirmed by grep before this rule shipped, not assumed)");
 check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role fit brief link itself still exists in the header nav (nothing silently removed it)");
 check(indexHtml.includes('<a href="ams-fit.html">AMS fit brief</a>'), "the AMS fit brief link (ams-fit.html) exists in the header nav, same mobile-safe .navlinks container as ada-fit.html");
+check(indexHtml.includes('<a href="ams-narrative.html">AMS narrative sample</a>'), "the AMS narrative work-sample link (ams-narrative.html) exists in the header nav");
 
 console.log("--- Comprehensive visual inspection (2026-08-27): text-overflow/layout-boundary findings ---");
 // Same tooling gap as the header check above (agent-browser blocked on this domain, resolved

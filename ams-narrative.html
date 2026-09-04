@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Work Sample — Amazon 6-Page Narrative (AMS Cost Engineering)</title>
+<meta name="description" content="TJ Jaiyen — a hypothetical AMS capital-investment decision, written in Amazon's own internal 6-page narrative format, to demonstrate the format and the underlying cost-engineering methodology.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+      --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+      --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+      --c-line:rgb(14 116 144 / .22);
+    }
+  }
+  :root[data-theme="dark"]{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  :root[data-theme="light"]{
+    --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+    --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+    --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+    --c-line:rgb(14 116 144 / .22);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:rgb(var(--c-bg-primary));color:rgb(var(--c-text-primary));
+    font:14.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  code,.mono,.tabular{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  a{color:rgb(var(--c-accent))}
+  :focus-visible{outline:2px solid rgb(var(--c-accent));outline-offset:2px;border-radius:4px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 72px}
+  .bar{position:sticky;top:0;z-index:40;background:rgb(var(--c-bg-primary) / .92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--c-line)}
+  .bar-in{max-width:1080px;margin:0 auto;padding:10px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .brand{display:flex;gap:9px;align-items:center;font-weight:600;text-decoration:none;color:inherit}
+  .brand small{display:block;font:400 11px/1.3 ui-monospace,Menlo,monospace;color:rgb(var(--c-text-secondary))}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--c-accent));flex:none}
+  .icobtn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 11px;
+    border:1px solid var(--c-line);border-radius:7px;background:transparent;color:inherit;
+    text-decoration:none;font-size:13px;cursor:pointer}
+  .icobtn:hover{border-color:rgb(var(--c-accent))}
+  h1{font-size:clamp(20px,3.2vw,26px);margin:28px 0 6px}
+  h2{font-size:16px;margin:34px 0 4px;padding-top:14px;border-top:1px solid var(--c-line)}
+  h2 .secnum{color:rgb(var(--c-accent));font-family:ui-monospace,Menlo,monospace;margin-right:8px}
+  h3{font-size:13.5px;margin:16px 0 4px;color:rgb(var(--c-text-secondary));text-transform:uppercase;letter-spacing:.02em}
+  .lede{color:rgb(var(--c-text-secondary))}
+  .frame{background:rgb(var(--c-accent)/.08);border:1px solid rgb(var(--c-accent)/.25);border-radius:8px;padding:14px 16px;font-size:12.5px;color:rgb(var(--c-text-secondary));margin:18px 0}
+  .card{background:rgb(var(--c-bg-card));border:1px solid var(--c-line);border-radius:12px;padding:16px 18px;margin:12px 0}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--c-line);vertical-align:top}
+  th{color:rgb(var(--c-text-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  .tenets{list-style:none;padding:0;margin:0}
+  .tenets li{padding:10px 0;border-bottom:1px solid var(--c-line)}
+  .tenets li:last-child{border-bottom:none}
+  .tenets b{color:rgb(var(--c-text-primary))}
+  .riskrow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-line);font-size:13px}
+  .riskrow:last-child{border-bottom:none}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700;white-space:nowrap;flex:none;height:fit-content}
+  .pill.high{background:rgb(var(--c-danger)/.15);color:rgb(var(--c-danger))}
+  .pill.med{background:rgb(var(--c-warning)/.15);color:rgb(var(--c-warning))}
+  .pill.low{background:rgb(var(--c-success)/.15);color:rgb(var(--c-success))}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--c-line);color:rgb(var(--c-text-secondary));font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <a class="brand" href="index.html"><span class="dot"></span>Cost Management Command Center<small>Work Sample · Amazon 6-Page Narrative</small></a>
+  <a class="icobtn" href="ams-fit.html">Fit brief</a>
+  <a class="icobtn" href="index.html" style="margin-left:auto">← Back to dashboard</a>
+</div></div>
+
+<div class="wrap">
+  <h1>Should AMS Bring Bracket Machining In-House for the Q3 Pilot Line?</h1>
+  <p class="lede">A capital-investment decision, written end-to-end in Amazon's own internal
+    6-page narrative format.</p>
+
+  <div class="frame"><strong>What this is.</strong> A work sample, not a real internal AMS
+    document — written to demonstrate fluency in Amazon's 6-page narrative format (the one this
+    role's proposals, business reviews, and build-vs-buy justifications are written in) and the
+    should-cost / machine-hour-rate / variance methodology underneath it. The scenario, the site,
+    and every dollar figure below are illustrative and invented for this exercise — not real AMS
+    data, not a claim of insider information. See the <a href="ams-fit.html">fit brief</a> for the
+    real, sourced coverage of this role against my actual background.</div>
+
+  <h2><span class="secnum">1</span>Context and Strategic Rationale</h2>
+  <p>AMS currently outsources bracket-class machined parts for the Q3 pilot line to a single
+    external tier-1 supplier at a quoted $186/unit across an expected 1,800-unit annual run. Lead
+    time from PO to delivery is 6 weeks, and the supplier has twice slipped delivery by 2+ weeks
+    against a committed date, each time absorbed as pilot-line schedule risk rather than passed
+    back as a penalty. AMS's own Bellevue facility has open 5-axis CNC capacity two shifts a week
+    that is otherwise idle.</p>
+  <p>The question this document answers: does bringing this part family in-house reduce unit cost,
+    and does it reduce schedule risk enough to justify the capital, labor, and management attention
+    an internal transition requires? This is not a general in-sourcing philosophy question — it is
+    a should-cost-driven answer for this one part family, at this volume, on this timeline.</p>
+
+  <h2><span class="secnum">2</span>Operating Tenets</h2>
+  <ul class="tenets">
+    <li><b>A should-cost model beats a supplier quote as a decision input.</b> The external quote
+      tells us what the supplier will accept; it does not tell us what the part should cost to make.
+      We decide against the second number, and only compare it to the first at the end.</li>
+    <li><b>Idle capacity is not free capacity.</b> "We already have the machine" is not a should-cost
+      input by itself — the machine's standing cost is sunk either way, but the decision must still
+      clear on running cost, labor, and opportunity cost of the shift capacity it consumes.</li>
+    <li><b>Schedule risk gets a dollar value, not an adjective.</b> "Risky" is not a line item. The
+      two historical slips are converted into an expected cost of delay before they enter the
+      recommendation.</li>
+    <li><b>The model is reviewed as code, not defended as an opinion.</b> Every input below is a
+      named assumption with a source or an explicit "estimate" flag — nothing is presented as more
+      certain than it is.</li>
+  </ul>
+
+  <h2><span class="secnum">3</span>Process Physics and Manufacturing Economics</h2>
+  <p>Bottom-up should-cost, built from process-level inputs rather than the supplier's own
+    breakdown:</p>
+  <div class="card tblwrap">
+    <table>
+      <thead><tr><th>Component</th><th>Basis</th><th>$/unit</th></tr></thead>
+      <tbody>
+        <tr><td>Material (net, scrap-adjusted)</td><td>4.2 kg 6061-T6 billet @ $9.40/kg, 1.06× buy-to-fly</td><td>$41.85</td></tr>
+        <tr><td>Machine conversion</td><td>38 min cycle + 48 min batch setup ÷ lot of 24 (2 min/unit) = 40 min/unit = 0.667 hr @ $47.50/hr MHR (5-axis, standing + running, 2-shift @ 78% OEE)</td><td>$31.67</td></tr>
+        <tr><td>Direct labor</td><td>0.667 hr @ $36.00/hr loaded, 0.5 manning ratio</td><td>$12.00</td></tr>
+        <tr><td>Overhead (allocated)</td><td>12% of material + machine conversion + labor, matching the facility's current absorption rate</td><td>$10.26</td></tr>
+        <tr><td><b>Should-cost per unit</b></td><td></td><td><b>$95.78</b></td></tr>
+        <tr><td>External quote (actual)</td><td>Current supplier PO rate</td><td>$186.00</td></tr>
+        <tr><td>Gap</td><td>Supplier price vs. should-cost</td><td><b>+$90.22 (48.5%)</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>A gap this size is itself a flag: either the supplier is pricing in a risk premium, low-volume
+    setup inefficiency, or margin the should-cost model doesn't capture, or the internal model is
+    missing a real cost. Section 5's sensitivity range exists specifically to pressure-test this
+    before it becomes the headline number.</p>
+
+  <h2><span class="secnum">4</span>Financial Reconciliation and Variance Bridges</h2>
+  <p>Because the Bellevue facility already runs comparable bracket geometries, its own standard-cost
+    variance history is the reality check against the should-cost model above rather than a clean
+    theoretical estimate:</p>
+  <div class="card tblwrap">
+    <table>
+      <thead><tr><th>Variance</th><th>Trailing 6-month avg</th><th>Read for this part family</th></tr></thead>
+      <tbody>
+        <tr><td>Material quantity variance</td><td>+2.1% unfavorable</td><td>Nesting/scrap running slightly above the 1.06× buy-to-fly assumption — already reflected in the material line above, not stacked again here.</td></tr>
+        <tr><td>Labor efficiency variance</td><td>+4.4% unfavorable</td><td>New part families typically run efficiency-negative for the first 4-6 weeks of ramp before settling to standard — modeled explicitly as a ramp cost in Section 6, not hidden inside the steady-state should-cost above.</td></tr>
+        <tr><td>Fixed overhead volume variance</td><td>−1.8% (favorable / over-absorbed)</td><td>The facility is currently absorbing more than budgeted fixed cost — meaning this part family's incremental machine-hours make the volume variance more favorable, not less, a real (if secondary) benefit of the in-source decision.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2><span class="secnum">5</span>Strategic Evaluation and Build-vs-Buy Analysis</h2>
+  <p>At 1,800 units/year, the should-cost gap ($90.22/unit) implies ~$162K/year in potential cost
+    avoidance before ramp costs. Against a capital ask of $0 (existing idle capacity — no new
+    machine purchase required for this volume) and a one-time ramp/qualification cost estimated at
+    $38K (first-article inspection, fixture build, 5 weeks of efficiency-negative labor per Section
+    4), payback is inside the first year on the cost line alone.</p>
+  <p>Schedule-risk value: two historical 2-week slips against a committed pilot-line date, each
+    estimated (program-management input, not a should-cost figure) at $40-60K in downstream schedule
+    impact. Bringing the part in-house does not guarantee zero slips, but removes the single-source,
+    6-week-lead-time dependency entirely — treated here as risk <em>reduction</em>, not a hard dollar credit,
+    to avoid double-counting a soft benefit as if it were should-cost.</p>
+  <p><b>Sensitivity:</b> even if the should-cost model understates true cost by 20% (a stress case
+    for setup-time and scrap assumptions), the in-house cost remains $114.94/unit — still $71/unit
+    below the external quote. The recommendation is not sensitive to being modestly wrong.</p>
+
+  <h2><span class="secnum">6</span>Implementation Plan, Milestones, and Risk Mitigation</h2>
+  <div class="card">
+    <div class="riskrow"><span class="pill low">Wk 1-2</span><span>First-article qualification run (10 units) against the existing supplier's print — no schedule commitment made against this batch.</span></div>
+    <div class="riskrow"><span class="pill low">Wk 3-4</span><span>Fixture and standard-work finalization; labor efficiency variance tracked daily against the Section 4 ramp assumption, not averaged monthly.</span></div>
+    <div class="riskrow"><span class="pill med">Wk 5-8</span><span>Parallel run — 50% volume in-house, 50% external — before fully exiting the supplier PO, so a should-cost miss is caught at half exposure, not full.</span></div>
+    <div class="riskrow"><span class="pill med">Risk: ramp efficiency worse than modeled</span><span>Trigger: labor efficiency variance exceeds 15% unfavorable past week 6. Action: extend the parallel-run window rather than force the exit date.</span></div>
+    <div class="riskrow"><span class="pill high">Risk: should-cost model missing a real cost driver</span><span>Trigger: actual-to-should-cost variance exceeds the 20% stress case in Section 5 for two consecutive months post-ramp. Action: full model re-audit before committing further part families to the same in-source pattern.</span></div>
+  </div>
+  <p><b>Recommendation:</b> proceed with qualification (Weeks 1-4) under the parallel-run structure
+    above. Full supplier exit is a separate, later decision gated on the Week 5-8 data, not
+    pre-committed here.</p>
+
+  <footer>
+    <p>Work sample only — see the <a href="ams-fit.html">fit brief</a> for real, sourced coverage of
+      this role against my actual background, and the <a href="index.html">methodology demo</a> this
+      page's design is drawn from.</p>
+  </footer>
+</div>
+</body>
+</html>
