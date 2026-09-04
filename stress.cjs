@@ -317,6 +317,14 @@ const adaFitHtml = fs.readFileSync(path.join(__dirname, "ada-fit.html"), "utf8")
 const adaFitRows = (adaFitHtml.match(/<tr><td class="req">/g) || []).length;
 check(adaFitRows === 22, "ada-fit.html has all 22 coverage rows (13 Responsibilities + 9 Requirements, matching every JD line in the InsightMap doc)", `found ${adaFitRows}`);
 
+console.log("--- ams-fit.html: coverage-brief completeness (Amazon AMS JD, 2026-09-04) ---");
+// Same structural row-count floor as ada-fit.html above, sized against the real AMS posting text
+// (vault queue/amazon-sr-manufacturing-cost-engineer/jd.md): 20 Key Responsibilities + 6 Basic
+// Qualifications + 8 Preferred Qualifications = 34 JD lines, one coverage row each.
+const amsFitHtml = fs.readFileSync(path.join(__dirname, "ams-fit.html"), "utf8");
+const amsFitRows = (amsFitHtml.match(/<tr><td class="req">/g) || []).length;
+check(amsFitRows === 34, "ams-fit.html has all 34 coverage rows (20 Responsibilities + 6 Basic + 8 Preferred, matching every line in the real AMS posting)", `found ${amsFitRows}`);
+
 console.log("--- Glossary: every category has a real render target, not just a filter/count entry ---");
 // Real bug found and fixed in this same pass: adding a 4th "vocab" glossaryCategories entry without
 // a matching <dl> container + renderCategory() call left it correctly counted/filterable but
@@ -513,6 +521,7 @@ const narrowHeaderMatch = indexHtml.match(/@media \(max-width:720px\)\{\s*\.navl
 check(!!narrowHeaderMatch, "found the header narrow-viewport rule (720px breakpoint, reusing the existing .tab-drawer/.factoid-toast breakpoint)");
 check(!/\.navlinks\{display:none\}/.test(indexHtml), "navlinks is NEVER hidden outright at any breakpoint -- it shrinks instead, so 'Role fit brief' (ada-fit.html) stays reachable (the footer does NOT independently link that page -- confirmed by grep before this rule shipped, not assumed)");
 check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role fit brief link itself still exists in the header nav (nothing silently removed it)");
+check(indexHtml.includes('<a href="ams-fit.html">AMS fit brief</a>'), "the AMS fit brief link (ams-fit.html) exists in the header nav, same mobile-safe .navlinks container as ada-fit.html");
 
 console.log("--- Comprehensive visual inspection (2026-08-27): text-overflow/layout-boundary findings ---");
 // Same tooling gap as the header check above (agent-browser blocked on this domain, resolved

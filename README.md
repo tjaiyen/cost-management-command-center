@@ -288,6 +288,17 @@ coverage rows for 9 of the JD's 21 Responsibilities/Requirements lines; all 9 ad
 Responsibilities, 9/9 Requirements now have their own row), each sourced from the InsightMap's own
 already-written evidence, not a new claim.
 
+[`ams-fit.html`](ams-fit.html) is the same pattern against Amazon Manufacturing Services' real
+Senior Manufacturing Cost Engineer posting (req 10512991, Bellevue/Seattle, WA) — 34 coverage rows
+(20 Key Responsibilities + 6 Basic Qualifications + 8 Preferred Qualifications), one per JD line,
+sourced from the vault's tailored resume for that opportunity. Named directly rather than hedged:
+no metals fabrication/CNC/additive-manufacturing process experience, no Master's degree or IE/OE/
+ME/PE practitioner tenure, and manufacturing-specific cost-engineering tenure of ~2 years against
+the JD's 5-year line (10 years total across construction + manufacturing, flagged as ambiguous
+JD phrasing rather than resolved in either direction). `stress.cjs` enforces the same 1:1 row-count
+floor as `ada-fit.html` (34, not just "some") and that its header nav link survives the mobile
+breakpoint.
+
 ## Status
 
 Built 2026-08-25 (7 tabs), published the same day. Expanded to full scale 2026-08-26 across 5
