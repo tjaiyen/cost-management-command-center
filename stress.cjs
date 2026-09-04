@@ -580,6 +580,17 @@ check(!/\.navlinks\{display:none\}/.test(indexHtml), "navlinks is NEVER hidden o
 check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role fit brief link itself still exists in the header nav (nothing silently removed it)");
 check(indexHtml.includes('<a href="ams-fit.html">AMS fit brief</a>'), "the AMS fit brief link (ams-fit.html) exists in the header nav, same mobile-safe .navlinks container as ada-fit.html");
 check(indexHtml.includes('<a href="ams-narrative.html">AMS narrative sample</a>'), "the AMS narrative work-sample link (ams-narrative.html) exists in the header nav");
+check(indexHtml.includes('<a href="variance-walkthrough.html">Variance walkthrough</a>'), "the variance walkthrough link (variance-walkthrough.html) exists in the header nav");
+
+console.log("--- variance-walkthrough.html: every real claim traces to the actual resume (2026-09-04) ---");
+// This page's whole premise is "no invented specifics" -- if the $208K figure or the company/dates
+// ever drifted from what the resume actually says, the page would be making a claim it can't back.
+const varianceHtml = fs.readFileSync(path.join(__dirname, "variance-walkthrough.html"), "utf8");
+check(varianceHtml.includes("208,000") || varianceHtml.includes("$208K"), "the $208K variance figure is stated (matches the resume's own '~$208K unexplained labor variance' bullet)");
+check(varianceHtml.includes("B.E. Meyers"), "correctly attributed to B.E. Meyers, not a different employer");
+check(varianceHtml.includes("SYSPRO"), "correctly names SYSPRO (not SAP -- that's the Collins Aerospace ERP, a different role)");
+const todoUsages = (varianceHtml.match(/class="todoframe"/g) || []).length;
+check(todoUsages === 2, "exactly 2 open placeholder callouts remain (root cause + fix mechanism), flagging real detail not yet supplied rather than silently inventing it", `found ${todoUsages}`);
 
 console.log("--- Comprehensive visual inspection (2026-08-27): text-overflow/layout-boundary findings ---");
 // Same tooling gap as the header check above (agent-browser blocked on this domain, resolved

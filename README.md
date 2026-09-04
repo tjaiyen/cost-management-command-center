@@ -318,6 +318,15 @@ have caught it. `stress.cjs` now re-derives every printed dollar figure from the
 basis text and cross-checks it against what's printed (not just re-summing the same cells), and the
 new check was confirmed to fail on the pre-fix version before it was confirmed to pass on the fix.
 
+[`variance-walkthrough.html`](variance-walkthrough.html) walks through a *real* investigation — the
+$208K labor-variance trace at B.E. Meyers already stated on the resume — as a 6-step timeline
+(Symptom → Method → Root Cause → Fix → Outcome). Deliberately incomplete rather than padded: two
+steps (the specific root-cause mechanism, the specific fix tooling) are marked with an open
+placeholder instead of an invented plausible-sounding detail, because the resume states the outcome
+without naming the mechanism. `stress.cjs` checks the real facts that ARE stated (company, ERP,
+dollar figure) and asserts exactly 2 placeholders remain open, so a future edit can't silently
+"fill in" a placeholder with something unverified.
+
 ## Status
 
 Built 2026-08-25 (7 tabs), published the same day. Expanded to full scale 2026-08-26 across 5

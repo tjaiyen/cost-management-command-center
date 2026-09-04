@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Variance Walkthrough — $208K Labor Variance (B.E. Meyers)</title>
+<meta name="description" content="TJ Jaiyen — a real labor-variance investigation at B.E. Meyers, walked through step by step: symptom, method, root cause, fix, outcome.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+      --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+      --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+      --c-line:rgb(14 116 144 / .22);
+    }
+  }
+  :root[data-theme="dark"]{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  :root[data-theme="light"]{
+    --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+    --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+    --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+    --c-line:rgb(14 116 144 / .22);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:rgb(var(--c-bg-primary));color:rgb(var(--c-text-primary));
+    font:14.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  code,.mono,.tabular{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  a{color:rgb(var(--c-accent))}
+  :focus-visible{outline:2px solid rgb(var(--c-accent));outline-offset:2px;border-radius:4px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 72px}
+  .bar{position:sticky;top:0;z-index:40;background:rgb(var(--c-bg-primary) / .92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--c-line)}
+  .bar-in{max-width:1080px;margin:0 auto;padding:10px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .brand{display:flex;gap:9px;align-items:center;font-weight:600;text-decoration:none;color:inherit}
+  .brand small{display:block;font:400 11px/1.3 ui-monospace,Menlo,monospace;color:rgb(var(--c-text-secondary))}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--c-accent));flex:none}
+  .icobtn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 11px;
+    border:1px solid var(--c-line);border-radius:7px;background:transparent;color:inherit;
+    text-decoration:none;font-size:13px;cursor:pointer}
+  .icobtn:hover{border-color:rgb(var(--c-accent))}
+  h1{font-size:clamp(20px,3.2vw,26px);margin:28px 0 6px}
+  .lede{color:rgb(var(--c-text-secondary))}
+  .frame{background:rgb(var(--c-accent)/.08);border:1px solid rgb(var(--c-accent)/.25);border-radius:8px;padding:14px 16px;font-size:12.5px;color:rgb(var(--c-text-secondary));margin:18px 0}
+  .todoframe{background:rgb(var(--c-warning)/.08);border:1px dashed rgb(var(--c-warning)/.4);border-radius:8px;padding:12px 14px;font-size:12px;color:rgb(var(--c-warning));margin-top:10px}
+  .timeline{position:relative;margin:24px 0;padding-left:38px}
+  .timeline::before{content:"";position:absolute;left:13px;top:8px;bottom:8px;width:2px;background:var(--c-line)}
+  .step{position:relative;margin-bottom:22px}
+  .step:last-child{margin-bottom:0}
+  .stepnum{position:absolute;left:-38px;top:0;width:28px;height:28px;border-radius:50%;
+    background:rgb(var(--c-bg-card));border:2px solid rgb(var(--c-accent));color:rgb(var(--c-accent));
+    display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:12.5px}
+  .step h2{font-size:15px;margin:2px 0 6px}
+  .step .card{background:rgb(var(--c-bg-card));border:1px solid var(--c-line);border-radius:10px;padding:14px 16px}
+  .stat{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-weight:700;color:rgb(var(--c-accent));font-size:15px}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--c-line);color:rgb(var(--c-text-secondary));font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <a class="brand" href="index.html"><span class="dot"></span>Cost Management Command Center<small>Variance Walkthrough · B.E. Meyers</small></a>
+  <a class="icobtn" href="index.html" style="margin-left:auto">← Back to dashboard</a>
+</div></div>
+
+<div class="wrap">
+  <h1>A Real Labor Variance, Traced to Root Cause</h1>
+  <p class="lede">B.E. Meyers &amp; Co. — Redmond, WA — Feb–Jun 2026. Not a hypothetical: this is the
+    same $208K labor-variance trace stated on my resume, walked through step by step.</p>
+
+  <div class="frame"><strong>What this is — and isn't yet.</strong> Every stage below is grounded
+    in what's already public on my resume. Two stages (marked) are honestly thinner than a full
+    case study should be, because the resume states the outcome, not every operational detail — I'd
+    rather show the real shape of the investigation than pad it with invented specifics that sound
+    good but aren't true. Ask me about the missing detail directly; I'd rather say it live than fake
+    it here.</div>
+
+  <div class="timeline">
+    <div class="step">
+      <div class="stepnum">1</div>
+      <h2>Symptom</h2>
+      <div class="card">A ~<span class="stat">$208,000</span> unexplained labor variance surfaced in
+        the manufacturing P&amp;L at B.E. Meyers — an ITAR-regulated defense manufacturer where I was
+        the first dedicated cost accountant in company history. No prior cost-accounting function,
+        no BI team, no documented SYSPRO schema to start from.</div>
+    </div>
+    <div class="step">
+      <div class="stepnum">2</div>
+      <h2>Why it couldn't just be "explained away"</h2>
+      <div class="card">With no predecessor and no existing variance-reporting process, there was no
+        template answer to reach for — "explain a $208K variance" meant building the traceability
+        path from scratch, not looking it up in an existing report.</div>
+    </div>
+    <div class="step">
+      <div class="stepnum">3</div>
+      <h2>Method</h2>
+      <div class="card">Mapped the SYSPRO 8 SQL schema across purchasing, receiving, WIP, and
+        inventory myself — joins that had never been formally documented at the company — then
+        traced the variance to its shop-floor root cause via a direct SQL query against that schema,
+        rather than working from the ERP's own summary reports.</div>
+    </div>
+    <div class="step">
+      <div class="stepnum">4</div>
+      <h2>Root cause</h2>
+      <div class="card">Traced to a specific shop-floor root cause — this is where the resume
+        states the outcome (traced and fixed) without naming the mechanism.
+        <div class="todoframe">⚠ Real detail needed here, not invented: what was the actual root
+          cause? (A mis-costed work order, an operator mis-clocking hours to the wrong job, an
+          incorrect standard routing time, overtime misallocation, something else?) Tell me and I'll
+          write this stage properly instead of leaving it generic.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="stepnum">5</div>
+      <h2>Fix</h2>
+      <div class="card">Built real-time tooling so the same variance stopped recurring — the resume's
+        own language, describing a preventive control, not a one-time reconciliation.
+        <div class="todoframe">⚠ Real detail needed here too: what did the "real-time tooling" actually
+          look like? (A Power BI alert, a SYSPRO validation rule, a daily SQL check, something else?)
+          Same offer — give me the real shape and I'll replace this placeholder.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="stepnum">6</div>
+      <h2>Outcome</h2>
+      <div class="card">Documented variance narratives for leadership, reviewed by the CFO —
+        replacing single-point cost estimates with CFO-reviewed, market-reflective baselines as the
+        standing practice going forward, not a one-off fire drill.</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Every real fact above traces to my own resume — no invented specifics. See the
+      <a href="ams-fit.html">AMS fit brief</a> for how this maps to the role, and the
+      <a href="index.html">methodology demo</a> this page's design is drawn from.</p>
+  </footer>
+</div>
+</body>
+</html>
