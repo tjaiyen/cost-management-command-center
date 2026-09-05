@@ -83,6 +83,9 @@
 <div class="bar"><div class="bar-in">
   <a class="brand" href="index.html"><span class="dot"></span>Cost Management Command Center<small>Work Sample · Amazon 6-Page Narrative</small></a>
   <a class="icobtn" href="ams-fit.html">Fit brief</a>
+  <a class="icobtn" href="variance-walkthrough.html">Variance walkthrough</a>
+  <a class="icobtn" href="ams-90day-plan.html">First 90 days</a>
+  <a class="icobtn" href="https://tjaiyen.github.io/ams-manufacturing-cost-command-center/">Full dashboard ↗</a>
   <a class="icobtn" href="index.html" style="margin-left:auto">← Back to dashboard</a>
 </div></div>
 
@@ -135,12 +138,12 @@
       <thead><tr><th>Component</th><th>Basis</th><th>$/unit</th></tr></thead>
       <tbody>
         <tr><td>Material (net, scrap-adjusted)</td><td>4.2 kg 6061-T6 billet @ $9.40/kg, 1.06× buy-to-fly</td><td>$41.85</td></tr>
-        <tr><td>Machine conversion</td><td>38 min cycle + 48 min batch setup ÷ lot of 24 (2 min/unit) = 40 min/unit = 0.667 hr @ $47.50/hr MHR (5-axis, standing + running, 2-shift @ 78% OEE)</td><td>$31.67</td></tr>
+        <tr><td>Machine conversion</td><td>38 min cycle + 48 min batch setup ÷ lot of 24 (2 min/unit) = 40 min/unit = 0.667 hr @ $54.00/hr MHR (5-axis, standing + running, 2-shift @ 78% OEE)</td><td>$36.00</td></tr>
         <tr><td>Direct labor</td><td>0.667 hr @ $36.00/hr loaded, 0.5 manning ratio</td><td>$12.00</td></tr>
-        <tr><td>Overhead (allocated)</td><td>12% of material + machine conversion + labor, matching the facility's current absorption rate</td><td>$10.26</td></tr>
-        <tr><td><b>Should-cost per unit</b></td><td></td><td><b>$95.78</b></td></tr>
+        <tr><td>Overhead (allocated)</td><td>12% of material + machine conversion + labor, matching the facility's current absorption rate</td><td>$10.78</td></tr>
+        <tr><td><b>Should-cost per unit</b></td><td></td><td><b>$100.63</b></td></tr>
         <tr><td>External quote (actual)</td><td>Current supplier PO rate</td><td>$186.00</td></tr>
-        <tr><td>Gap</td><td>Supplier price vs. should-cost</td><td><b>+$90.22 (48.5%)</b></td></tr>
+        <tr><td>Gap</td><td>Supplier price vs. should-cost, as a % of the external quote</td><td><b>+$85.37 (45.9% of quote)</b></td></tr>
       </tbody>
     </table>
   </div>
@@ -165,7 +168,7 @@
   </div>
 
   <h2><span class="secnum">5</span>Strategic Evaluation and Build-vs-Buy Analysis</h2>
-  <p>At 1,800 units/year, the should-cost gap ($90.22/unit) implies ~$162K/year in potential cost
+  <p>At 1,800 units/year, the should-cost gap ($85.37/unit) implies ~$154K/year in potential cost
     avoidance before ramp costs. Against a capital ask of $0 (existing idle capacity — no new
     machine purchase required for this volume) and a one-time ramp/qualification cost estimated at
     $38K (first-article inspection, fixture build, 5 weeks of efficiency-negative labor per Section
@@ -176,7 +179,7 @@
     6-week-lead-time dependency entirely — treated here as risk <em>reduction</em>, not a hard dollar credit,
     to avoid double-counting a soft benefit as if it were should-cost.</p>
   <p><b>Sensitivity:</b> even if the should-cost model understates true cost by 20% (a stress case
-    for setup-time and scrap assumptions), the in-house cost remains $114.94/unit — still $71/unit
+    for setup-time and scrap assumptions), the in-house cost remains $120.76/unit — still $65/unit
     below the external quote. The recommendation is not sensitive to being modestly wrong.</p>
 
   <h2><span class="secnum">6</span>Implementation Plan, Milestones, and Risk Mitigation</h2>

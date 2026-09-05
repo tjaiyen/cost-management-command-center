@@ -303,8 +303,10 @@ breakpoint.
 17-line bottom-up model (material + machine conversion + labor + overhead, manning ratio varies by
 process) directly demonstrating the JD's own "Cost Model Development" ask, labeled illustrative
 throughout (generic inputs, not real AMS cost data). Golden-value pair confirmed live in-browser
-before the stress check was written (default inputs → $132.34 total; switching to additive → $125.02):
-see `stress.cjs`'s "should-cost calculator wiring" block for the structural checks and exact numbers.
+before the stress check was written (default inputs → $137.73 total; switching to additive →
+$130.41): see `stress.cjs`'s "should-cost calculator wiring" block for the structural checks and
+exact numbers. (Default MHR nudged from $45 to $52 on 2026-09-04 — a stress-test found $45 sat only
+~6% from a specific fabricated MHR figure in one of the downloaded documents.)
 
 [`ams-narrative.html`](ams-narrative.html) is a work sample, not a fit brief — a hypothetical AMS
 build-vs-buy decision (bring bracket machining in-house or keep outsourcing it) written end-to-end

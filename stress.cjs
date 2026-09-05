@@ -329,9 +329,12 @@ console.log("--- ams-fit.html: should-cost calculator wiring (2026-09-04) ---");
 // Lightweight structural checks, not a full DOM-stub/vm re-derivation like index.html's dual-stack
 // parity engine below -- proportionate to a 17-line pure function with no persisted state. The
 // arithmetic itself was verified live in-browser before this check was written (B27/B35
-// pre-registered expectation): default inputs (cnc/24/4.0kg/$18/40min/30min/$45mhr/$38labor) ->
-// $74.16 material / $30.94 machine / $13.06 labor / $14.18 overhead / $132.34 total; switching
-// process to 'am' (manning 0.5->0.25) -> $6.53 labor / $125.02 total. Both reproduced exactly.
+// pre-registered expectation): default inputs (cnc/24/4.0kg/$18/40min/30min/$52mhr/$38labor) ->
+// $74.16 material / $35.75 machine / $13.06 labor / $14.76 overhead / $137.73 total; switching
+// process to 'am' (manning 0.5->0.25) -> $6.53 labor / $130.41 total. Both reproduced exactly.
+// (MHR default nudged from $45 to $52 on 2026-09-04 -- a stress-test found $45 sat only ~6% from
+// a specific fabricated MHR figure ($47.88) in one of the downloaded documents; re-verified live
+// after the change, see the commit for the before/after numbers.)
 check(amsFitHtml.includes("function calcShouldCost()"), "calcShouldCost() is defined");
 check(amsFitHtml.includes("calcShouldCost();") && /<\/script>\s*<\/body>/.test(amsFitHtml), "calcShouldCost() runs on load (called at the bottom of the script, not just wired to onchange)");
 const calcIds = ["calcProcess", "calcBatch", "calcMass", "calcMatRate", "calcRuntime", "calcSetup", "calcMhr", "calcLabor",
@@ -355,25 +358,27 @@ const narrMach = money(/Machine conversion[\s\S]*?<td>\$([\d.]+)<\/td>/);
 const narrLabor = money(/Direct labor[\s\S]*?<td>\$([\d.]+)<\/td>/);
 const narrOh = money(/Overhead \(allocated\)[\s\S]*?<td>\$([\d.]+)<\/td>/);
 const narrTotal = money(/Should-cost per unit<\/b><\/td><td><\/td><td><b>\$([\d.]+)<\/b><\/td>/);
-const narrGapMatch = amsNarrHtml.match(/<b>\+\$([\d.]+) \(([\d.]+)%\)<\/b>/);
+const narrGapMatch = amsNarrHtml.match(/<b>\+\$([\d.]+) \(([\d.]+)% of quote\)<\/b>/);
 [narrMat, narrMach, narrLabor, narrOh, narrTotal].forEach((v, i) => {
   check(!Number.isNaN(v), `ams-narrative.html should-cost row ${i} was found and parsed as a dollar figure`, `raw=${v}`);
 });
-check(!!narrGapMatch, "found the gap-vs-quote figure to check");
+check(!!narrGapMatch, "found the gap-vs-quote figure to check (also confirms the '% of quote' denominator label survived -- a stress-test found the original '(48.5%)' text didn't say which denominator it used)");
 // Independently re-derive from the row's own stated basis text (4.2kg @ $9.40/kg, 1.06x buy-to-fly;
-// 38min cycle + 48min/24-unit-lot setup; $47.50/hr MHR; $36.00/hr labor at 0.5 manning; 12% OH on
+// 38min cycle + 48min/24-unit-lot setup; $54.00/hr MHR; $36.00/hr labor at 0.5 manning; 12% OH on
 // material+machine+labor; $186.00 external quote) -- not just re-summing the printed cells, which
-// would validate the same slip if it were reproduced in the derivation too.
+// would validate the same slip if it were reproduced in the derivation too. MHR nudged from $47.50
+// to $54.00 on 2026-09-04 -- a stress-test found $47.50 sat only 0.8% from a specific fabricated
+// MHR figure ($47.88) in one of the downloaded documents.
 const derivedMat = Math.round(4.2 * 9.40 * 1.06 * 100) / 100;
 const derivedHrs = (38 + 48 / 24) / 60;
-const derivedMach = Math.round(derivedHrs * 47.50 * 100) / 100;
+const derivedMach = Math.round(derivedHrs * 54.00 * 100) / 100;
 const derivedLabor = Math.round(derivedHrs * 36.00 * 0.5 * 100) / 100;
 const derivedOh = Math.round((derivedMat + derivedMach + derivedLabor) * 0.12 * 100) / 100;
 const derivedTotal = Math.round((derivedMat + derivedMach + derivedLabor + derivedOh) * 100) / 100;
 const derivedGap = Math.round((186.00 - derivedTotal) * 100) / 100;
 const derivedPct = Math.round((derivedGap / 186.00) * 1000) / 10;
 check(Math.abs(narrMat - derivedMat) < 0.005, "material $/unit matches its own stated basis (4.2kg @ $9.40/kg, 1.06x buy-to-fly)", `printed=${narrMat} derived=${derivedMat}`);
-check(Math.abs(narrMach - derivedMach) < 0.005, "machine conversion $/unit matches its own stated basis (40min/unit @ $47.50/hr MHR)", `printed=${narrMach} derived=${derivedMach}`);
+check(Math.abs(narrMach - derivedMach) < 0.005, "machine conversion $/unit matches its own stated basis (40min/unit @ $54.00/hr MHR)", `printed=${narrMach} derived=${derivedMach}`);
 check(Math.abs(narrLabor - derivedLabor) < 0.005, "direct labor $/unit matches its own stated basis (40min/unit @ $36.00/hr, 0.5 manning)", `printed=${narrLabor} derived=${derivedLabor}`);
 check(Math.abs(narrOh - derivedOh) < 0.005, "overhead $/unit is really 12% of material+machine+labor, not a disconnected number", `printed=${narrOh} derived=${derivedOh}`);
 check(Math.abs(narrTotal - derivedTotal) < 0.005, "the printed should-cost TOTAL is the real sum of its own four line items (the exact defect class the hand-caught bug was)", `printed=${narrTotal} derived=${derivedTotal}`);
@@ -605,6 +610,34 @@ check(varianceHtml.includes("B.E. Meyers"), "correctly attributed to B.E. Meyers
 check(varianceHtml.includes("SYSPRO"), "correctly names SYSPRO (not SAP -- that's the Collins Aerospace ERP, a different role)");
 const todoUsages = (varianceHtml.match(/class="todoframe"/g) || []).length;
 check(todoUsages === 2, "exactly 2 open placeholder callouts remain (root cause + fix mechanism), flagging real detail not yet supplied rather than silently inventing it", `found ${todoUsages}`);
+
+console.log("--- AMS pages fully cross-link each other + the sibling dashboard repo (2026-09-04, closing a real gap) ---");
+// A stress-test found the AMS pages only linked forward in the order they were built (ams-fit.html
+// linked to nothing; ams-narrative.html linked only to ams-fit.html; variance-walkthrough.html
+// linked to nothing) -- a visitor landing on the most-likely-shared page (ams-fit.html) had no path
+// to the others without going back through index.html first. Also: nothing anywhere in this repo
+// referenced the new standalone ams-manufacturing-cost-command-center dashboard.
+check(indexHtml.includes('href="https://tjaiyen.github.io/ams-manufacturing-cost-command-center/"'), "index.html's main nav links to the standalone AMS dashboard repo");
+const amsPages = [["ams-fit.html", amsFitHtml], ["ams-narrative.html", amsNarrHtml], ["variance-walkthrough.html", varianceHtml], ["ams-90day-plan.html", plan90Html]];
+amsPages.forEach(([name, content]) => {
+  amsPages.forEach(([otherName]) => {
+    if (name === otherName) return;
+    check(content.includes(`href="${otherName}"`), `${name} links to its sibling ${otherName}`);
+  });
+  check(content.includes('href="https://tjaiyen.github.io/ams-manufacturing-cost-command-center/"'), `${name} links to the standalone AMS dashboard repo`);
+});
+
+console.log("--- Same fabrication guard extended to the other 3 AMS pages (2026-09-04, closing a real gap) ---");
+// A stress-test found this guard only ever ran against ams-90day-plan.html -- the other three AMS
+// pages (ams-fit.html, ams-narrative.html, variance-walkthrough.html) had NO equivalent check.
+// Manually re-verified clean at the time the gap was found (no live leak), but a real process hole:
+// nothing would have caught it if one of those pages had picked up a banned string later. None of
+// these three pages has a "debunk card" exception -- they never discuss the downloaded documents at
+// all, so no exclusion is needed here (unlike index.html and ams-90day-plan.html).
+[["ams-fit.html", amsFitHtml], ["ams-narrative.html", amsNarrHtml], ["variance-walkthrough.html", varianceHtml]].forEach(([name, content]) => {
+  const found = bannedStrings.filter((s) => content.includes(s));
+  check(found.length === 0, `none of the fabricated/unsourced specifics leaked into ${name} (this page has no debunk card, so zero tolerance)`, JSON.stringify(found));
+});
 
 console.log("--- Comprehensive visual inspection (2026-08-27): text-overflow/layout-boundary findings ---");
 // Same tooling gap as the header check above (agent-browser blocked on this domain, resolved
