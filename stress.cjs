@@ -581,6 +581,20 @@ check(indexHtml.includes('<a href="ada-fit.html">Role fit brief</a>'), "the Role
 check(indexHtml.includes('<a href="ams-fit.html">AMS fit brief</a>'), "the AMS fit brief link (ams-fit.html) exists in the header nav, same mobile-safe .navlinks container as ada-fit.html");
 check(indexHtml.includes('<a href="ams-narrative.html">AMS narrative sample</a>'), "the AMS narrative work-sample link (ams-narrative.html) exists in the header nav");
 check(indexHtml.includes('<a href="variance-walkthrough.html">Variance walkthrough</a>'), "the variance walkthrough link (variance-walkthrough.html) exists in the header nav");
+check(indexHtml.includes('<a href="ams-90day-plan.html">First 90 days</a>'), "the First 90 Days link (ams-90day-plan.html) exists in the header nav");
+
+console.log("--- ams-90day-plan.html: no fabricated-specifics leakage (2026-09-04) ---");
+// This page exists specifically to reframe a downloaded doc's presumptuous "20 issues AMS has"
+// framing into an honest thesis -- the doc's own fabricated specifics (a claim already found false
+// against the real JD, and a test-count figure copy-pasted verbatim from an earlier, separately
+// fabricated document) must never leak into the reframed version. A direct string guard, not a
+// style preference: these strings are the actual defect this page exists to avoid re-committing.
+const plan90Html = fs.readFileSync(path.join(__dirname, "ams-90day-plan.html"), "utf8");
+const bannedStrings = ["Kuiper", "Robotics", "AWS data center", "1,520", "Director of AMS", "Plant Controller"];
+const foundBanned = bannedStrings.filter((s) => plan90Html.includes(s));
+check(foundBanned.length === 0, "none of the source doc's fabricated/unsourced specifics (Kuiper/Robotics/AWS-DC claim, the copied '1,520' test figure, named org-chart roles) leaked into the reframed page", JSON.stringify(foundBanned));
+check(plan90Html.includes("not a claim about AMS's actual"), "the page states its own hypothesis-not-fact framing explicitly, not just by omission");
+
 
 console.log("--- variance-walkthrough.html: every real claim traces to the actual resume (2026-09-04) ---");
 // This page's whole premise is "no invented specifics" -- if the $208K figure or the company/dates

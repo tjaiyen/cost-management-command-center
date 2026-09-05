@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>My First 90 Days — Amazon Manufacturing Services</title>
+<meta name="description" content="TJ Jaiyen — a working thesis for the first 90 days as Senior Manufacturing Cost Engineer, AMS. Not a claim about AMS's actual problems or org chart.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0F1D'/%3E%3Cpath d='M6 22 L12 15 L18 18 L26 8' stroke='%2306B6D4' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+      --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+      --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+      --c-line:rgb(14 116 144 / .22);
+    }
+  }
+  :root[data-theme="dark"]{
+    --c-bg-primary:10 15 29; --c-bg-card:30 41 59; --c-accent:6 182 212;
+    --c-text-primary:241 245 249; --c-text-secondary:148 163 184; --c-text-code:34 211 238;
+    --c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;
+    --c-line:rgb(6 182 212 / .20);
+  }
+  :root[data-theme="light"]{
+    --c-bg-primary:248 250 252; --c-bg-card:255 255 255; --c-accent:14 116 144;
+    --c-text-primary:15 23 42; --c-text-secondary:71 85 105; --c-text-code:14 116 144;
+    --c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;
+    --c-line:rgb(14 116 144 / .22);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:rgb(var(--c-bg-primary));color:rgb(var(--c-text-primary));
+    font:14.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  code,.mono,.tabular{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  a{color:rgb(var(--c-accent))}
+  :focus-visible{outline:2px solid rgb(var(--c-accent));outline-offset:2px;border-radius:4px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px 72px}
+  .bar{position:sticky;top:0;z-index:40;background:rgb(var(--c-bg-primary) / .92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--c-line)}
+  .bar-in{max-width:1080px;margin:0 auto;padding:10px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .brand{display:flex;gap:9px;align-items:center;font-weight:600;text-decoration:none;color:inherit}
+  .brand small{display:block;font:400 11px/1.3 ui-monospace,Menlo,monospace;color:rgb(var(--c-text-secondary))}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--c-accent));flex:none}
+  .icobtn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 11px;
+    border:1px solid var(--c-line);border-radius:7px;background:transparent;color:inherit;
+    text-decoration:none;font-size:13px;cursor:pointer}
+  .icobtn:hover{border-color:rgb(var(--c-accent))}
+  h1{font-size:clamp(20px,3.2vw,26px);margin:28px 0 6px}
+  h2{font-size:16px;margin:34px 0 4px;padding-top:14px;border-top:1px solid var(--c-line)}
+  h2 .secnum{color:rgb(var(--c-accent));font-family:ui-monospace,Menlo,monospace;margin-right:8px}
+  .lede{color:rgb(var(--c-text-secondary))}
+  .frame{background:rgb(var(--c-accent)/.08);border:1px solid rgb(var(--c-accent)/.25);border-radius:8px;padding:14px 16px;font-size:12.5px;color:rgb(var(--c-text-secondary));margin:18px 0}
+  .card{background:rgb(var(--c-bg-card));border:1px solid var(--c-line);border-radius:12px;padding:16px 18px;margin:12px 0}
+  .patterns{list-style:none;padding:0;margin:0}
+  .patterns li{padding:9px 0;border-bottom:1px solid var(--c-line);font-size:13.5px}
+  .patterns li:last-child{border-bottom:none}
+  .rhythm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+  .rhythm div{background:rgb(var(--c-bg-primary));border:1px solid var(--c-line);border-radius:8px;padding:10px 12px;font-size:12.5px}
+  .rhythm .days{display:block;font-family:ui-monospace,Menlo,monospace;color:rgb(var(--c-accent));font-weight:700;font-size:11px;margin-bottom:4px}
+  @media (max-width:640px){.rhythm{grid-template-columns:1fr}}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--c-line);vertical-align:top}
+  th{color:rgb(var(--c-text-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--c-line);color:rgb(var(--c-text-secondary));font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <a class="brand" href="index.html"><span class="dot"></span>Cost Management Command Center<small>First 90 Days · Amazon Manufacturing Services</small></a>
+  <a class="icobtn" href="ams-fit.html">Fit brief</a>
+  <a class="icobtn" href="ams-narrative.html">Narrative sample</a>
+  <a class="icobtn" href="index.html" style="margin-left:auto">← Back to dashboard</a>
+</div></div>
+
+<div class="wrap">
+  <h1>My First 90 Days — A Working Thesis, Not a Claim About AMS</h1>
+  <p class="lede">Four areas I'd assess and start building in, structured the way a cost-engineering
+    function like this typically needs to be organized — and the operating rhythm I'd expect to work
+    inside.</p>
+
+  <div class="frame"><strong>What this is — and isn't.</strong> This is my own hypothesis for how
+    I'd approach this seat, built from general, well-established patterns in multi-site
+    manufacturing cost engineering — not a claim about AMS's actual current state, systems, or org
+    chart. I don't have that information, and I'm not implying otherwise. See the
+    <a href="ams-fit.html">fit brief</a> for what's actually verified about the role and my
+    background, and the <a href="ams-narrative.html">narrative sample</a> for one of these areas
+    worked through in full depth.</div>
+
+  <h2><span class="secnum">1</span>Cost Modeling, Quoting &amp; Telemetry Automation</h2>
+  <div class="card">
+    <ul class="patterns">
+      <li><b>Quoting-to-actual drift.</b> Static, spreadsheet-based quoting models diverging from
+        real shop-floor costs once a part family moves past prototype volume — a near-universal
+        pattern wherever quoting predates an automated actuals feedback loop.</li>
+      <li><b>Uniform overhead flattening work-center economics.</b> Spreading facility overhead
+        evenly across machines of very different capital intensity (a manual deburring station vs.
+        a 5-axis mill) systematically misprices both.</li>
+      <li><b>Additive manufacturing's hidden cost tail.</b> Costing DMLS/SLA jobs on laser runtime
+        alone routinely misses powder-reclaim ratios, shielding-gas consumption, and
+        post-processing — a known blind spot in additive costing generally.</li>
+    </ul>
+    <div class="rhythm">
+      <div><span class="days">Days 1-30</span>Audit a sample of historical work orders against
+        quoted cost to baseline the real drift, by part family and process.</div>
+      <div><span class="days">Days 31-60</span>Build the should-cost logic that closes the gap the
+        audit found, starting with the highest-volume part family.</div>
+      <div><span class="days">Days 61-90</span>Pilot the automated actuals feedback loop on one part
+        family before proposing a wider rollout.</div>
+    </div>
+  </div>
+
+  <h2><span class="secnum">2</span>Operational Variance, Material Yield &amp; Labor Productivity</h2>
+  <div class="card">
+    <ul class="patterns">
+      <li><b>Buy-to-fly waste in precision machining.</b> Aerospace-grade billet milling routinely
+        running 6:1+ material-to-finished-part ratios, priced into the model as sunk scrap rather
+        than a tracked, reducible cost.</li>
+      <li><b>Routing standards that never get revisited.</b> A cycle time set at first prototype
+        release, then never re-timed — labor-efficiency variance drifts quietly for months before a
+        monthly close surfaces it.</li>
+      <li><b>Scrap and rework cleared informally.</b> Without a documented disposition trail, the
+        true cost of non-quality never reaches the P&amp;L in the first place.</li>
+    </ul>
+    <div class="rhythm">
+      <div><span class="days">Days 1-30</span>Audit scrap/rework logging discipline and routing
+        staleness — find out what's actually being captured today.</div>
+      <div><span class="days">Days 31-60</span>Build the variance-detection and disposition-tracking
+        mechanism the audit shows is missing.</div>
+      <div><span class="days">Days 61-90</span>Automate the reporting last, once the underlying data
+        capture is trustworthy enough to automate.</div>
+    </div>
+  </div>
+
+  <h2><span class="secnum">3</span>Finance, P&amp;L Ownership &amp; Absorption Accounting</h2>
+  <div class="card">
+    <ul class="patterns">
+      <li><b>Unabsorbed capacity during ramp lulls.</b> Idle machine time between prototype releases
+        silently erodes the P&amp;L as an unfavorable volume variance nobody flagged in advance.</li>
+      <li><b>Cost-avoidance claims that don't survive finance scrutiny.</b> Benchmarked against
+        stale or non-binding supplier quotes instead of a real, defensible market baseline.</li>
+      <li><b>Manual month-end variance reconciliation.</b> Delays close and buries the real
+        shop-floor driver under a spreadsheet instead of surfacing it.</li>
+    </ul>
+    <div class="rhythm">
+      <div><span class="days">Days 1-30</span>Learn what absorption and cost-avoidance methodology
+        finance will actually accept before proposing a new one.</div>
+      <div><span class="days">Days 31-60</span>Build the automated variance bridge against that
+        accepted methodology.</div>
+      <div><span class="days">Days 61-90</span>Get it into the monthly close cadence as the standing
+        source, not a one-off exercise.</div>
+    </div>
+  </div>
+
+  <h2><span class="secnum">4</span>Strategic Capital, Equipment Scaling &amp; Build-vs-Buy</h2>
+  <div class="card">
+    <ul class="patterns">
+      <li><b>Make-vs-buy calls driven by lead time, not cost.</b> A real decision needs the marginal
+        vs. fully-burdened cost comparison against the external quote, not just "who can deliver
+        fastest."</li>
+      <li><b>Tooling expensed against a single job.</b> Specialized fixtures and build plates
+        expensed against one prototype run instead of amortized across the production runs that
+        actually use them.</li>
+      <li><b>CapEx requests without a payback model.</b> Major equipment asks (multi-laser additive,
+        5-axis mill-turn) create friction at planning review when there's no NPV/payback behind
+        them.</li>
+    </ul>
+    <div class="rhythm">
+      <div><span class="days">Days 1-30</span>Build the build-vs-buy and payback-model logic as a
+        reusable tool, not a one-time analysis.</div>
+      <div><span class="days">Days 31-60</span>Validate it against a couple of real historical
+        decisions to see if it would have changed the call.</div>
+      <div><span class="days">Days 61-90</span>Formalize it into the standard capital-request
+        process ahead of the next planning cycle.</div>
+    </div>
+  </div>
+
+  <h2><span class="secnum">5</span>The Operating Rhythm I'd Expect</h2>
+  <p class="lede">Not a claim about AMS's specific meetings — this is how Amazon's own publicly
+    known operating cadence works, and the rhythm I'd expect to build the above into.</p>
+  <div class="card tblwrap">
+    <table>
+      <thead><tr><th>Cadence</th><th>Who</th><th>What it's for</th></tr></thead>
+      <tbody>
+        <tr><td>Daily shop-floor standup</td><td>Supervisors, manufacturing engineers</td><td>Rapid containment of scrap spikes and machine downtime from the last 24 hours.</td></tr>
+        <tr><td>Weekly Business Review</td><td>Site leadership, cost engineering</td><td>Routing/labor-efficiency variances and capacity utilization, reviewed while they're still fixable.</td></tr>
+        <tr><td>Monthly Business Review</td><td>Finance, plant leadership</td><td>The variance walk and absorption reconciliation — where cost actuals meet the general ledger.</td></tr>
+        <tr><td>OP1 / OP2 planning cycles</td><td>Leadership, cross-functional partners</td><td>Bottoms-up cost projections and CapEx justification, written as Amazon's own 6-page narrative — see the <a href="ams-narrative.html">narrative sample</a>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <p>A working thesis, not a claim about AMS's actual state. See the <a href="ams-fit.html">fit
+      brief</a> for verified, sourced coverage of this role against my real background, and the
+      <a href="index.html">methodology demo</a> this page's design is drawn from.</p>
+  </footer>
+</div>
+</body>
+</html>

@@ -327,6 +327,18 @@ without naming the mechanism. `stress.cjs` checks the real facts that ARE stated
 dollar figure) and asserts exactly 2 placeholders remain open, so a future edit can't silently
 "fill in" a placeholder with something unverified.
 
+[`ams-90day-plan.html`](ams-90day-plan.html) reframes a second downloaded "research" document — a
+20-issue operational governance framework for AMS, complete with a RACI matrix naming specific
+roles — into an honest "how I'd approach the first 90 days" thesis. The source document repeated the
+*exact same* unconfirmed Kuiper/Robotics/AWS-data-center claim from the first downloaded doc, and
+reused the identical fabricated "1,520-test" figure verbatim — two documents landing on the same
+made-up number isn't corroboration, it's evidence of copied origin. Kept: the 4-pillar taxonomy and
+the tiered operating cadence (Daily → WBR → MBR → OP1/OP2), both legitimate, generic
+manufacturing-cost-engineering structures. Dropped entirely: the RACI table, every dollar threshold,
+and the Kuiper/Robotics/AWS-DC claim. `stress.cjs` enforces the drop directly — a string guard
+checking none of the source doc's fabricated specifics leaked into the reframed page, confirmed to
+actually fail when one is reintroduced (not just written and trusted).
+
 ## Status
 
 Built 2026-08-25 (7 tabs), published the same day. Expanded to full scale 2026-08-26 across 5
