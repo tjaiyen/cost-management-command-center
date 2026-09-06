@@ -341,6 +341,14 @@ const calcIds = ["calcProcess", "calcBatch", "calcMass", "calcMatRate", "calcRun
   "calcOutMat", "calcOutMach", "calcOutLabor", "calcOutOh", "calcOutTotal"];
 const missingCalcIds = calcIds.filter((id) => !amsFitHtml.includes(`id="${id}"`));
 check(missingCalcIds.length === 0, "every calculator input/output id referenced by calcShouldCost() has a matching element in the HTML", JSON.stringify(missingCalcIds));
+// 2026-09-06: the 6 should-cost inputs had no min="" floor -- calcShouldCost() is pure multiply/
+// add, so a directly-typed negative value never produced the sibling ams-manufacturing repo's NaN
+// bug, but it did silently degrade to a cosmetically-odd negative dollar total with no guard at
+// all. Floored all 6 to min="0" (matching calcBatch's pre-existing min="1" pattern on the same
+// panel), one field at a time so a future edit dropping just one of the six still fails clearly.
+["calcMass", "calcMatRate", "calcRuntime", "calcSetup", "calcMhr", "calcLabor"].forEach((id) => {
+  check(new RegExp(`id="${id}"[^>]*min="0"`).test(amsFitHtml), `${id} carries a min="0" floor, guarding against a directly-typed negative value`);
+});
 check(/MANNING = \{ cnc: 0\.5, am: 0\.25, sheet: 1\.0 \}/.test(amsFitHtml), "the manning-ratio map covers all 3 process options offered in the <select> (cnc/am/sheet)");
 check(amsFitHtml.includes("Illustrative calculator") && amsFitHtml.includes("not real AMS cost data"), "the calculator is labeled illustrative, not presented as real AMS cost data (never-fabricate discipline)");
 

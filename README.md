@@ -1143,3 +1143,15 @@ distinctiveness, and confirmed the reduced-motion fix can't throw. It found and 
 
 index.html 5,426 → 5,438 (+12), verify.cjs 2,172 → 2,185 (+13), stress.cjs unchanged at 571 (one
 clause removed, one line simplified — net zero). Both suites green.
+
+**2026-09-06, ams-fit.html should-cost inputs — missing min="" floor:** flagged during a sibling-
+repo sweep for the same NaN bug just fixed in `ams-manufacturing-cost-command-center`'s Break-Even
+Crossover Playground (see that repo's README). Not the same bug here — `calcShouldCost()` is pure
+multiply/add, so a directly-typed negative value degraded to a cosmetically-odd negative dollar
+total, never `NaN` — but the same underlying gap: `calcMass`/`calcMatRate`/`calcRuntime`/
+`calcSetup`/`calcMhr`/`calcLabor` had no `min=""` at all, unlike `calcBatch` on the same panel
+(`min="1"`). Floored all 6 to `min="0"`. Added 6 stress.cjs checks (one per input, so a future edit
+dropping just one still fails clearly) — temporarily removed one to confirm it fails, then restored
+and confirmed it passes again, before trusting it. stress.cjs 267 → 273 (+6, this run's own real
+count via `node stress.cjs | grep -c "^pass:"`, not carried over from an earlier entry). All checks
+green.
