@@ -161,9 +161,13 @@ legible, marked `illustrative` throughout.
   alongside color, not color alone.
 - **Colorblind-safe status colors** — success/warning/danger now use hues from the real Okabe-Ito
   (2008) colorblind-safe palette, not just a generic red/amber/green — the specific RGB values were
-  computed and WCAG 2.1 AA contrast-checked (≥4.5:1) against this page's own actual background
-  colors in both themes (an external doc's claim to use this palette turned out to cite the wrong
-  hex values entirely — verified independently before adopting the real ones instead).
+  computed and WCAG 2.1 AA contrast-checked (≥4.5:1) against this page's own actual *composited*
+  background colors in both themes — the real alpha-blended tint (10–15% of the same status color
+  over the card background) that `.badge`/`.alert-card` actually render underneath their text, not
+  just the flat card background a first pass at this claim had checked against (a real gap found
+  and closed 2026-09-06 — see the changelog) (an external doc's claim to use this palette turned out
+  to cite the wrong hex values entirely — verified independently before adopting the real ones
+  instead).
 - **Skip-to-content link + `scope="col"` on all 29 table headers** — real WCAG fixes (2.4.1 Bypass
   Blocks; explicit column-header association), not aspirational ones.
 - **An altitude-grouped nav rail, a global 1–9 tab-jump + "?" keyboard-shortcuts overlay, a
@@ -1155,3 +1159,51 @@ dropping just one still fails clearly) — temporarily removed one to confirm it
 and confirmed it passes again, before trusting it. stress.cjs 267 → 273 (+6, this run's own real
 count via `node stress.cjs | grep -c "^pass:"`, not carried over from an earlier entry). All checks
 green.
+
+**External `/stress-test` audit, 2026-09-06 — 7 confirmed findings across index.html and the 4
+satellite pages, all fixed:**
+
+- **Contingency-drawdown sliders never refreshed Attention & Triage or the header alert bell
+  (HIGH)** — `updateDrawdownAndOverview()`, the sliders' shared `input` handler, called
+  `renderOverview()`/`renderDrawdownGauge()`/`renderProgramHealth()` but never
+  `renderTriage()`/`renderAlertBell()` — even though both re-read the exact same live
+  `computeTriageItems()` the Contingency tab's own alert card already updates from on every slider
+  move. Dragging either slider left the Triage list and header bell count silently stale until the
+  currency toggle or a full reload happened to refresh them. Fixed by calling both from the same
+  handler.
+- **`.badge` and `.alert-card` status-color text failed WCAG AA against their real rendered
+  background, dark theme (HIGH × 2)** — this file's own claim to have contrast-checked the
+  Okabe-Ito status colors was checked against a flat card background, never the actual composited
+  pixel `.badge.real`/`.badge.illustrative` (15% self-tint) and `.alert-card.ok`/`.alert-card.warn
+  .alert-head` (10% self-tint) really render text on top of. Hand-verified with the real WCAG
+  relative-luminance formula: dark-theme success failed at both its 15% (3.95:1) and 10% (4.27:1)
+  tints, dark-theme danger failed at its 10% tint (3.99:1), dark-theme warning narrowly failed at
+  15% (4.47:1), and light-theme success also failed at 15% (4.37:1) — all below the 4.5:1 AA floor.
+  Retuned the 3 affected tokens (dark success/warning/danger; light success only, since light
+  warning/danger already cleared 4.5:1) to the nearest values that pass at their own binding alpha,
+  keeping all 4 duplicated theme blocks in sync and every other self-tint usage already on the page
+  (gate-num, tabbtn, stoplight-tile, heatmap bubble) no worse off than before. This file's own
+  contrast claim corrected to say "composited" background, not "actual background colors."
+- **Command palette's only real focusable element had no visible focus ring (MED)** —
+  `.palette-input{outline:none}` unconditionally beat the page's own global `:focus-visible` rule at
+  equal specificity, on the one control (`#paletteInput`) the palette's Tab-trap guarantees keyboard
+  focus can never leave. Removed the override; the global ring now renders on it.
+- **Monte Carlo histogram animation ignored `prefers-reduced-motion` (MED)** —
+  `animateHistogram()` only guarded on `requestAnimationFrame`'s existence, unlike its sibling
+  `animateValue()` (already fixed for this exact gap in the 2026-08-27 UX/UI pass). Added the same
+  `prefersReducedMotion()` guard.
+- **ams-fit.html's 8 should-cost labels had no programmatic association (MED)** — every `<label>`
+  in the calculator lacked a `for=` attribute, unlike all 10 labels in index.html. Added `for=`
+  matching each field's own id.
+- **24 `<th>` cells across the 4 satellite pages had no `scope="col"` (LOW)** — ada-fit.html,
+  ams-fit.html, ams-90day-plan.html, and ams-narrative.html never carried the `scope="col"`
+  convention index.html established on its own 29 headers. Added it to all 24.
+
+All 7 fixes falsification-tested (temporarily reverted each, confirmed the corresponding new
+stress.cjs check fails, restored, re-confirmed green) — including the contrast checks against the
+pre-fix token values, which independently reproduced 3.95/4.47/4.27/3.99:1, matching the hand
+computation exactly before any assertion was written (per this repo's own pre-registration
+discipline). index.html 5,443 → 5,452 (+9: 2 function-body edits, 1 CSS-property removal, 6
+retuned RGB literals across 4 theme blocks). stress.cjs 273 → 298 (+25, one new regression guard per
+finding, this run's own real count via `node stress.cjs | grep -c "^pass:"`). verify.cjs untouched
+at 2,185 lines, still 525/525 passing — both suites green.

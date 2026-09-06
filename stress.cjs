@@ -125,8 +125,8 @@ console.log("--- Okabe-Ito status-color tokens: all 4 duplicated theme blocks st
 // light-mode tokens in 2 places (@media prefers-color-scheme + :root[data-theme="light"]) -- a
 // real risk this build has hit before (drift between duplicated blocks). Confirms all 4 actually
 // carry the real Okabe-Ito-derived, WCAG-AA-contrast-checked values, not a stale/half-updated copy.
-const darkTokenBlocks = (indexHtml.match(/--c-success:9 170 124; --c-warning:218 146 11; --c-danger:242 93 13;/g) || []).length;
-const lightTokenBlocks = (indexHtml.match(/--c-success:6 121 89; --c-warning:131 87 7; --c-danger:170 65 9;/g) || []).length;
+const darkTokenBlocks = (indexHtml.match(/--c-success:48 184 145; --c-warning:219 148 16; --c-danger:244 116 47;/g) || []).length;
+const lightTokenBlocks = (indexHtml.match(/--c-success:6 117 86; --c-warning:131 87 7; --c-danger:170 65 9;/g) || []).length;
 check(darkTokenBlocks === 2, "both dark-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${darkTokenBlocks}, expected 2`);
 check(lightTokenBlocks === 2, "both light-mode color-token blocks carry the same Okabe-Ito-derived values", `found ${lightTokenBlocks}, expected 2`);
 
@@ -693,6 +693,80 @@ check(indexHtml.includes('{ label:"Why it matters", key:"why" }'),
   "the KPI catalog's CSV export includes the new 'Why it matters' column, not just the on-screen table");
 check(indexHtml.includes("<th scope='col'>Why it matters</th>"),
   "the rendered KPI catalog table's own header row includes the new column");
+
+console.log("--- /stress-test pass (2026-09-06): regression guards for confirmed findings ---");
+// Finding 1 (HIGH): the drawdown sliders' shared handler refreshed Overview/gauge/Program Health
+// but never Attention & Triage or the header alert bell, even though both re-read the SAME live
+// sliders via computeTriageItems() -- they just weren't called from here, so moving either slider
+// desynced them from the Contingency tab's own alert card until the currency toggle or a reload.
+check(/function updateDrawdownAndOverview\(\)\{[\s\S]*?if \(typeof renderTriage === "function"\) triageItems = renderTriage\(\);\s*\n\s*if \(typeof renderAlertBell === "function"\) alertBellItems = renderAlertBell\(\);\s*\n\s*\}/.test(indexHtml),
+  "the drawdown sliders' shared handler (updateDrawdownAndOverview) now also refreshes renderTriage()/renderAlertBell(), not just Overview/gauge/Program Health");
+
+// Findings 2+3 (HIGH): .badge and .alert-card headers paint a status color as text directly on a
+// tinted background OF THAT SAME COLOR -- neither suite had ever computed a real WCAG contrast
+// ratio against that actual composited pixel, only asserted the 4 duplicated theme blocks stay
+// byte-identical to each other. Implements the same relative-luminance formula WCAG 2.1 itself
+// specifies (not a library) and reads the LIVE token/background values out of index.html's own
+// CSS, so a future color edit that regresses contrast fails here instead of silently shipping.
+function srgbToLin(c) { c = c / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function relLum([r, g, b]) { return 0.2126 * srgbToLin(r) + 0.7152 * srgbToLin(g) + 0.0722 * srgbToLin(b); }
+function wcagContrast(fg, bg) {
+  const l1 = relLum(fg), l2 = relLum(bg);
+  const hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function alphaComposite(fg, bg, alpha) { return [0, 1, 2].map((i) => bg[i] * (1 - alpha) + fg[i] * alpha); }
+function extractRgbToken(css, name) {
+  const m = css.match(new RegExp(`--${name}:(\\d+) (\\d+) (\\d+)`));
+  return m ? [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)] : null;
+}
+const darkThemeCss = (indexHtml.match(/:root\{([^}]*)\}/) || [])[1] || "";
+const lightThemeCss = (indexHtml.match(/@media \(prefers-color-scheme: light\)\{\s*:root\{([^}]*)\}/) || [])[1] || "";
+[["dark", darkThemeCss], ["light", lightThemeCss]].forEach(([themeName, css]) => {
+  const bgCard = extractRgbToken(css, "c-bg-card");
+  const success = extractRgbToken(css, "c-success");
+  const warning = extractRgbToken(css, "c-warning");
+  const danger = extractRgbToken(css, "c-danger");
+  check(!!bgCard && !!success && !!warning && !!danger, `found the live --c-bg-card/--c-success/--c-warning/--c-danger tokens in the ${themeName}-theme CSS block to contrast-check`);
+  if (bgCard && success && warning && danger) {
+    const badgeReal = wcagContrast(success, alphaComposite(success, bgCard, 0.15));
+    const badgeIllustrative = wcagContrast(warning, alphaComposite(warning, bgCard, 0.15));
+    const alertOk = wcagContrast(success, alphaComposite(success, bgCard, 0.10));
+    const alertWarn = wcagContrast(danger, alphaComposite(danger, bgCard, 0.10));
+    check(badgeReal >= 4.5, `${themeName} theme: .badge.real text meets WCAG AA (>=4.5:1) against its own actual composited background (15% success tint over card bg)`, `${badgeReal.toFixed(2)}:1`);
+    check(badgeIllustrative >= 4.5, `${themeName} theme: .badge.illustrative text meets WCAG AA (>=4.5:1) against its own actual composited background (15% warning tint over card bg)`, `${badgeIllustrative.toFixed(2)}:1`);
+    check(alertOk >= 4.5, `${themeName} theme: .alert-card.ok .alert-head text meets WCAG AA (>=4.5:1) against its own actual composited background (10% success tint over card bg)`, `${alertOk.toFixed(2)}:1`);
+    check(alertWarn >= 4.5, `${themeName} theme: .alert-card.warn .alert-head text meets WCAG AA (>=4.5:1) against its own actual composited background (10% danger tint over card bg)`, `${alertWarn.toFixed(2)}:1`);
+  }
+});
+
+// Finding 4 (MED): .palette-input unconditionally set outline:none, so the global :focus-visible
+// rule (equal specificity, declared earlier) never won the cascade -- on the one control the
+// command palette's Tab-trap guarantees keyboard focus can never leave.
+check(!/\.palette-input\{[^}]*outline:\s*none/.test(indexHtml),
+  "#paletteInput no longer suppresses its own outline, so the page's global :focus-visible ring can render on it");
+
+// Finding 5 (MED): animateHistogram() only guarded on requestAnimationFrame's existence, never on
+// prefers-reduced-motion, unlike its sibling animateValue() (fixed for this exact gap earlier).
+check(/function animateHistogram\(counts, maxCount\)\{\s*if \(typeof requestAnimationFrame !== "function" \|\| prefersReducedMotion\(\)\)/.test(indexHtml),
+  "animateHistogram() now also skips its progressive-reveal tween when prefers-reduced-motion is set, matching animateValue()'s guard");
+
+// Finding 6 (MED): ams-fit.html's 8 should-cost form labels had no for="" attribute at all, unlike
+// every other <label> in this repo (all 10 in index.html carry a matching for=), so a screen
+// reader announces each field with no name. One field at a time so a future edit dropping just one
+// still fails clearly.
+["calcProcess", "calcBatch", "calcMass", "calcMatRate", "calcRuntime", "calcSetup", "calcMhr", "calcLabor"].forEach((id) => {
+  check(new RegExp(`<label for="${id}">`).test(amsFitHtml), `ams-fit.html's #${id} field has a label programmatically associated via for="${id}"`);
+});
+
+// Finding 7 (LOW): all 24 <th> cells across the 4 satellite pages (ada-fit/ams-fit/ams-90day-plan/
+// ams-narrative) were bare, contradicting index.html's own established scope="col" convention on
+// all 29 of its own table headers.
+[["ada-fit.html", adaFitHtml], ["ams-fit.html", amsFitHtml], ["ams-90day-plan.html", plan90Html], ["ams-narrative.html", amsNarrHtml]].forEach(([name, content]) => {
+  const thCount = (content.match(/<th(?:\s[^>]*)?>/g) || []).length;
+  const scopedCount = (content.match(/<th scope="col">/g) || []).length;
+  check(thCount > 0 && thCount === scopedCount, `every <th> in ${name} carries scope="col" (${scopedCount}/${thCount})`, `${scopedCount}/${thCount}`);
+});
 
 console.log("");
 if (failures > 0) {
